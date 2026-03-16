@@ -45,7 +45,6 @@ O **RDV Mobile** é o aplicativo front-end do sistema de Registro de Despesas de
 - 🔐 Login e cadastro de usuários
 - 🚛 Registro e acompanhamento de viagens
 - 💰 Lançamento de despesas por categoria (abastecimento, alimentação, pedágio, manutenção, outros)
-- 📸 Upload de comprovantes com foto
 - 👤 Gerenciamento de perfil de usuário
 - 📊 Visualização de relatórios de despesas
 
@@ -314,8 +313,6 @@ O app se comunica com a **API RESTful** (`tcc-despesas-api`) usando:
 | :--- | :--- |
 | 🔑 **JWT** | Access token (2min) + Refresh token (3 dias) |
 | 📤 **REST** | Endpoints para viagens, despesas e usuários |
-| 📸 **Upload** | Envio de comprovantes via multipart/form-data |
-| ☁️ **Imagens** | Servidas via Garage S3-compatible |
 
 ### Identificadores por Plataforma
 
