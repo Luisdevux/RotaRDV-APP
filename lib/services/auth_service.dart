@@ -14,6 +14,31 @@ class AuthService {
     serverClientId: dotenv.env['GOOGLE_CLIENT_ID'],
   );
 
+  Future<Map<String, dynamic>?> login(String email, String senha) async {
+    try {
+      final url = Uri.parse('${ApiConstants.baseUrl}/login');
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'email': email,
+          'senha': senha,
+        }),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        return data;
+      } else {
+        final error = jsonDecode(response.body);
+        throw Exception(error['customMessage'] ?? error['message'] ?? 'Erro ao fazer login.');
+      }
+    } catch (e) {
+      print('Erro no login local: $e');
+      rethrow;
+    }
+  }
+
   Future<Map<String, dynamic>?> signInWithGoogle() async {
     try {
       // 1. Iniciar o fluxo do Google

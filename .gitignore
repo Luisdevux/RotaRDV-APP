@@ -46,4 +46,3 @@ app.*.map.json
 
 # Env da Aplicação com Chaves Secretas
 .env
-.env.example

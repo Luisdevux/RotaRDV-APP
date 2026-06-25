@@ -16,18 +16,13 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final _cpfController = TextEditingController();
+  final _emailController = TextEditingController();
   final _senhaController = TextEditingController();
   bool _obscurePassword = true;
 
-  final _cpfFormatter = MaskTextInputFormatter(
-    mask: '###.###.###-##',
-    filter: { "#": RegExp(r'[0-9]') },
-  );
-
   @override
   void dispose() {
-    _cpfController.dispose();
+    _emailController.dispose();
     _senhaController.dispose();
     super.dispose();
   }
@@ -36,17 +31,38 @@ class _LoginPageState extends State<LoginPage> {
     final authVM = context.read<AuthViewModel>();
     final success = await authVM.loginWithGoogle();
 
-    if (!mounted) return;
-
-    if (success && authVM.currentUser != null) {
+    if (success && mounted) {
+      Navigator.of(context).pushReplacementNamed(Routes.home);
+    } else if (!success && mounted && authVM.errorMessage != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Bem-vindo, ${authVM.currentUser!['nome']}!'),
-          backgroundColor: AppColors.success,
+          content: Text(authVM.errorMessage!),
+          backgroundColor: AppColors.error,
         ),
       );
-      Navigator.pushReplacementNamed(context, Routes.home);
-    } else if (authVM.errorMessage != null) {
+    }
+  }
+
+  void _handleLocalLogin() async {
+    final email = _emailController.text;
+    final senha = _senhaController.text;
+
+    if (email.isEmpty || senha.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Por favor, preencha o E-mail e a senha.'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
+    final authVM = context.read<AuthViewModel>();
+    final success = await authVM.login(email, senha);
+
+    if (success && mounted) {
+      Navigator.of(context).pushReplacementNamed(Routes.home);
+    } else if (!success && mounted && authVM.errorMessage != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(authVM.errorMessage!),
@@ -60,6 +76,7 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     final authVM = context.watch<AuthViewModel>();
     final _isLoadingGoogle = authVM.isLoadingGoogle;
+    final _isLoadingLocal = authVM.isLoadingLocal;
     return Scaffold(
       backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
       body: AnnotatedRegion<SystemUiOverlayStyle>(
@@ -132,22 +149,21 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       const SizedBox(height: 24),
 
-                      // CPF Input
+                      // Email Input
                       Text(
-                        'CPF',
+                        'E-mail',
                         style: Theme.of(context).textTheme.labelLarge?.copyWith(
                           color: AppColors.textSecondary,
                         ),
                       ),
                       const SizedBox(height: 8),
                       TextField(
-                        controller: _cpfController,
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [_cpfFormatter],
+                        controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
                         decoration: const InputDecoration(
-                          hintText: '000.000.000-00',
+                          hintText: 'motorista@exemplo.com',
                           prefixIcon: Icon(
-                            Icons.person_outline,
+                            Icons.email_outlined,
                             color: AppColors.textHint,
                           ),
                         ),
@@ -202,20 +218,27 @@ class _LoginPageState extends State<LoginPage> {
 
                       // Botão Entrar
                       ElevatedButton(
-                        onPressed: () {
-                          // Ação de login
-                        },
+                        onPressed: _isLoadingLocal ? null : _handleLocalLogin,
                         style: ElevatedButton.styleFrom(
                           minimumSize: const Size(double.infinity, 54),
                         ),
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text('Entrar no App'),
-                            SizedBox(width: 8),
-                            Icon(Icons.arrow_forward),
-                          ],
-                        ),
+                        child: _isLoadingLocal
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text('Entrar no App'),
+                                  SizedBox(width: 8),
+                                  Icon(Icons.arrow_forward),
+                                ],
+                              ),
                       ),
                       const SizedBox(height: 24),
 

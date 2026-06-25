@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:app_despesas/core/theme/app_theme.dart';
+import 'package:provider/provider.dart';
+import 'package:app_despesas/features/auth/auth_viewmodel.dart';
+import 'package:app_despesas/routes.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -8,29 +11,22 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Visão Geral'),
-        backgroundColor: AppColors.headerBackground,
-        elevation: 0,
-      ),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.home_outlined, size: 64, color: AppColors.textHint),
-            const SizedBox(height: 16),
-            Text(
-              'Bem-vindo à Tela Inicial!',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Aqui ficarão os gráficos e despesas.',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColors.textHint,
-              ),
-            ),
-          ],
+        child: ElevatedButton.icon(
+          onPressed: () async {
+            final authVM = context.read<AuthViewModel>();
+            await authVM.logout();
+            if (context.mounted) {
+              Navigator.of(context).pushReplacementNamed(Routes.login);
+            }
+          },
+          icon: const Icon(Icons.logout),
+          label: const Text('Sair'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.error,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+          ),
         ),
       ),
     );
