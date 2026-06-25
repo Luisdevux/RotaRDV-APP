@@ -52,6 +52,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.13.1
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -81,6 +82,14 @@ flutter:
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
   # example:
+
+flutter_launcher_icons:
+  image_path: "assets/images/rotardv-icone.png"
+  android: true
+  ios: true
+  adaptive_icon_background: "#0f1b2e"
+  adaptive_icon_foreground: "assets/images/rotardv-fg.png"
+
   # fonts:
   #   - family: Schyler
   #     fonts:
