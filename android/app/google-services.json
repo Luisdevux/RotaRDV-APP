@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "243156572755",
+    "project_id": "rotardv-af215",
+    "storage_bucket": "rotardv-af215.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:243156572755:android:726e01556fab5f37f084a6",
+        "android_client_info": {
+          "package_name": "com.example.app_despesas"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDxkAg9TcEJ7rlMx_cDMI-ivfU5FZESpco"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
