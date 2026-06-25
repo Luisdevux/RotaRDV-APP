@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
 import 'package:app_despesas/core/theme/app_theme.dart';
 import 'package:app_despesas/features/auth/auth_viewmodel.dart';
@@ -18,6 +19,11 @@ class _LoginPageState extends State<LoginPage> {
   final _cpfController = TextEditingController();
   final _senhaController = TextEditingController();
   bool _obscurePassword = true;
+
+  final _cpfFormatter = MaskTextInputFormatter(
+    mask: '###.###.###-##',
+    filter: { "#": RegExp(r'[0-9]') },
+  );
 
   @override
   void dispose() {
@@ -137,6 +143,7 @@ class _LoginPageState extends State<LoginPage> {
                       TextField(
                         controller: _cpfController,
                         keyboardType: TextInputType.number,
+                        inputFormatters: [_cpfFormatter],
                         decoration: const InputDecoration(
                           hintText: '000.000.000-00',
                           prefixIcon: Icon(
@@ -194,14 +201,20 @@ class _LoginPageState extends State<LoginPage> {
                       const SizedBox(height: 16),
 
                       // Botão Entrar
-                      ElevatedButton.icon(
+                      ElevatedButton(
                         onPressed: () {
                           // Ação de login
                         },
-                        icon: const Icon(Icons.arrow_forward),
-                        label: const Text('Entrar no App'),
                         style: ElevatedButton.styleFrom(
                           minimumSize: const Size(double.infinity, 54),
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text('Entrar no App'),
+                            SizedBox(width: 8),
+                            Icon(Icons.arrow_forward),
+                          ],
                         ),
                       ),
                       const SizedBox(height: 24),
