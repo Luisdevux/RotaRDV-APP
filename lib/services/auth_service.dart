@@ -3,6 +3,8 @@ import '../core/constants/api_constants.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../core/database/local_database.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
   final GoogleSignIn _googleSignIn = GoogleSignIn(
@@ -81,5 +83,15 @@ class AuthService {
 
   Future<void> signOut() async {
     await _googleSignIn.signOut();
+
+    // Limpar o banco de dados Isar
+    final isar = LocalDatabase.isar;
+    await isar.writeTxn(() async {
+      await isar.clear(); // Limpa todas as coleções!
+    });
+
+    // Limpar os SharedPreferences (tokens, datas de sync, etc) para não deixar resquícios de dados do usuário anterior
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
   }
 }

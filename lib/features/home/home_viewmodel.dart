@@ -13,11 +13,13 @@ class HomeViewModel extends ChangeNotifier {
   bool isLoading = true;
   List<ViagemCollection> ultimasViagens = [];
 
-  HomeViewModel(this.authViewModel) {
-    init();
-  }
+  HomeViewModel(this.authViewModel);
 
   Future<void> init() async {
+    // Garante que o loading reapareça toda vez que entrar na tela
+    isLoading = true;
+    notifyListeners();
+
     // Carrega as últimas viagens do banco local que se já sincronizaram com a API
     await carregarDadosBancoLocal();
 
@@ -34,6 +36,7 @@ class HomeViewModel extends ChangeNotifier {
     } catch (e) {
       // Se estiver sem internet, ele "falha" silenciosamente e o usuário continua vendo os dados do banco local
       debugPrint("API fora do ar ou usuário sem internet. Mostrando dados do banco local.");
+      debugPrint("Erro no pullSync: $e");
     }
   }
 

@@ -3,11 +3,27 @@ import '../../core/theme/app_theme.dart';
 import 'package:provider/provider.dart';
 import 'home_viewmodel.dart';
 import '../auth/auth_viewmodel.dart';
+import '../sync/sync_service.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import '../../routes.dart';
 import '../../core/widgets/network_status_bar.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  @override
+  void initState() {
+    super.initState();
+    // Quando a tela carregar, pede para o ViewModel buscar os dados novos (ou vazios, se acabou de logar)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<HomeViewModel>().init();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,12 +59,66 @@ class HomePage extends StatelessWidget {
                     alignment: Alignment.centerRight,
                     child: IconButton(                                                           
                       icon: const Icon(Icons.logout, color: AppColors.textHint),          
-                      onPressed: () async {                                               
-                        final authVM = context.read<AuthViewModel>();                     
-                        await authVM.logout();                                            
-                        if (context.mounted) {                                            
-                          Navigator.of(context).pushReplacementNamed(Routes.login);       
-                        }                                                                 
+                      onPressed: () async {
+                        final syncService = SyncService();
+                        final authVM = context.read<AuthViewModel>();
+                        final token = authVM.currentUser?['accessToken'] ?? '';
+
+                        // Verifica se tem dados pendentes de sincronização antes de permitir o logout
+                        final hasPending = await syncService.hasPendingSync();
+
+                        if (hasPending) {
+                          // Verifica a conexão com a internet
+                          final connectivity = await Connectivity().checkConnectivity();
+                          final isOffline = connectivity.contains(ConnectivityResult.none) || connectivity.isEmpty;
+
+                          if (isOffline) {
+                            if (context.mounted) {
+                              showDialog(
+                                context: context,
+                                builder: (ctx) => AlertDialog(
+                                  title: const Text('Não é possível sair agora'),
+                                  content: const Text('Você possui viagens ou despesas offline. Conecte-se à internet para sincronizá-las antes de sair, ou seus dados serão perdidos!'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.of(ctx).pop(),
+                                      child: const Text('OK'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }
+                            return; // Bloqueia o logout
+                          }
+
+                          // Tenta forçar o push na API antes de sair
+                          try {
+                            await syncService.pushSync(token);
+                          } catch (e) {
+                            if (context.mounted) {
+                              showDialog(
+                                context: context,
+                                builder: (ctx) => AlertDialog(
+                                  title: const Text('Erro de Sincronização'),
+                                  content: Text('Falha ao enviar seus dados para a nuvem. Tente novamente.\nErro: $e'),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.of(ctx).pop(),
+                                      child: const Text('OK'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }
+                            return; // Bloqueia o logout
+                          }
+                        }
+
+                        // Se não tem pendências ou o push funcionou perfeitamente, prossegue com o logout:
+                        await authVM.logout();
+                        if (context.mounted) {
+                          Navigator.of(context).pushReplacementNamed(Routes.login);
+                        }
                       },                                                                  
                     ),
                   ),
@@ -61,7 +131,6 @@ class HomePage extends StatelessWidget {
                             height: 64,
                             fit: BoxFit.cover,
                             errorBuilder: (context, error, stackTrace) {
-                              // Se der 404 (como a foto "uuid.jpeg"), cai aqui e mostra o ícone!
                               return const CircleAvatar(
                                 backgroundColor: AppColors.primary,
                                 radius: 32,

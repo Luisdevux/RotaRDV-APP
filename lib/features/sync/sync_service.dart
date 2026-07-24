@@ -10,6 +10,30 @@ import 'package:isar/isar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SyncService {
+  Future<bool> hasPendingSync() async {
+    final isar = LocalDatabase.isar;
+
+    final viagensParaSincronizar = await isar.viagemCollections
+        .filter()
+        .statusSincronizacaoEqualTo('criado')
+        .or()
+        .statusSincronizacaoEqualTo('editado')
+        .or()
+        .statusSincronizacaoEqualTo('deletado')
+        .count();
+
+    final despesasParaSincronizar = await isar.despesaCollections
+        .filter()
+        .statusSincronizacaoEqualTo('criado')
+        .or()
+        .statusSincronizacaoEqualTo('editado')
+        .or()
+        .statusSincronizacaoEqualTo('deletado')
+        .count();
+
+    return viagensParaSincronizar > 0 || despesasParaSincronizar > 0;
+  }
+
   Future<void> pushSync(String accessToken) async {
     final isar = LocalDatabase.isar;
 
