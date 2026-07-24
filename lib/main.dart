@@ -6,10 +6,12 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'firebase_options.dart';
 import 'package:app_despesas/features/auth/auth_viewmodel.dart';
 import 'package:app_despesas/features/home/home_viewmodel.dart';
+import 'package:app_despesas/core/database/local_database.dart';
 import 'package:app_despesas/routes.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await LocalDatabase.init();
   await dotenv.load(fileName: ".env");
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
@@ -25,7 +27,14 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
-        ChangeNotifierProvider(create: (_) => HomeViewModel()),
+        ChangeNotifierProxyProvider<AuthViewModel, HomeViewModel>(
+          create: (context) => HomeViewModel(Provider.of<AuthViewModel>(context, listen: false)),
+          update: (context, auth, previous) {
+            previous ??= HomeViewModel(auth);
+            previous.authViewModel = auth;
+            return previous;
+          },
+        ),
       ],
       child: MaterialApp(
         title: 'RotaRDV',

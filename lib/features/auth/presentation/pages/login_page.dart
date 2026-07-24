@@ -3,10 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
-import 'package:app_despesas/core/theme/app_theme.dart';
-import 'package:app_despesas/features/auth/auth_viewmodel.dart';
-import 'package:app_despesas/routes.dart';
-import 'package:app_despesas/core/widgets/network_status_bar.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../auth_viewmodel.dart';
+import '../../../../routes.dart';
+import '../../../../core/widgets/network_status_bar.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
