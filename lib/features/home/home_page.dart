@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/database/local_database.dart';
+import '../../core/widgets/custom_refresh_indicator.dart';
 import 'package:provider/provider.dart';
 import 'home_viewmodel.dart';
 import '../auth/auth_viewmodel.dart';
@@ -154,9 +156,25 @@ class _HomePageState extends State<HomePage> {
 
                   const SizedBox(height: 4),
 
-                  Text(
-                      'Nenhuma viagem em andamento',
-                      style: Theme.of(context).textTheme.bodyMedium,
+                  Builder(
+                    builder: (context) {
+                      final homeVM = context.watch<HomeViewModel>();
+                      final temViagemAtiva = homeVM.ultimasViagens.any((v) => v.status == 'em_andamento');
+                      if (temViagemAtiva) {
+                        final ativa = homeVM.ultimasViagens.firstWhere((v) => v.status == 'em_andamento');
+                        return Text(
+                          'Em viagem: ${ativa.origemCidade} -> ${ativa.destinoCidade}',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        );
+                      }
+                      return Text(
+                        'Nenhuma viagem em andamento',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      );
+                    }
                   ),
                 ],
               ),
@@ -263,15 +281,19 @@ class _HomePageState extends State<HomePage> {
                           }
 
                           // Se tem viagem, desenha em uma lista
-                          return ListView.builder(
-                            itemCount: homeVM.ultimasViagens.length,
-                            itemBuilder: (context, index) {
-                              final viagem = homeVM.ultimasViagens[index];
-
-                              // Formatar a data de forma mais amigável
-                              final data = viagem.dataInicio;
-                              final dataStr = '${data.day.toString().padLeft(2, '0')}/${data.month.toString().padLeft(2, '0')}/${data.year}';
-                              final isConcluida = viagem.status == 'concluída';
+                          return CustomRefreshIndicator(
+                            onRefresh: homeVM.refresh,
+                            child: ListView.builder(
+                              physics: const AlwaysScrollableScrollPhysics(),
+                              itemCount: homeVM.ultimasViagens.length,
+                              itemBuilder: (context, index) {
+                                final viagem = homeVM.ultimasViagens[index];
+  
+                                // Formatar a data de forma mais amigável
+                                final data = viagem.dataInicio;
+                                final dataStr = '${data.day.toString().padLeft(2, '0')}/${data.month.toString().padLeft(2, '0')}/${data.year}';
+                                final isConcluida = viagem.status == 'concluída';
+                                final isCancelada = viagem.status == 'cancelada';
 
                               return Container(
                                 margin: const EdgeInsets.only(bottom: 16),
@@ -331,15 +353,23 @@ class _HomePageState extends State<HomePage> {
                                     Row(
                                       children: [
                                         Icon(
-                                          isConcluida ? Icons.check_circle : Icons.local_shipping,
-                                          color: isConcluida ? AppColors.success : AppColors.warning,
+                                          isConcluida 
+                                              ? Icons.check_circle 
+                                              : (isCancelada ? Icons.cancel : Icons.local_shipping),
+                                          color: isConcluida 
+                                              ? AppColors.success 
+                                              : (isCancelada ? AppColors.error : AppColors.warning),
                                           size: 16,
                                         ),
                                         const SizedBox(width: 4),
                                         Text(
-                                          (isConcluida ? 'CONCLUÍDA' : 'EM ANDAMENTO').toUpperCase(),
+                                          (isConcluida 
+                                              ? 'CONCLUÍDA' 
+                                              : (isCancelada ? 'CANCELADA' : 'EM ANDAMENTO')).toUpperCase(),
                                           style: TextStyle(
-                                            color: isConcluida ? AppColors.success : AppColors.warning,
+                                            color: isConcluida 
+                                                ? AppColors.success 
+                                                : (isCancelada ? AppColors.error : AppColors.warning),
                                             fontSize: 10,
                                             fontWeight: FontWeight.bold,
                                           ),
@@ -350,7 +380,7 @@ class _HomePageState extends State<HomePage> {
                                 )
                               );
                             },
-                          );
+                          ));
                         }
                       )
                     )

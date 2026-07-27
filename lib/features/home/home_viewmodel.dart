@@ -56,4 +56,14 @@ class HomeViewModel extends ChangeNotifier {
     ultimasViagens = viagensLocal;
     notifyListeners(); // Avisa a tela que os dados foram atualizados
   }
+
+  Future<void> refresh() async {
+    try {
+      final token = authViewModel.currentUser?['accessToken'] ?? '';
+      await _syncService.pullSync(token);
+      await carregarDadosBancoLocal();
+    } catch (e) {
+      debugPrint("Erro no pullSync (refresh): $e");
+    }
+  }
 }
