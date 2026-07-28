@@ -1,3 +1,4 @@
+import '../../core/widgets/custom_bottom_nav_bar.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/database/local_database.dart';
@@ -390,6 +391,13 @@ class _HomePageState extends State<HomePage> {
             )
           ],
         ),
+      ),
+      bottomNavigationBar: CustomBottomNavBar(
+        currentIndex: 0,
+        onTap: (index) {
+          // A será adicionada a lógica de navegação
+          debugPrint("Navegando para a aba: $index");
+        },
       ),
     );
   }
