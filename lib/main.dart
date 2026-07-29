@@ -16,17 +16,30 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(const MyApp());
+  final authViewModel = AuthViewModel();
+  final isAuth = await authViewModel.checkAuth();
+
+  runApp(MyApp(
+    authViewModel: authViewModel,
+    initialRoute: isAuth ? Routes.home : Routes.login,
+  ));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final AuthViewModel authViewModel;
+  final String initialRoute;
+
+  const MyApp({
+    super.key, 
+    required this.authViewModel,
+    required this.initialRoute,
+  });
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AuthViewModel()),
+        ChangeNotifierProvider.value(value: authViewModel),
         ChangeNotifierProxyProvider<AuthViewModel, HomeViewModel>(
           create: (context) => HomeViewModel(Provider.of<AuthViewModel>(context, listen: false)),
           update: (context, auth, previous) {
@@ -40,7 +53,7 @@ class MyApp extends StatelessWidget {
         title: 'RotaRDV',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.darkTheme,
-        initialRoute: Routes.login,
+        initialRoute: initialRoute,
         routes: Routes.getRoutes(),
       ),
     );
