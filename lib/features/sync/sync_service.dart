@@ -1,15 +1,13 @@
-// lib/features/sync/sync_service.dart
-
 import 'dart:convert';
-import 'package:http/http.dart' as http;
-import '../../core/constants/api_constants.dart';
 import '../../core/database/local_database.dart';
+import '../../core/network/api_client.dart';
 import '../../models/viagem_collection.dart';
 import '../../models/despesa_collection.dart';
 import 'package:isar/isar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SyncService {
+  /// Verifica se há registros locais pendentes de envio para a API
   Future<bool> hasPendingSync() async {
     final isar = LocalDatabase.isar;
 
@@ -34,7 +32,8 @@ class SyncService {
     return viagensParaSincronizar > 0 || despesasParaSincronizar > 0;
   }
 
-  Future<void> pushSync(String accessToken) async {
+  /// Envia alterações locais para a nuvem
+  Future<void> pushSync() async {
     final isar = LocalDatabase.isar;
 
     final viagensParaSincronizar = await isar.viagemCollections
@@ -83,16 +82,7 @@ class SyncService {
       }).toList()
     };
 
-    final url = Uri.parse('${ApiConstants.baseUrl}/sync/push');
-    
-    final response = await http.post(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $accessToken'
-      },
-      body: jsonEncode(payload),
-    );
+    final response = await ApiClient.post('/sync/push', body: payload);
 
     if (response.statusCode == 200 || response.statusCode == 201) {
       await isar.writeTxn(() async {
@@ -120,24 +110,17 @@ class SyncService {
     }
   }
 
-  Future<void> pullSync(String accessToken) async {
+  /// Baixa alterações recentes da nuvem para o banco local Isar
+  Future<void> pullSync() async {
     final prefs = await SharedPreferences.getInstance();
     final lastSyncStr = prefs.getString('last_pull_sync_date');
     
-    String urlStr = '${ApiConstants.baseUrl}/sync/pull';
+    String endpoint = '/sync/pull';
     if (lastSyncStr != null) {
-      urlStr += '?updatedAfter=${Uri.encodeComponent(lastSyncStr)}';
+      endpoint += '?updatedAfter=${Uri.encodeComponent(lastSyncStr)}';
     }
 
-    final url = Uri.parse(urlStr);
-    
-    final response = await http.get(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer $accessToken'
-      },
-    );
+    final response = await ApiClient.get(endpoint);
 
     if (response.statusCode == 200 || response.statusCode == 201) {
       final jsonBody = jsonDecode(response.body);
@@ -164,6 +147,7 @@ class SyncService {
             viagem.destinoEstado = vRaw['destino']['estado'];
             viagem.kmInicial = (vRaw['km_inicial'] as num).toDouble();
             viagem.kmFinal = vRaw['km_final'] != null ? (vRaw['km_final'] as num).toDouble() : null;
+            
             // Helper para lidar com ambos os formatos de data: ISO e DD/MM/YYYY
             DateTime parseDate(String d) {
               if (d.contains('/')) {
@@ -194,6 +178,7 @@ class SyncService {
             despesa.viagemId = dRaw['viagem_id'];
             despesa.tipo = dRaw['tipo'];
             despesa.valorTotal = (dRaw['valor_total'] as num).toDouble();
+            
             // Helper para lidar com ambos os formatos de data: ISO e DD/MM/YYYY
             DateTime parseDate(String d) {
               if (d.contains('/')) {

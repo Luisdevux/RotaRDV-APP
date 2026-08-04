@@ -29,8 +29,7 @@ class HomeViewModel extends ChangeNotifier {
 
     // Em 2º plano, o app tenta bater na API para checar os dados mais recentes
     try {
-      final token = authViewModel.currentUser?['accessToken'] ?? '';
-      await _syncService.pullSync(token);
+      await _syncService.pullSync();
       // Se trouxer dados novos, atualiza a tela
       await carregarDadosBancoLocal();
     } catch (e) {
@@ -59,8 +58,7 @@ class HomeViewModel extends ChangeNotifier {
 
   Future<void> refresh() async {
     try {
-      final token = authViewModel.currentUser?['accessToken'] ?? '';
-      await _syncService.pullSync(token);
+      await _syncService.pullSync();
       await carregarDadosBancoLocal();
     } catch (e) {
       debugPrint("Erro no pullSync (refresh): $e");

@@ -18,11 +18,22 @@ class AuthViewModel extends ChangeNotifier {
 
     try {
       final result = await _authService.login(email, senha);
-      if (result != null) {
-        currentUser = result['data']['user'];
+      if (result != null && result['data']?['user'] != null) {
+        final user = Map<String, dynamic>.from(result['data']['user']);
+        final accessToken = user['accessToken'] ?? user['accesstoken'] ?? '';
+        final refreshToken = user['refreshToken'] ?? user['refreshtoken'] ?? '';
+        
+        user['accessToken'] = accessToken;
+        user['refreshToken'] = refreshToken;
+        currentUser = user;
+
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('currentUser', jsonEncode(currentUser));
-        await prefs.setString('accessToken', result['data']['user']['accessToken']);
+        await prefs.setString('accessToken', accessToken);
+        if (refreshToken.isNotEmpty) {
+          await prefs.setString('refreshToken', refreshToken);
+        }
+
         isLoadingLocal = false;
         notifyListeners();
         return true;
@@ -45,11 +56,22 @@ class AuthViewModel extends ChangeNotifier {
 
     try {
       final result = await _authService.signInWithGoogle();
-      if (result != null) {
-        currentUser = result['data']['user'];
+      if (result != null && result['data']?['user'] != null) {
+        final user = Map<String, dynamic>.from(result['data']['user']);
+        final accessToken = user['accessToken'] ?? user['accesstoken'] ?? '';
+        final refreshToken = user['refreshToken'] ?? user['refreshtoken'] ?? '';
+        
+        user['accessToken'] = accessToken;
+        user['refreshToken'] = refreshToken;
+        currentUser = user;
+
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('currentUser', jsonEncode(currentUser));
-        await prefs.setString('accessToken', result['data']['user']['accessToken']);
+        await prefs.setString('accessToken', accessToken);
+        if (refreshToken.isNotEmpty) {
+          await prefs.setString('refreshToken', refreshToken);
+        }
+
         isLoadingGoogle = false;
         notifyListeners();
         return true;
@@ -71,6 +93,7 @@ class AuthViewModel extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('currentUser');
     await prefs.remove('accessToken');
+    await prefs.remove('refreshToken');
     notifyListeners();
   }
 
@@ -78,10 +101,14 @@ class AuthViewModel extends ChangeNotifier {
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('accessToken');
-      if (token != null && token.isNotEmpty) {
+      final refreshToken = prefs.getString('refreshToken');
+
+      if ((token != null && token.isNotEmpty) || (refreshToken != null && refreshToken.isNotEmpty)) {
         final userStr = prefs.getString('currentUser');
         if (userStr != null) {
-          currentUser = jsonDecode(userStr);
+          currentUser = Map<String, dynamic>.from(jsonDecode(userStr));
+          if (token != null) currentUser!['accessToken'] = token;
+          if (refreshToken != null) currentUser!['refreshToken'] = refreshToken;
           notifyListeners();
           return true;
         }
@@ -90,6 +117,44 @@ class AuthViewModel extends ChangeNotifier {
     } catch (e) {
       return false;
     }
+  }
+
+  Future<String?> refreshToken() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final storedRefreshToken = prefs.getString('refreshToken') ??
+          currentUser?['refreshToken'] ??
+          currentUser?['refreshtoken'];
+
+      if (storedRefreshToken == null || storedRefreshToken.isEmpty) {
+        debugPrint('Nenhum refresh token disponível.');
+        return null;
+      }
+
+      final result = await _authService.refreshToken(storedRefreshToken);
+      if (result != null && result['data']?['user'] != null) {
+        final user = Map<String, dynamic>.from(result['data']['user']);
+        final newAccessToken = user['accessToken'] ?? user['accesstoken'] ?? '';
+        final newRefreshToken = user['refreshToken'] ?? user['refreshtoken'] ?? storedRefreshToken;
+
+        if (newAccessToken.isNotEmpty) {
+          user['accessToken'] = newAccessToken;
+          user['refreshToken'] = newRefreshToken;
+          currentUser = {...?currentUser, ...user};
+
+          await prefs.setString('currentUser', jsonEncode(currentUser));
+          await prefs.setString('accessToken', newAccessToken);
+          await prefs.setString('refreshToken', newRefreshToken);
+          notifyListeners();
+          debugPrint('Token JWT renovado com sucesso via Refresh Token!');
+          return newAccessToken;
+        }
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Erro ao renovar token no AuthViewModel: $e');
+      return null;
+    }
+  }
 }
 
-}

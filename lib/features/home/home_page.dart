@@ -1,7 +1,6 @@
 import '../../core/widgets/custom_bottom_nav_bar.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/database/local_database.dart';
 import '../../core/widgets/custom_refresh_indicator.dart';
 import 'package:provider/provider.dart';
 import 'home_viewmodel.dart';
@@ -64,8 +63,6 @@ class _HomePageState extends State<HomePage> {
                       icon: const Icon(Icons.logout, color: AppColors.textHint),          
                       onPressed: () async {
                         final syncService = SyncService();
-                        final authVM = context.read<AuthViewModel>();
-                        final token = authVM.currentUser?['accessToken'] ?? '';
 
                         // Verifica se tem dados pendentes de sincronização antes de permitir o logout
                         final hasPending = await syncService.hasPendingSync();
@@ -96,7 +93,7 @@ class _HomePageState extends State<HomePage> {
 
                           // Tenta forçar o push na API antes de sair
                           try {
-                            await syncService.pushSync(token);
+                            await syncService.pushSync();
                           } catch (e) {
                             if (context.mounted) {
                               showDialog(
