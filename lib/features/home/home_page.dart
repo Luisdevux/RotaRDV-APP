@@ -179,14 +179,12 @@ class _HomePageState extends State<HomePage> {
             ),
 
             const SizedBox(height: 40),
-
-            // Botão para iniciar uma nova viagem
-            Padding(
+              // Botão para iniciar uma nova viagem
+              Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: ElevatedButton(
                 onPressed: () {
-                  // TODO: Implementar a lógica para iniciar uma nova viagem
-                  print('Em construção: Iniciar nova viagem!');
+                  Navigator.pushNamed(context, Routes.novaViagem);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
