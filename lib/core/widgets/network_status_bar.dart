@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:app_despesas/core/theme/app_theme.dart';
+import '../theme/app_theme.dart';
 
 class NetworkStatusBar extends StatefulWidget {
   const NetworkStatusBar({Key? key}) : super(key: key);
