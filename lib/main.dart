@@ -7,7 +7,10 @@ import 'firebase_options.dart';
 import 'package:app_despesas/features/auth/auth_viewmodel.dart';
 import 'package:app_despesas/features/home/home_viewmodel.dart';
 import 'package:app_despesas/core/database/local_database.dart';
+import 'package:app_despesas/services/deep_link_service.dart';
 import 'package:app_despesas/routes.dart';
+
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,6 +19,10 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  
+  // Inicializa o serviço de Deep Links
+  await DeepLinkService.init(navigatorKey);
+
   final authViewModel = AuthViewModel();
   final isAuth = await authViewModel.checkAuth();
 
@@ -51,6 +58,7 @@ class MyApp extends StatelessWidget {
       ],
       child: MaterialApp(
         title: 'RotaRDV',
+        navigatorKey: navigatorKey,
         debugShowCheckedModeBanner: false,
         theme: AppTheme.darkTheme,
         initialRoute: initialRoute,
