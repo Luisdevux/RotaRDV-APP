@@ -59,68 +59,91 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   Align(
                     alignment: Alignment.centerRight,
-                    child: IconButton(                                                           
-                      icon: const Icon(Icons.logout, color: AppColors.textHint),          
-                      onPressed: () async {
-                        final syncService = SyncService();
+                    child:                      IconButton(                                                           
+                        icon: const Icon(Icons.logout, color: AppColors.textHint),          
+                        onPressed: () async {
+                          // Confirmação prévia de saída
+                          final bool? confirmarSaida = await showDialog<bool>(
+                            context: context,
+                            builder: (ctx) => AlertDialog(
+                              title: const Text('Sair da conta'),
+                              content: const Text('Deseja realmente encerrar sua sessão no aplicativo?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.of(ctx).pop(false),
+                                  child: const Text('Cancelar'),
+                                ),
+                                ElevatedButton(
+                                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+                                  onPressed: () => Navigator.of(ctx).pop(true),
+                                  child: const Text('Sair', style: TextStyle(color: Colors.white)),
+                                ),
+                              ],
+                            ),
+                          );
 
-                        // Verifica se tem dados pendentes de sincronização antes de permitir o logout
-                        final hasPending = await syncService.hasPendingSync();
+                          if (confirmarSaida != true || !context.mounted) return;
 
-                        if (hasPending) {
-                          // Verifica a conexão com a internet
-                          final connectivity = await Connectivity().checkConnectivity();
-                          final isOffline = connectivity.contains(ConnectivityResult.none) || connectivity.isEmpty;
+                          // Inicializa o serviço de sincronização
+                          final syncService = SyncService();
 
-                          if (isOffline) {
+                          // Verifica se há dados locais pendentes de envio
+                          final hasPending = await syncService.hasPendingSync();
+
+                          if (hasPending) {
+                            // Exibe feedback de sincronização em andamento
                             if (context.mounted) {
-                              showDialog(
-                                context: context,
-                                builder: (ctx) => AlertDialog(
-                                  title: const Text('Não é possível sair agora'),
-                                  content: const Text('Você possui viagens ou despesas offline. Conecte-se à internet para sincronizá-las antes de sair, ou seus dados serão perdidos!'),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.of(ctx).pop(),
-                                      child: const Text('OK'),
-                                    ),
-                                  ],
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Row(
+                                    children: [
+                                      SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                      ),
+                                      SizedBox(width: 12),
+                                      Text('Sincronizando dados antes de sair...'),
+                                    ],
+                                  ),
+                                  duration: Duration(seconds: 4),
                                 ),
                               );
                             }
-                            return; // Bloqueia o logout
-                          }
 
-                          // Tenta forçar o push na API antes de sair
-                          try {
-                            await syncService.pushSync();
-                          } catch (e) {
-                            if (context.mounted) {
-                              showDialog(
-                                context: context,
-                                builder: (ctx) => AlertDialog(
-                                  title: const Text('Erro de Sincronização'),
-                                  content: Text('Falha ao enviar seus dados para a nuvem. Tente novamente.\nErro: $e'),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.of(ctx).pop(),
-                                      child: const Text('OK'),
+                            // Tenta enviar as pendências para o servidor antes de deslogar
+                            try {
+                              await syncService.pushSync();
+                            } catch (e) {
+                              // Se falhar (offline, erro de rede ou API fora), BLOQUEIA O LOGOUT para proteger os dados locais
+                              if (context.mounted) {
+                                showDialog(
+                                  context: context,
+                                  builder: (ctx) => AlertDialog(
+                                    title: const Text('Não é possível sair agora'),
+                                    content: const Text(
+                                      'Você possui viagens ou despesas salvas apenas no celular que ainda não foram sincronizadas com o servidor.\n\nConecte-se à internet para sincronizá-las antes de sair para garantir que nada seja perdido!',
                                     ),
-                                  ],
-                                ),
-                              );
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.of(ctx).pop(),
+                                        child: const Text('Entendi'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }
+                              return; // Trava estrita de segurança: NÃO desloga
                             }
-                            return; // Bloqueia o logout
                           }
-                        }
 
-                        // Se não tem pendências ou o push funcionou perfeitamente, prossegue com o logout:
-                        await authVM.logout();
-                        if (context.mounted) {
-                          Navigator.of(context).pushReplacementNamed(Routes.login);
-                        }
-                      },                                                                  
-                    ),
+                          // Se não tem pendências ou se o push subiu com 100% de sucesso, desloga:
+                          await authVM.logout();
+                          if (context.mounted) {
+                            Navigator.of(context).pushReplacementNamed(Routes.login);
+                          }
+                        },                                                                  
+                      ),
                   ),
                     
                   userPhotoUrl != null

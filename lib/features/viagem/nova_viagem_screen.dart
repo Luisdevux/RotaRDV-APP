@@ -9,6 +9,7 @@ import '../../models/viagem_collection.dart';
 import 'package:isar/isar.dart';
 import 'package:provider/provider.dart';
 import '../home/home_viewmodel.dart';
+import '../sync/sync_service.dart';
 import '../../core/widgets/labeled_input_field.dart';
 import '../../core/widgets/odometer_input_field.dart';
 
@@ -251,6 +252,9 @@ class _NovaViagemScreenState extends State<NovaViagemScreen> {
       await isar.writeTxn(() async {
         await isar.viagemCollections.put(novaViagem);
       });
+
+      // Dispara a sincronização em segundo plano (com retry de até 3x se a conexão oscilar)
+      SyncService().syncAll();
 
       if (mounted) {
         // Atualiza a home para refletir a nova viagem

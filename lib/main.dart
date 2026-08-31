@@ -7,6 +7,7 @@ import 'firebase_options.dart';
 import 'package:app_despesas/features/auth/auth_viewmodel.dart';
 import 'package:app_despesas/features/home/home_viewmodel.dart';
 import 'package:app_despesas/core/database/local_database.dart';
+import 'package:app_despesas/features/sync/sync_service.dart';
 import 'package:app_despesas/services/deep_link_service.dart';
 import 'package:app_despesas/routes.dart';
 
@@ -22,6 +23,9 @@ void main() async {
   
   // Inicializa o serviço de Deep Links
   await DeepLinkService.init(navigatorKey);
+
+  // Inicializa o listener global de conectividade (auto-sync ao voltar a rede)
+  SyncService().initConnectivityListener();
 
   final authViewModel = AuthViewModel();
   final isAuth = await authViewModel.checkAuth();
