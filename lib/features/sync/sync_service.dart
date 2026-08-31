@@ -271,6 +271,14 @@ class SyncService {
         }
       });
 
+      // Atualiza os dados do veículo em cache se vier no retorno
+      if (data['veiculo'] != null) {
+        await prefs.setString('currentVehicle', jsonEncode(data['veiculo']));
+        debugPrint('[SyncService] Dados do veículo atualizados no cache: ${data['veiculo']['modelo']} (${data['veiculo']['placa']})');
+      } else {
+        await prefs.remove('currentVehicle');
+      }
+
       // Salva o momento do sync (UTC)
       await prefs.setString('last_pull_sync_date', DateTime.now().toUtc().toIso8601String());
       debugPrint('[SyncService] PullSync concluído com sucesso.');

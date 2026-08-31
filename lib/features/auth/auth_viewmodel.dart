@@ -33,6 +33,9 @@ class AuthViewModel extends ChangeNotifier {
         if (refreshToken.isNotEmpty) {
           await prefs.setString('refreshToken', refreshToken);
         }
+        if (user['veiculo_id'] is Map) {
+          await prefs.setString('currentVehicle', jsonEncode(user['veiculo_id']));
+        }
 
         isLoadingLocal = false;
         notifyListeners();
@@ -71,6 +74,9 @@ class AuthViewModel extends ChangeNotifier {
         if (refreshToken.isNotEmpty) {
           await prefs.setString('refreshToken', refreshToken);
         }
+        if (user['veiculo_id'] is Map) {
+          await prefs.setString('currentVehicle', jsonEncode(user['veiculo_id']));
+        }
 
         isLoadingGoogle = false;
         notifyListeners();
@@ -87,11 +93,19 @@ class AuthViewModel extends ChangeNotifier {
     }
   }
 
+  Map<String, dynamic>? get currentVehicle {
+    if (currentUser != null && currentUser!['veiculo_id'] is Map) {
+      return Map<String, dynamic>.from(currentUser!['veiculo_id']);
+    }
+    return null;
+  }
+
   Future<void> logout() async {
     await _authService.signOut();
     currentUser = null;
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('currentUser');
+    await prefs.remove('currentVehicle');
     await prefs.remove('accessToken');
     await prefs.remove('refreshToken');
     notifyListeners();
@@ -109,6 +123,11 @@ class AuthViewModel extends ChangeNotifier {
           currentUser = Map<String, dynamic>.from(jsonDecode(userStr));
           if (token != null) currentUser!['accessToken'] = token;
           if (refreshToken != null) currentUser!['refreshToken'] = refreshToken;
+
+          final vehicleStr = prefs.getString('currentVehicle');
+          if (vehicleStr != null) {
+            currentUser!['veiculo_id'] = jsonDecode(vehicleStr);
+          }
           notifyListeners();
           return true;
         }
