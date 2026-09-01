@@ -6,32 +6,70 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'firebase_options.dart';
 import 'package:app_despesas/features/auth/auth_viewmodel.dart';
 import 'package:app_despesas/features/home/home_viewmodel.dart';
+import 'package:app_despesas/core/database/local_database.dart';
+import 'package:app_despesas/features/sync/sync_service.dart';
+import 'package:app_despesas/services/deep_link_service.dart';
+import 'package:app_despesas/services/estado_cidade_service.dart';
 import 'package:app_despesas/routes.dart';
+
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await LocalDatabase.init();
   await dotenv.load(fileName: ".env");
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(const MyApp());
+  
+  // Pré-carrega o catálogo de cidades e estados offline do IBGE em memória
+  EstadoCidadeService().loadEstadosECidades();
+
+  // Inicializa o serviço de Deep Links
+  await DeepLinkService.init(navigatorKey);
+
+  // Inicializa o listener global de conectividade (auto-sync ao voltar a rede)
+  SyncService().initConnectivityListener();
+
+  final authViewModel = AuthViewModel();
+  final isAuth = await authViewModel.checkAuth();
+
+  runApp(MyApp(
+    authViewModel: authViewModel,
+    initialRoute: isAuth ? Routes.home : Routes.login,
+  ));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final AuthViewModel authViewModel;
+  final String initialRoute;
+
+  const MyApp({
+    super.key, 
+    required this.authViewModel,
+    required this.initialRoute,
+  });
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AuthViewModel()),
-        ChangeNotifierProvider(create: (_) => HomeViewModel()),
+        ChangeNotifierProvider.value(value: authViewModel),
+        ChangeNotifierProxyProvider<AuthViewModel, HomeViewModel>(
+          create: (context) => HomeViewModel(Provider.of<AuthViewModel>(context, listen: false)),
+          update: (context, auth, previous) {
+            previous ??= HomeViewModel(auth);
+            previous.authViewModel = auth;
+            return previous;
+          },
+        ),
       ],
       child: MaterialApp(
         title: 'RotaRDV',
+        navigatorKey: navigatorKey,
         debugShowCheckedModeBanner: false,
         theme: AppTheme.darkTheme,
-        initialRoute: Routes.login,
+        initialRoute: initialRoute,
         routes: Routes.getRoutes(),
       ),
     );

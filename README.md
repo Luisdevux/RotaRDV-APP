@@ -1,19 +1,21 @@
 <div align="center">
 
-# 📱 RDV Mobile - Registro de Despesas de Viagens
+# 📱 RotaRDV Mobile — Gestão de Despesas e Viagens
 
-**Aplicativo mobile para gerenciamento de despesas de viagens em transportadoras rodoviárias.**
+**Aplicativo mobile Offline-First para controle e prestação de contas de viagens em transportadoras rodoviárias.**
 
-Permite registrar viagens, despesas detalhadas por tipo (abastecimento, alimentação, pedágio, manutenção e outros) e gerenciar perfil de usuário.
+Permite que motoristas registrem viagens e despesas detalhadas mesmo em locais sem qualquer sinal de internet, sincronizando tudo automaticamente com a nuvem quando a conexão for restabelecida.
 
-![Flutter](https://img.shields.io/badge/Flutter-3.11+-02569B?style=for-the-badge&logo=flutter&logoColor=white)
-![Dart](https://img.shields.io/badge/Dart-3.11+-0175C2?style=for-the-badge&logo=dart&logoColor=white)
-![Android](https://img.shields.io/badge/Android-47A248?style=for-the-badge&logo=android&logoColor=white)
-![iOS](https://img.shields.io/badge/iOS-000000?style=for-the-badge&logo=apple&logoColor=white)
-![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)
+[![Flutter](https://img.shields.io/badge/Flutter-3.11+-02569B?style=for-the-badge&logo=flutter&logoColor=white)](https://flutter.dev)
+[![Dart](https://img.shields.io/badge/Dart-3.11+-0175C2?style=for-the-badge&logo=dart&logoColor=white)](https://dart.dev)
+[![Isar Database](https://img.shields.io/badge/Isar_Database-3.1-4051B5?style=for-the-badge&logo=databricks&logoColor=white)](https://isar.dev)
+[![Android](https://img.shields.io/badge/Android-47A248?style=for-the-badge&logo=android&logoColor=white)](https://developer.android.com)
+[![iOS](https://img.shields.io/badge/iOS-000000?style=for-the-badge&logo=apple&logoColor=white)](https://developer.apple.com/ios/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
 
-![Material Design](https://img.shields.io/badge/Material_Design-757575?style=flat-square&logo=materialdesign&logoColor=white)
+![Material Design 3](https://img.shields.io/badge/Material_Design_3-757575?style=flat-square&logo=materialdesign&logoColor=white)
 ![GitLab CI](https://img.shields.io/badge/GitLab_CI-FC6D26?style=flat-square&logo=gitlab&logoColor=white)
+![Provider](https://img.shields.io/badge/State-Provider_MVVM-blue?style=flat-square)
 
 </div>
 
@@ -21,361 +23,270 @@ Permite registrar viagens, despesas detalhadas por tipo (abastecimento, alimenta
 
 ## 📋 Sumário
 
-- [Sobre o Projeto](#-sobre-o-projeto)
-- [Tecnologias](#-tecnologias)
-- [Estrutura do Projeto](#-estrutura-do-projeto)
-- [Instalação](#-instalação)
-- [Executando o App](#-executando-o-app)
-- [Testes](#-testes)
-- [CI/CD](#-cicd)
-- [Arquitetura](#-arquitetura)
-- [Plataformas Suportadas](#-plataformas-suportadas)
-- [Projetos Relacionados](#-projetos-relacionados)
-- [Convenções do Projeto](#-convenções-do-projeto)
-- [Licença](#-licença)
+- [💡 Sobre o Projeto](#-sobre-o-projeto)
+- [✨ Principais Funcionalidades](#-principais-funcionalidades)
+- [🏛️ Arquitetura Offline-First & Sincronização](#️-arquitetura-offline-first--sincronização)
+- [🛠️ Tecnologias & Bibliotecas](#️-tecnologias--bibliotecas)
+- [📁 Estrutura de Pastas](#-estrutura-de-pastas)
+- [🚀 Instalação & Configuração](#-instalação--configuração)
+- [▶️ Executando o Aplicativo](#️-executando-o-aplicativo)
+- [🧪 Testes & Análise Estática](#-testes--análise-estática)
+- [🔄 CI/CD](#-cicd)
+- [🔗 Projetos Relacionados](#-projetos-relacionados)
+- [📄 Licença](#-licença)
 
 ---
 
 ## 💡 Sobre o Projeto
 
-O **RDV Mobile** é o aplicativo front-end do sistema de Registro de Despesas de Viagens, desenvolvido com Flutter para funcionar em **Android** e **iOS**. Ele se comunica com a [API RESTful](https://gitlab.fslab.dev/tcc-registro-de-despesas-luis/tcc-despesas-api) para fornecer uma interface intuitiva para motoristas e gestores de transportadoras rodoviárias.
+O **RotaRDV Mobile** foi projetado especificamente para o cenário de transporte de cargas no Brasil, onde motoristas frequentemente trafegam por rodovias e regiões remotas com sinal de dados instável ou ausente.
 
-### Funcionalidades Planejadas
-
-- 🔐 Login e cadastro de usuários
-- 🚛 Registro e acompanhamento de viagens
-- 💰 Lançamento de despesas por categoria (abastecimento, alimentação, pedágio, manutenção, outros)
-- 👤 Gerenciamento de perfil de usuário
-- 📊 Visualização de relatórios de despesas
+Construído com base no paradigma **Offline-First**, o aplicativo trata o banco de dados local do dispositivo (**Isar NoSQL**) como a **fonte da verdade primária**. O usuário tem resposta instantânea (latência zero) para qualquer operação, enquanto um motor inteligente em segundo plano gerencia a comunicação e sincronização bidirecional com a [API RESTful RotaRDV](https://gitlab.fslab.dev/tcc-registro-de-despesas-luis/tcc-despesas-api).
 
 ---
 
-## 🛠 Tecnologias
+## ✨ Principais Funcionalidades
 
-<details>
-<summary><b>Framework & Linguagem</b></summary>
-
-| Tecnologia | Versão | Descrição |
-| :--- | :---: | :--- |
-| ![Flutter](https://img.shields.io/badge/-Flutter-02569B?style=flat-square&logo=flutter&logoColor=white) | 3.11+ | Framework UI multiplataforma |
-| ![Dart](https://img.shields.io/badge/-Dart-0175C2?style=flat-square&logo=dart&logoColor=white) | 3.11+ | Linguagem de programação |
-| ![Material Design](https://img.shields.io/badge/-Material_Design-757575?style=flat-square&logo=materialdesign&logoColor=white) | 3 | Sistema de design (Material You) |
-
-</details>
-
-<details>
-<summary><b>Dependências</b></summary>
-
-| Pacote | Descrição |
-| :--- | :--- |
-| `flutter` | SDK Flutter |
-| `cupertino_icons` | Ícones estilo iOS (Cupertino) |
-
-</details>
-
-<details>
-<summary><b>Desenvolvimento & Testes</b></summary>
-
-| Pacote | Descrição |
-| :--- | :--- |
-| `flutter_test` | Framework de testes do Flutter |
-| `flutter_lints` | Regras de lint recomendadas para Flutter |
-
-</details>
+- 🔐 **Autenticação Dupla:** Suporte a Login tradicional (E-mail/Senha) e **Google Sign-In (OAuth2)**.
+- ⚡ **Sessão Persistente & Auto-Renew:** Usuário permanece conectado no dispositivo. O cliente HTTP renova o token JWT silenciosamente via `/refresh` sem interromper a navegação.
+- 📴 **Operação 100% Offline:** Cadastro, visualização e manipulação de viagens e despesas funcionam sem internet.
+- 🔄 **Motor de Sincronização Bidirecional:**
+  - **Push:** Envia alterações locais pendentes (`criado`, `editado`, `deletado`) para a nuvem.
+  - **Pull Incremental:** Baixa novos registros criados em outros dispositivos usando timestamp UTC (`updatedAfter`).
+- 🌐 **Barra de Conectividade em Tempo Real:** Componente visual (`NetworkStatusBar`) que alerta instantaneamente sobre o estado da conexão (Online / Offline).
+- 🛡️ **Proteção contra Perda de Dados:** O app impede o logout caso existam dados locais não sincronizados sem conexão com a internet.
+- 🎨 **Design System Moderno:** Interface escura temática com alto contraste, fontes Google Lexend e micro-interações fluidas.
 
 ---
 
-## 📁 Estrutura do Projeto
+## 🏛️ Arquitetura Offline-First & Sincronização
 
-<details>
-<summary><b>✅ Estrutura Atual</b> (clique para expandir)</summary>
+### Diagrama Arquitetural de Dados
 
-```
-tcc-despesas-mobile/
-├── 📱 lib/
-│   └── main.dart                      # Ponto de entrada do aplicativo
-│
-├── 🧪 test/
-│   └── widget_test.dart               # Teste de widget padrão
-│
-├── 🤖 android/
-│   ├── app/
-│   │   ├── build.gradle.kts           # Configuração de build Android
-│   │   └── src/
-│   │       ├── main/
-│   │       │   ├── AndroidManifest.xml # Manifest principal
-│   │       │   └── kotlin/.../MainActivity.kt
-│   │       ├── debug/AndroidManifest.xml
-│   │       └── profile/AndroidManifest.xml
-│   ├── build.gradle.kts               # Build config raiz Android
-│   ├── settings.gradle.kts            # Settings Gradle
-│   └── gradle/                        # Wrapper Gradle
-│
-├── 🍎 ios/
-│   ├── Runner/
-│   │   ├── AppDelegate.swift          # Delegate principal iOS
-│   │   ├── SceneDelegate.swift        # Scene delegate
-│   │   ├── Info.plist                 # Configurações do app
-│   │   └── Assets.xcassets/           # Assets e ícones
-│   ├── Runner.xcodeproj/              # Projeto Xcode
-│   └── RunnerTests/                   # Testes iOS nativos
-│
-├── 🌐 web/
-│   ├── index.html                     # Página HTML principal
-│   ├── manifest.json                  # PWA manifest
-│   └── icons/                         # Ícones do PWA
-│
-├── 🐧 linux/
-│   └── CMakeLists.txt                 # Build config Linux
-│
-├── 🪟 windows/
-│   ├── CMakeLists.txt                 # Build config Windows
-│   └── runner/                        # Runner Windows nativo
-│
-├── 🍏 macos/
-│   ├── Runner/                        # Runner macOS
-│   └── Runner.xcodeproj/              # Projeto Xcode macOS
-│
-├── 📦 pubspec.yaml                    # Dependências e configurações
-├── 📦 pubspec.lock                    # Lock de dependências
-├── ⚙️ analysis_options.yaml           # Configuração do Dart analyzer
-├── 🔄 .gitlab-ci.yml                  # Pipeline CI/CD
-└── 📄 .metadata                       # Metadata do Flutter
+```mermaid
+graph TD
+    subgraph Mobile ["📱 Dispositivo Mobile (Flutter)"]
+        UI["🖥️ Interface (Views / Widgets)"]
+        VM["🧠 ViewModels (Provider / State)"]
+        Isar[("💾 Isar DB (Local NoSQL - Fonte Primária)")]
+        Sync["🔄 SyncService (Push / Pull)"]
+        Client["🌐 ApiClient (Interceptor & Token Auto-Refresh)"]
+        
+        UI <--> VM
+        VM <--> Isar
+        Sync <--> Isar
+        Sync --> Client
+    end
+
+    subgraph Backend ["☁️ Nuvem & Backend"]
+        API["⚙️ Node.js / Express API"]
+        Mongo[("🍃 MongoDB")]
+        Storage["📦 Storage de Imagens"]
+        
+        Client <-->|HTTPS / JWT| API
+        API <--> Mongo
+        API <--> Storage
+    end
+
+    style Isar fill:#4051B5,color:#fff
+    style Client fill:#02569B,color:#fff
+    style Sync fill:#FF851A,color:#fff
 ```
 
-</details>
+### Ciclo de Vida da Sincronização
 
-<details>
-<summary><b>⏳ Estrutura Planejada</b> (clique para expandir)</summary>
+1. **Criação Local:** Ao registrar uma viagem ou despesa, é gerado um `UUID v4` e o registro é gravado no Isar com status `statusSincronizacao = 'criado'`.
+2. **Push:** Ao detectar conexão, o `SyncService` coleta todos os registros com status `criado`, `editado` ou `deletado` e dispara `POST /sync/push`. Em caso de sucesso, atualiza o status local para `sincronizado`.
+3. **Pull Incremental:** Ao abrir ou atualizar a Home, o app faz `GET /sync/pull?updatedAfter=...` trazendo apenas dados modificados desde a última sincronização com sucesso.
+
+---
+
+## 🛠️ Tecnologias & Bibliotecas
+
+| Categoria | Tecnologia | Finalidade |
+| :--- | :--- | :--- |
+| **Linguagem & SDK** | Dart 3.11+ / Flutter 3.11+ | Desenvolvimento multiplataforma |
+| **Banco Local** | [Isar Database](https://pub.dev/packages/isar) 3.1 | Banco NoSQL local de alta performance |
+| **Gerenciamento de Estado** | [Provider](https://pub.dev/packages/provider) 6.1 | Padrão MVVM reativo e desacoplado |
+| **Rede & HTTP** | [http](https://pub.dev/packages/http) | Cliente HTTP integrado ao `ApiClient` central |
+| **Autenticação** | Firebase Auth & Google Sign-In | Autenticação federada com Google |
+| **Conectividade** | [connectivity_plus](https://pub.dev/packages/connectivity_plus) | Monitoramento de estado de rede em tempo real |
+| **Armazenamento Seguro** | [shared_preferences](https://pub.dev/packages/shared_preferences) | Persistência de tokens JWT e metadados |
+| **Configurações** | [flutter_dotenv](https://pub.dev/packages/flutter_dotenv) | Carregamento de variáveis de ambiente `.env` |
+| **Tipografia & Estilo** | [google_fonts](https://pub.dev/packages/google_fonts) (Lexend) | Design system refinado com Material 3 |
+| **Identificadores** | [uuid](https://pub.dev/packages/uuid) | Geração de UUIDs compatíveis com MongoDB |
+
+---
+
+## 📁 Estrutura de Pastas
+
+O projeto adota uma variação limpa de **Feature-First + Clean Architecture**, espelhando o padrão arquitetural do projeto base **`fipe50`**:
 
 ```
 lib/
-├── 🚀 main.dart                      # Entry point
-├── 📱 app.dart                        # MaterialApp e configuração de rotas
+├── 🚀 main.dart                            # Ponto de entrada, inicialização do Isar e injeção global
+├── 🗺️ routes.dart                          # Definição e mapeamento centralizado de rotas
 │
-├── 🎨 core/
-│   ├── theme/                         # Tema e cores do app
-│   ├── constants/                     # Constantes globais
-│   ├── utils/                         # Utilitários gerais
-│   └── widgets/                       # Widgets reutilizáveis
+├── 🧱 core/                               # Núcleo compartilhado da aplicação
+│   ├── constants/
+│   │   └── api_constants.dart             # URLs e endpoints base da API
+│   ├── database/
+│   │   └── local_database.dart            # Inicialização e instância singleton do Isar
+│   ├── network/
+│   │   └── api_client.dart                # Cliente HTTP com Interceptor e Auto-Refresh de Token
+│   ├── theme/
+│   │   └── app_theme.dart                 # Tokens de cores (AppColors) e ThemeData (AppTheme)
+│   └── widgets/
+│       ├── custom_bottom_nav_bar.dart     # Barra de navegação inferior customizada
+│       ├── custom_refresh_indicator.dart  # Indicador de pull-to-refresh estilizado
+│       └── network_status_bar.dart        # Barra reativa de conectividade online/offline
 │
-├── 🔐 features/
-│   ├── auth/                          # Login, registro, recuperação de senha
-│   ├── home/                          # Tela inicial / dashboard
-│   ├── viagens/                       # CRUD de viagens
-│   ├── despesas/                      # CRUD de despesas
-│   └── perfil/                        # Perfil do usuário
+├── 📦 models/                             # Modelos e Schemas do Banco Local Isar
+│   ├── viagem_collection.dart             # Model de Viagem com anotações @collection
+│   ├── viagem_collection.g.dart           # Código gerado pelo build_runner para Viagem
+│   ├── despesa_collection.dart            # Model de Despesa com anotações @collection
+│   └── despesa_collection.g.dart          # Código gerado pelo build_runner para Despesa
 │
-├── 🌐 services/
-│   ├── api/                           # Cliente HTTP para a API
-│   ├── auth/                          # Gerenciamento de tokens JWT
-│   └── storage/                       # Armazenamento local
+├── 🧩 features/                           # Módulos de funcionalidades de negócio
+│   ├── auth/                              # Autenticação e Gestão de Usuário
+│   │   ├── auth_viewmodel.dart            # ViewModel de login, tokens e estado da sessão
+│   │   └── presentation/pages/
+│   │       └── login_page.dart            # Tela de login (Local + Google Sign-In)
+│   ├── home/                              # Painel Principal / Dashboard
+│   │   ├── home_viewmodel.dart            # ViewModel da Home (carregamento Isar + sync)
+│   │   └── home_page.dart                 # Tela principal com listagem de viagens
+│   └── sync/                              # Módulo de Sincronização
+│       └── sync_service.dart              # Regras de push/pull e resolução de conflitos
 │
-└── 📝 models/                         # Modelos de dados
-    ├── usuario.dart
-    ├── viagem.dart
-    └── despesa.dart
+├── 🌐 services/                           # Serviços de integração externa
+│   └── auth_service.dart                  # Chamadas diretas aos endpoints de autenticação
+│
+└── 📚 docs/                               # Documentações técnicas de arquitetura
+    └── arquitetura_imagens_offline_first.md
 ```
-
-</details>
 
 ---
 
-## 🚀 Instalação
+## 🚀 Instalação & Configuração
 
-### Requisitos
+### Pré-requisitos
 
-| Requisito | Versão |
-| :--- | :--- |
-| ![Flutter](https://img.shields.io/badge/-Flutter-02569B?style=flat-square&logo=flutter&logoColor=white) | 3.11+ |
-| ![Dart](https://img.shields.io/badge/-Dart-0175C2?style=flat-square&logo=dart&logoColor=white) | 3.11+ |
-| ![Android Studio](https://img.shields.io/badge/-Android_Studio-3DDC84?style=flat-square&logo=androidstudio&logoColor=white) | Recomendado |
-| ![VS Code](https://img.shields.io/badge/-VS_Code-007ACC?style=flat-square&logo=visualstudiocode&logoColor=white) | Alternativa |
+- **Flutter SDK:** `>= 3.11.0`
+- **Dart SDK:** `>= 3.11.0`
+- **Android Studio** ou **VS Code** com extensões Flutter/Dart instaladas
 
-### Setup
+### 1. Clonar o Repositório
 
 ```bash
-# Clonar o repositório
 git clone https://gitlab.fslab.dev/tcc-registro-de-despesas-luis/tcc-despesas-mobile.git
 cd tcc-despesas-mobile
+```
 
-# Verificar que o Flutter está configurado corretamente
-flutter doctor
+### 2. Instalar Dependências
 
-# Instalar dependências
+```bash
 flutter pub get
 ```
 
+### 3. Configurar Variáveis de Ambiente (`.env`)
+
+Crie o arquivo `.env` na raiz do projeto (ou copie a partir de `.env.example`):
+
+```bash
+cp .env.example .env
+```
+
+Edite o `.env` com suas credenciais:
+
+```env
+GOOGLE_CLIENT_ID=seu_client_id_google_oauth_aqui
+```
+
+> **Nota sobre a URL da API:** Para ajustar o endpoint da API, altere o arquivo `lib/core/constants/api_constants.dart`.
+
+### 4. Gerar Código do Banco Local (Isar Generators)
+
+Sempre que modificar ou recriar os modelos em `lib/models/`, execute:
+
+```bash
+flutter pub run build_runner build --delete-conflicting-outputs
+```
+
 ---
 
-## ▶️ Executando o App
+## ▶️ Executando o Aplicativo
 
 ### Android
 
 ```bash
-# Listar dispositivos disponíveis
+# Listar emuladores ou aparelhos físicos conectados
 flutter devices
 
-# Executar em modo debug
+# Executar em modo Debug
 flutter run
 
-# Executar em dispositivo específico
-flutter run -d <device_id>
-
-# Build APK de release
+# Gerar APK de Release
 flutter build apk --release
 
-# Build App Bundle (Google Play)
+# Gerar App Bundle (.aab) para Google Play
 flutter build appbundle --release
 ```
 
-### iOS (requer macOS)
+### iOS *(requer macOS com Xcode)*
 
 ```bash
-# Executar no simulador iOS
+# Executar no simulador
 flutter run -d iPhone
 
-# Build IPA de release
+# Gerar IPA de Release
 flutter build ipa --release
-```
-
-### Web
-
-```bash
-# Executar no navegador
-flutter run -d chrome
-
-# Build para web
-flutter build web --release
 ```
 
 ---
 
-## 🧪 Testes
+## 🧪 Testes & Análise Estática
 
 ```bash
-# Executar todos os testes
+# Executar análise estática de código (Linter)
+flutter analyze
+
+# Executar suíte de testes unitários
 flutter test
 
-# Executar com cobertura
+# Executar com relatório de cobertura
 flutter test --coverage
-
-# Executar teste específico
-flutter test test/widget_test.dart
-
-# Analisar código (linting)
-flutter analyze
 ```
 
 ---
 
 ## 🔄 CI/CD
 
-Pipeline GitLab CI (`.gitlab-ci.yml`) com dois estágios de segurança:
+O repositório possui integração contínua configurada via **GitLab CI** (`.gitlab-ci.yml`), executando análises automáticas de segurança a cada push e Merge Request:
 
-```mermaid
-graph LR
-    A[📥 Push/MR] --> B[🔍 SAST]
-    B --> C[🔐 Secret Detection]
-    style A fill:#f9f,stroke:#333
-    style B fill:#bbf,stroke:#333
-    style C fill:#bfb,stroke:#333
-```
-
-| Estágio | Descrição |
-| :--- | :--- |
-| `test` | 🔍 SAST - análise estática de segurança do código |
-| `secret-detection` | 🔐 Detecção de credenciais/segredos commitados |
-
----
-
-## 🏗 Arquitetura
-
-### Comunicação com a API
-
-```mermaid
-graph LR
-    A[📱 App Flutter] -->|HTTP/HTTPS| B[🔐 JWT Auth]
-    B --> C[🌐 API REST]
-    C --> D[(🍃 MongoDB)]
-    C --> E[☁️ Garage S3]
-
-    style A fill:#e1f5fe
-    style B fill:#fff3e0
-    style C fill:#e8f5e9
-    style D fill:#e8eaf6
-    style E fill:#fce4ec
-```
-
-O app se comunica com a **API RESTful** (`tcc-despesas-api`) usando:
-
-| Recurso | Descrição |
-| :--- | :--- |
-| 🔑 **JWT** | Access token (2min) + Refresh token (3 dias) |
-| 📤 **REST** | Endpoints para viagens, despesas e usuários |
-
-### Identificadores por Plataforma
-
-| Plataforma | Identificador |
-| :--- | :--- |
-| 🤖 Android | `com.example.app_despesas` |
-| 🍎 iOS | `com.example.appDespesas` |
-| 🍏 macOS | `com.example.appDespesas` |
-| 🐧 Linux | `com.example.app_despesas` |
-| 🪟 Windows | `app_despesas` |
-| 🌐 Web | `app_despesas` |
-
----
-
-## 📱 Plataformas Suportadas
-
-| Plataforma | Status | Notas |
-| :--- | :---: | :--- |
-| 🤖 Android | ✅ Suportado | Plataforma principal |
-| 🍎 iOS | ✅ Suportado | Requer macOS para build |
-| 🌐 Web | ⚙️ Configurado | Para testes/demonstração |
-| 🪟 Windows | ⚙️ Configurado | Desktop |
-| 🐧 Linux | ⚙️ Configurado | Desktop |
-| 🍏 macOS | ⚙️ Configurado | Desktop |
-
-> **Foco principal:** Android e iOS. As demais plataformas estão configuradas mas não são o alvo primário.
+- **SAST:** Análise estática de vulnerabilidades e boas práticas no código-fonte.
+- **Secret Detection:** Varredura preventiva para impedir vazamento de chaves ou credenciais privadas.
 
 ---
 
 ## 🔗 Projetos Relacionados
 
-| Projeto | Descrição | Link |
+| Projeto | Descrição | Repositório |
 | :--- | :--- | :--- |
-| 🧾 **tcc-despesas-api** | API RESTful (Node.js + Express + MongoDB) | [GitLab](https://gitlab.fslab.dev/tcc-registro-de-despesas-luis/tcc-despesas-api) |
-| 📱 **tcc-despesas-mobile** | App Mobile (Flutter) | *Este repositório* |
-
----
-
-## 📏 Convenções do Projeto
-
-| Convenção | Padrão |
-| :--- | :--- |
-| **Linguagem** | Dart 3.11+ |
-| **Nomes de arquivos** | `snake_case.dart` |
-| **Nomes de classes** | `PascalCase` |
-| **Nomes de variáveis** | `camelCase` |
-| **Nomes de constantes** | `camelCase` ou `UPPER_CASE` |
-| **Lint** | `flutter_lints` (regras recomendadas) |
-| **Package name** | `app_despesas` |
-| **Análise estática** | `flutter analyze` antes de commitar |
+| 🧾 **RotaRDV API** | API RESTful (Node.js + Express + MongoDB + JWT) | [GitLab API](https://gitlab.fslab.dev/tcc-registro-de-despesas-luis/tcc-despesas-api) |
+| 📱 **RotaRDV Mobile** | App Mobile Offline-First (Flutter + Isar) | *Este Repositório* |
 
 ---
 
 ## 📄 Licença
 
-Este projeto está licenciado sob a **MIT License**.
+Este projeto está licenciado sob os termos da **MIT License**. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
 
 ---
 
 <div align="center">
 
-Desenvolvido por **Luis Felipe Lopes**
+Desenvolvido por **Luis Felipe Lopes** como Trabalho de Conclusão de Curso (TCC).
 
-![Flutter](https://img.shields.io/badge/Made_with-Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white)
+![Flutter](https://img.shields.io/badge/Feito_com-Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white)
 
 </div>
