@@ -1,32 +1,107 @@
+import 'dart:async';
 import 'dart:convert';
-import '../../core/database/local_database.dart';
-import '../../core/network/api_client.dart';
-import '../../models/viagem_collection.dart';
-import '../../models/despesa_collection.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/foundation.dart';
 import 'package:isar/isar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../core/database/local_database.dart';
+import '../../core/network/api_client.dart';
+import '../../models/despesa_collection.dart';
+import '../../models/viagem_collection.dart';
 
 class SyncService {
+  // Singleton
+  static final SyncService _instance = SyncService._internal();
+  factory SyncService() => _instance;
+  SyncService._internal();
+
+  bool _isSyncing = false;
+  bool get isSyncing => _isSyncing;
+
+  StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
+  
+  /// Notificador reativo de eventos de sincronização para atualizar as telas da UI
+  final ValueNotifier<int> syncEventNotifier = ValueNotifier<int>(0);
+
+  /// Inicializa o listener de conectividade do aparelho.
+  /// Sempre que o aparelho voltar a ter rede (Wi-Fi ou Dados Móveis), dispara automaticamente o syncAll.
+  void initConnectivityListener() {
+    _connectivitySubscription?.cancel();
+    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((List<ConnectivityResult> results) async {
+      final isOffline = results.contains(ConnectivityResult.none) || results.isEmpty;
+      if (!isOffline) {
+        debugPrint('[SyncService] Conexão com a internet restabelecida! Aguardando estabilização para sincronizar...');
+        // Aguarda 1 segundo para garantir que a interface de rede do dispositivo estabilizou
+        await Future.delayed(const Duration(milliseconds: 1000));
+        syncAll();
+      }
+    });
+    debugPrint('[SyncService] Listener de conectividade inicializado com sucesso.');
+  }
+
+  /// Cancela o listener de conectividade
+  void dispose() {
+    _connectivitySubscription?.cancel();
+    _connectivitySubscription = null;
+  }
+
+  /// Executa o ciclo completo de sincronização (Push -> Pull) com política de até [maxRetries] tentativas.
+  /// Se não conseguir conectar após as tentativas, os dados locais são mantidos sem percas e o sync aguarda o próximo ciclo.
+  Future<bool> syncAll({int maxRetries = 3}) async {
+    if (_isSyncing) {
+      debugPrint('[SyncService] Sincronização já está em andamento. Ignorando chamada concorrente.');
+      return false;
+    }
+
+    _isSyncing = true;
+    int attempt = 0;
+    bool success = false;
+
+    while (attempt < maxRetries && !success) {
+      attempt++;
+      try {
+        debugPrint('[SyncService] Iniciando ciclo de sincronização (Tentativa $attempt/$maxRetries)...');
+        
+        // PUSH: Envia tudo que foi criado/editado/deletado localmente para o backend
+        await pushSync();
+        
+        // PULL: Baixa as alterações e novidades da nuvem
+        await pullSync();
+
+        success = true;
+        debugPrint('[SyncService] Sincronização concluída com sucesso na tentativa $attempt!');
+        syncEventNotifier.value++;
+      } catch (e) {
+        debugPrint('[SyncService] Erro na tentativa $attempt/$maxRetries de sincronização: $e');
+        if (attempt < maxRetries) {
+          // Delay progressivo antes da próxima tentativa: 1.5s, 3.0s...
+          final waitDuration = Duration(milliseconds: 1500 * attempt);
+          debugPrint('[SyncService] Aguardando ${waitDuration.inMilliseconds}ms antes de tentar novamente...');
+          await Future.delayed(waitDuration);
+        } else {
+          debugPrint('[SyncService] Atingido o limite de $maxRetries tentativas. Dados locais mantidos seguros no Isar. Aguardando novo sinal de rede.');
+        }
+      }
+    }
+
+    _isSyncing = false;
+    return success;
+  }
+
   /// Verifica se há registros locais pendentes de envio para a API
   Future<bool> hasPendingSync() async {
     final isar = LocalDatabase.isar;
 
     final viagensParaSincronizar = await isar.viagemCollections
         .filter()
-        .statusSincronizacaoEqualTo('criado')
-        .or()
-        .statusSincronizacaoEqualTo('editado')
-        .or()
-        .statusSincronizacaoEqualTo('deletado')
+        .not()
+        .statusSincronizacaoEqualTo('sincronizado')
         .count();
 
     final despesasParaSincronizar = await isar.despesaCollections
         .filter()
-        .statusSincronizacaoEqualTo('criado')
-        .or()
-        .statusSincronizacaoEqualTo('editado')
-        .or()
-        .statusSincronizacaoEqualTo('deletado')
+        .not()
+        .statusSincronizacaoEqualTo('sincronizado')
         .count();
 
     return viagensParaSincronizar > 0 || despesasParaSincronizar > 0;
@@ -38,25 +113,22 @@ class SyncService {
 
     final viagensParaSincronizar = await isar.viagemCollections
         .filter()
-        .statusSincronizacaoEqualTo('criado')
-        .or()
-        .statusSincronizacaoEqualTo('editado')
-        .or()
-        .statusSincronizacaoEqualTo('deletado')
+        .not()
+        .statusSincronizacaoEqualTo('sincronizado')
         .findAll();
 
     final despesasParaSincronizar = await isar.despesaCollections
         .filter()
-        .statusSincronizacaoEqualTo('criado')
-        .or()
-        .statusSincronizacaoEqualTo('editado')
-        .or()
-        .statusSincronizacaoEqualTo('deletado')
+        .not()
+        .statusSincronizacaoEqualTo('sincronizado')
         .findAll();
 
     if (viagensParaSincronizar.isEmpty && despesasParaSincronizar.isEmpty) {
+      debugPrint('[SyncService] Nenhuma alteração local pendente de envio para o push.');
       return; 
     }
+
+    debugPrint('[SyncService] Enviando ${viagensParaSincronizar.length} viagem(ns) e ${despesasParaSincronizar.length} despesa(s) para o servidor...');
 
     final payload = {
       'viagens': viagensParaSincronizar.map((v) => {
@@ -105,8 +177,9 @@ class SyncService {
           }
         }
       });
+      debugPrint('[SyncService] PushSync concluído e registros marcados como sincronizados.');
     } else {
-      throw Exception('Falha ao sincronizar dados: ${response.body}');
+      throw Exception('Falha no PushSync (Status ${response.statusCode}): ${response.body}');
     }
   }
 
@@ -198,10 +271,19 @@ class SyncService {
         }
       });
 
+      // Atualiza os dados do veículo em cache se vier no retorno
+      if (data['veiculo'] != null) {
+        await prefs.setString('currentVehicle', jsonEncode(data['veiculo']));
+        debugPrint('[SyncService] Dados do veículo atualizados no cache: ${data['veiculo']['modelo']} (${data['veiculo']['placa']})');
+      } else {
+        await prefs.remove('currentVehicle');
+      }
+
       // Salva o momento do sync (UTC)
       await prefs.setString('last_pull_sync_date', DateTime.now().toUtc().toIso8601String());
+      debugPrint('[SyncService] PullSync concluído com sucesso.');
     } else {
-      throw Exception('Falha ao puxar dados: ${response.body}');
+      throw Exception('Falha no PullSync (Status ${response.statusCode}): ${response.body}');
     }
   }
 }

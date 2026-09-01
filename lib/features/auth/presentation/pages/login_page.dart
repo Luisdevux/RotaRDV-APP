@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../auth_viewmodel.dart';
