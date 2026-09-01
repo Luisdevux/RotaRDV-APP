@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:uuid/uuid.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/database/local_database.dart';
@@ -11,8 +10,8 @@ import 'package:provider/provider.dart';
 import '../auth/auth_viewmodel.dart';
 import '../home/home_viewmodel.dart';
 import '../sync/sync_service.dart';
-import '../../core/widgets/labeled_input_field.dart';
 import '../../core/widgets/odometer_input_field.dart';
+import '../../core/widgets/cidade_estado_picker.dart';
 
 class NovaViagemScreen extends StatefulWidget {
   const NovaViagemScreen({super.key});
@@ -22,18 +21,15 @@ class NovaViagemScreen extends StatefulWidget {
 }
 
 class _NovaViagemScreenState extends State<NovaViagemScreen> {
-  final TextEditingController _origemController = TextEditingController();
-  final TextEditingController _origemUFController = TextEditingController();
-  final TextEditingController _destinoController = TextEditingController();
-  final TextEditingController _destinoUFController = TextEditingController();
+  String? _origemCidade;
+  String? _origemUF;
+  String? _destinoCidade;
+  String? _destinoUF;
+
   final TextEditingController _kmController = TextEditingController();
 
   @override
   void dispose() {
-    _origemController.dispose();
-    _origemUFController.dispose();
-    _destinoController.dispose();
-    _destinoUFController.dispose();
     _kmController.dispose();
     super.dispose();
   }
@@ -157,59 +153,39 @@ class _NovaViagemScreenState extends State<NovaViagemScreen> {
                       ),
                       const SizedBox(height: 24),
 
-                      // Origin Field
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Expanded(
-                            flex: 7,
-                            child: LabeledInputField(
-                              label: 'Origem',
-                              icon: LucideIcons.mapPin,
-                              controller: _origemController,
-                              hintText: 'Cidade de partida',
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            flex: 3,
-                            child: LabeledInputField(
-                              label: 'UF',
-                              icon: LucideIcons.map,
-                              controller: _origemUFController,
-                              hintText: 'MT',
-                            ),
-                          ),
-                        ],
+                      // Seletor de Origem (Cidade e Estado via IBGE Offline)
+                      CidadeEstadoPicker(
+                        label: 'Origem',
+                        icon: LucideIcons.mapPin,
+                        cidade: _origemCidade,
+                        uf: _origemUF,
+                        hintCidade: 'Selecione a cidade de partida',
+                        hintUF: 'UF',
+                        onSelected: (cidade, uf) {
+                          setState(() {
+                            _origemCidade = cidade;
+                            _origemUF = uf;
+                          });
+                        },
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 20),
 
-                      // Destination Field
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Expanded(
-                            flex: 7,
-                            child: LabeledInputField(
-                              label: 'Destino',
-                              icon: LucideIcons.flag,
-                              controller: _destinoController,
-                              hintText: 'Cidade de destino',
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            flex: 3,
-                            child: LabeledInputField(
-                              label: 'UF',
-                              icon: LucideIcons.map,
-                              controller: _destinoUFController,
-                              hintText: 'PA',
-                            ),
-                          ),
-                        ],
+                      // Seletor de Destino (Cidade e Estado via IBGE Offline)
+                      CidadeEstadoPicker(
+                        label: 'Destino',
+                        icon: LucideIcons.flag,
+                        cidade: _destinoCidade,
+                        uf: _destinoUF,
+                        hintCidade: 'Selecione a cidade de destino',
+                        hintUF: 'UF',
+                        onSelected: (cidade, uf) {
+                          setState(() {
+                            _destinoCidade = cidade;
+                            _destinoUF = uf;
+                          });
+                        },
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 20),
 
                       // Odometer Field
                       OdometerInputField(
@@ -280,15 +256,38 @@ class _NovaViagemScreenState extends State<NovaViagemScreen> {
   }
 
   void _iniciarViagem(BuildContext context) async {
-    final origem = _origemController.text.trim();
-    final origemUF = _origemUFController.text.trim();
-    final destino = _destinoController.text.trim();
-    final destinoUF = _destinoUFController.text.trim();
+    final origem = _origemCidade?.trim() ?? '';
+    final origemUF = _origemUF?.trim() ?? '';
+    final destino = _destinoCidade?.trim() ?? '';
+    final destinoUF = _destinoUF?.trim() ?? '';
     final kmText = _kmController.text.trim();
 
-    if (origem.isEmpty || origemUF.isEmpty || destino.isEmpty || destinoUF.isEmpty || kmText.isEmpty) {
+    if (origem.isEmpty || origemUF.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Preencha todos os campos!')),
+        const SnackBar(
+          content: Text('Por favor, selecione a cidade e estado de Origem!'),
+          backgroundColor: AppColors.warning,
+        ),
+      );
+      return;
+    }
+
+    if (destino.isEmpty || destinoUF.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Por favor, selecione a cidade e estado de Destino!'),
+          backgroundColor: AppColors.warning,
+        ),
+      );
+      return;
+    }
+
+    if (kmText.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Por favor, informe a quilometragem inicial do caminhão!'),
+          backgroundColor: AppColors.warning,
+        ),
       );
       return;
     }

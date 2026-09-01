@@ -6,7 +6,6 @@ import 'package:provider/provider.dart';
 import 'home_viewmodel.dart';
 import '../auth/auth_viewmodel.dart';
 import '../sync/sync_service.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import '../../routes.dart';
 import '../../core/widgets/network_status_bar.dart';
 

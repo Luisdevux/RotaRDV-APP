@@ -9,6 +9,7 @@ import 'package:app_despesas/features/home/home_viewmodel.dart';
 import 'package:app_despesas/core/database/local_database.dart';
 import 'package:app_despesas/features/sync/sync_service.dart';
 import 'package:app_despesas/services/deep_link_service.dart';
+import 'package:app_despesas/services/estado_cidade_service.dart';
 import 'package:app_despesas/routes.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -21,6 +22,9 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   
+  // Pré-carrega o catálogo de cidades e estados offline do IBGE em memória
+  EstadoCidadeService().loadEstadosECidades();
+
   // Inicializa o serviço de Deep Links
   await DeepLinkService.init(navigatorKey);
 
