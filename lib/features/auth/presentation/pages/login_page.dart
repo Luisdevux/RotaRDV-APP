@@ -74,8 +74,8 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     final authVM = context.watch<AuthViewModel>();
-    final _isLoadingGoogle = authVM.isLoadingGoogle;
-    final _isLoadingLocal = authVM.isLoadingLocal;
+    final isLoadingGoogle = authVM.isLoadingGoogle;
+    final isLoadingLocal = authVM.isLoadingLocal;
     return Scaffold(
       backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
       body: AnnotatedRegion<SystemUiOverlayStyle>(
@@ -217,17 +217,17 @@ class _LoginPageState extends State<LoginPage> {
 
                       // Botão Entrar
                       ElevatedButton(
-                        onPressed: _isLoadingLocal ? null : _handleLocalLogin,
+                        onPressed: isLoadingLocal ? null : _handleLocalLogin,
                         style: ElevatedButton.styleFrom(
                           minimumSize: const Size(double.infinity, 54),
                         ),
-                        child: _isLoadingLocal
+                        child: isLoadingLocal
                             ? const SizedBox(
                                 width: 24,
                                 height: 24,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  color: Colors.white,
+                                  color: AppColors.textPrimary,
                                 ),
                               )
                             : const Row(
@@ -264,10 +264,10 @@ class _LoginPageState extends State<LoginPage> {
 
                       // Botão Google
                       OutlinedButton.icon(
-                        onPressed: _isLoadingGoogle
+                        onPressed: isLoadingGoogle
                             ? null
                             : _handleGoogleSignIn,
-                        icon: _isLoadingGoogle
+                        icon: isLoadingGoogle
                             ? const SizedBox(
                                 width: 24,
                                 height: 24,
@@ -282,7 +282,7 @@ class _LoginPageState extends State<LoginPage> {
                                     const Icon(Icons.g_mobiledata, size: 28),
                               ),
                         label: Text(
-                          _isLoadingGoogle
+                          isLoadingGoogle
                               ? 'Autenticando...'
                               : 'Continuar com Google',
                         ),

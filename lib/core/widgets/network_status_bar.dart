@@ -1,10 +1,16 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
 
 class NetworkStatusBar extends StatefulWidget {
-  const NetworkStatusBar({Key? key}) : super(key: key);
+  final bool persistentWhenOffline;
+
+  const NetworkStatusBar({
+    super.key,
+    this.persistentWhenOffline = true,
+  });
 
   @override
   State<NetworkStatusBar> createState() => _NetworkStatusBarState();
@@ -23,8 +29,8 @@ class _NetworkStatusBarState extends State<NetworkStatusBar> {
       final isNowOffline = results.contains(ConnectivityResult.none) || results.isEmpty;
       _showStatus(isOffline: isNowOffline);
     });
-    
-    // Initial check
+
+    // Verificação inicial de conectividade
     Connectivity().checkConnectivity().then((results) {
       final isNowOffline = results.contains(ConnectivityResult.none) || results.isEmpty;
       if (isNowOffline) {
@@ -35,20 +41,23 @@ class _NetworkStatusBarState extends State<NetworkStatusBar> {
 
   void _showStatus({required bool isOffline}) {
     if (!mounted) return;
-    
+
     setState(() {
       _isOffline = isOffline;
       _isVisible = true;
     });
 
     _hideTimer?.cancel();
-    _hideTimer = Timer(const Duration(seconds: 3), () {
-      if (mounted) {
-        setState(() {
-          _isVisible = false;
-        });
-      }
-    });
+    // Se for online ou se não estiver configurado para persistir offline, esconde após 3 segundos
+    if (!isOffline || !widget.persistentWhenOffline) {
+      _hideTimer = Timer(const Duration(seconds: 3), () {
+        if (mounted) {
+          setState(() {
+            _isVisible = false;
+          });
+        }
+      });
+    }
   }
 
   @override
@@ -60,11 +69,17 @@ class _NetworkStatusBarState extends State<NetworkStatusBar> {
 
   @override
   Widget build(BuildContext context) {
+    final backgroundColor = _isOffline ? AppColors.warning : AppColors.success;
+    final textColor = AppColors.textDark;
+    final statusIcon = _isOffline ? Icons.wifi_off : Icons.wifi;
+    final statusText = _isOffline ? 'Status: Offline' : 'Status: Online';
+
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
       height: _isVisible ? 32.0 : 0.0,
       width: double.infinity,
-      color: _isOffline ? AppColors.warning : AppColors.success,
+      color: backgroundColor,
       child: SingleChildScrollView(
         physics: const NeverScrollableScrollPhysics(),
         child: SizedBox(
@@ -73,15 +88,15 @@ class _NetworkStatusBarState extends State<NetworkStatusBar> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                _isOffline ? Icons.wifi_off : Icons.wifi,
-                color: Colors.black,
+                statusIcon,
+                color: textColor,
                 size: 16,
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.sm),
               Text(
-                _isOffline ? 'Status: Offline' : 'Status: Online',
-                style: const TextStyle(
-                  color: Colors.black,
+                statusText,
+                style: GoogleFonts.lexend(
+                  color: textColor,
                   fontWeight: FontWeight.bold,
                   fontSize: 12,
                 ),

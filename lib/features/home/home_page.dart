@@ -1,3 +1,4 @@
+import '../../core/widgets/app_dialog.dart';
 import '../../core/widgets/custom_bottom_nav_bar.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
@@ -58,91 +59,77 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   Align(
                     alignment: Alignment.centerRight,
-                    child:                      IconButton(                                                           
-                        icon: const Icon(Icons.logout, color: AppColors.textHint),          
-                        onPressed: () async {
-                          // Confirmação prévia de saída
-                          final bool? confirmarSaida = await showDialog<bool>(
-                            context: context,
-                            builder: (ctx) => AlertDialog(
-                              title: const Text('Sair da conta'),
-                              content: const Text('Deseja realmente encerrar sua sessão no aplicativo?'),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.of(ctx).pop(false),
-                                  child: const Text('Cancelar'),
+                    child: IconButton(
+                      icon: const Icon(Icons.logout, color: AppColors.textHint),
+                      onPressed: () async {
+                        // Confirmação prévia de saída via componente modular AppDialog
+                        final bool? confirmarSaida = await AppDialog.show(
+                          context: context,
+                          title: 'Sair da conta',
+                          message: 'Deseja realmente encerrar sua sessão no aplicativo?',
+                          confirmText: 'Sair',
+                          cancelText: 'Cancelar',
+                          isDestructive: true,
+                          icon: Icons.logout,
+                        );
+
+                        if (confirmarSaida != true || !context.mounted) return;
+
+                        // Inicializa o serviço de sincronização
+                        final syncService = SyncService();
+
+                        // Verifica se há dados locais pendentes de envio
+                        final hasPending = await syncService.hasPendingSync();
+
+                        if (hasPending) {
+                          // Exibe feedback de sincronização em andamento
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Row(
+                                  children: [
+                                    SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.textPrimary),
+                                    ),
+                                    SizedBox(width: 12),
+                                    Text('Sincronizando dados antes de sair...'),
+                                  ],
                                 ),
-                                ElevatedButton(
-                                  style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
-                                  onPressed: () => Navigator.of(ctx).pop(true),
-                                  child: const Text('Sair', style: TextStyle(color: Colors.white)),
-                                ),
-                              ],
-                            ),
-                          );
+                                duration: Duration(seconds: 4),
+                              ),
+                            );
+                          }
 
-                          if (confirmarSaida != true || !context.mounted) return;
-
-                          // Inicializa o serviço de sincronização
-                          final syncService = SyncService();
-
-                          // Verifica se há dados locais pendentes de envio
-                          final hasPending = await syncService.hasPendingSync();
-
-                          if (hasPending) {
-                            // Exibe feedback de sincronização em andamento
+                          // Tenta enviar as pendências para o servidor antes de deslogar
+                          try {
+                            await syncService.pushSync();
+                          } catch (e) {
+                            // Se falhar (offline, erro de rede ou API fora), BLOQUEIA O LOGOUT para proteger os dados locais
                             if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Row(
-                                    children: [
-                                      SizedBox(
-                                        width: 16,
-                                        height: 16,
-                                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                                      ),
-                                      SizedBox(width: 12),
-                                      Text('Sincronizando dados antes de sair...'),
-                                    ],
-                                  ),
-                                  duration: Duration(seconds: 4),
-                                ),
+                              await AppDialog.show(
+                                context: context,
+                                title: 'Não é possível sair agora',
+                                message:
+                                    'Você possui viagens ou despesas salvas apenas no celular que ainda não foram sincronizadas com o servidor.\n\nConecte-se à internet para sincronizá-las antes de sair para garantir que nada seja perdido!',
+                                confirmText: 'Entendi',
+                                cancelText: null,
+                                icon: Icons.cloud_off,
+                                iconColor: AppColors.warning,
                               );
                             }
-
-                            // Tenta enviar as pendências para o servidor antes de deslogar
-                            try {
-                              await syncService.pushSync();
-                            } catch (e) {
-                              // Se falhar (offline, erro de rede ou API fora), BLOQUEIA O LOGOUT para proteger os dados locais
-                              if (context.mounted) {
-                                showDialog(
-                                  context: context,
-                                  builder: (ctx) => AlertDialog(
-                                    title: const Text('Não é possível sair agora'),
-                                    content: const Text(
-                                      'Você possui viagens ou despesas salvas apenas no celular que ainda não foram sincronizadas com o servidor.\n\nConecte-se à internet para sincronizá-las antes de sair para garantir que nada seja perdido!',
-                                    ),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () => Navigator.of(ctx).pop(),
-                                        child: const Text('Entendi'),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              }
-                              return; // Trava estrita de segurança: NÃO desloga
-                            }
+                            return; // Trava estrita de segurança: NÃO desloga
                           }
+                        }
 
-                          // Se não tem pendências ou se o push subiu com 100% de sucesso, desloga:
-                          await authVM.logout();
-                          if (context.mounted) {
-                            Navigator.of(context).pushReplacementNamed(Routes.login);
-                          }
-                        },                                                                  
-                      ),
+                        // Se não tem pendências ou se o push subiu com 100% de sucesso, desloga:
+                        await authVM.logout();
+                        if (context.mounted) {
+                          Navigator.of(context).pushReplacementNamed(Routes.login);
+                        }
+                      },
+                    ),
                   ),
                     
                   userPhotoUrl != null
