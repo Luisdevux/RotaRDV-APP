@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../core/theme/app_theme.dart';
+import '../theme/app_theme.dart';
 
 class LabeledInputField extends StatelessWidget {
   final String label;
   final IconData icon;
   final TextEditingController controller;
   final String hintText;
+  final TextInputType? keyboardType;
 
   const LabeledInputField({
     super.key,
@@ -14,52 +15,59 @@ class LabeledInputField extends StatelessWidget {
     required this.icon,
     required this.controller,
     required this.hintText,
+    this.keyboardType,
   });
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Icon(icon, color: AppColors.primary, size: 18),
-            const SizedBox(width: 8),
+            Icon(icon, color: colors.primary, size: 18),
+            const SizedBox(width: AppSpacing.sm),
             Text(
               label,
               style: GoogleFonts.lexend(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: const Color(0xFFCBD5E1),
+                color: colors.textSecondary,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.sm),
         Container(
           decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.05),
-            border: Border.all(color: AppColors.primary.withValues(alpha: 0.20)),
-            borderRadius: BorderRadius.circular(16),
+            color: colors.primaryLight,
+            border: Border.all(color: colors.primary.withValues(alpha: 0.20)),
+            borderRadius: AppRadius.lgRadius,
           ),
           child: TextField(
             controller: controller,
+            keyboardType: keyboardType,
             style: GoogleFonts.lexend(
               fontSize: 18,
               fontWeight: FontWeight.w400,
-              color: const Color(0xFFE2E8F0),
+              color: colors.textPrimary,
             ),
             decoration: InputDecoration(
               hintText: hintText,
               hintStyle: GoogleFonts.lexend(
                 fontSize: 18,
                 fontWeight: FontWeight.w400,
-                color: const Color(0xFF64748B),
+                color: colors.textHint,
               ),
               border: InputBorder.none,
               enabledBorder: InputBorder.none,
               focusedBorder: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15.5),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.lg,
+                vertical: AppSpacing.lg,
+              ),
               filled: false,
             ),
           ),

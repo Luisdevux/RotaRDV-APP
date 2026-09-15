@@ -19,9 +19,9 @@ class ThousandsFormatter extends TextInputFormatter {
     String formattedText = '';
     for (int i = 0; i < newText.length; i++) {
       if (i > 0 && i % 3 == 0) {
-        formattedText = '.' + formattedText;
+        formattedText = '.$formattedText';
       }
-      formattedText = newText[newText.length - 1 - i] + formattedText;
+      formattedText = '${newText[newText.length - 1 - i]}$formattedText';
     }
 
     return TextEditingValue(

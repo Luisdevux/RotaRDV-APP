@@ -15,12 +15,14 @@ class CustomBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+
     return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.background,
+      decoration: BoxDecoration(
+        color: colors.background,
         border: Border(
           top: BorderSide(
-            color: AppColors.borderSubtle,
+            color: colors.borderSubtle,
             width: 1.0,
           ),
         ),
@@ -48,8 +50,9 @@ class CustomBottomNavBar extends StatelessWidget {
     IconData icon,
     String label,
   ) {
+    final colors = context.colors;
     final isSelected = currentIndex == index;
-    final itemColor = isSelected ? AppColors.primary : AppColors.textHint;
+    final itemColor = isSelected ? colors.primary : colors.textHint;
 
     return Expanded(
       child: Material(
@@ -57,8 +60,8 @@ class CustomBottomNavBar extends StatelessWidget {
         child: InkWell(
           onTap: () => onTap(index),
           borderRadius: AppRadius.lgRadius,
-          splashColor: AppColors.textHint.withValues(alpha: 0.15),
-          highlightColor: AppColors.textHint.withValues(alpha: 0.08),
+          splashColor: colors.textHint.withValues(alpha: 0.15),
+          highlightColor: colors.textHint.withValues(alpha: 0.08),
           child: Center(
             child: Padding(
               padding: const EdgeInsets.symmetric(
@@ -93,4 +96,3 @@ class CustomBottomNavBar extends StatelessWidget {
     );
   }
 }
-

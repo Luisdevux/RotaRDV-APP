@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/api_constants.dart';
 
@@ -178,5 +180,64 @@ class ApiClient {
       customHeaders: headers,
       requiresAuth: requiresAuth,
     );
+  }
+
+  static Future<http.Response> uploadFile(
+    String path, {
+    required File file,
+    required String fieldName,
+    Map<String, String>? fields,
+    Map<String, String>? headers,
+    bool requiresAuth = true,
+  }) async {
+    final endpoint = path.startsWith('http') ? path : '$baseUrl$path';
+    final url = Uri.parse(endpoint);
+
+    Future<http.Response> executeUpload(String? token) async {
+      final request = http.MultipartRequest('POST', url);
+      if (requiresAuth && token != null && token.isNotEmpty) {
+        request.headers['Authorization'] = 'Bearer $token';
+      }
+      if (headers != null) {
+        request.headers.addAll(headers);
+      }
+      if (fields != null) {
+        request.fields.addAll(fields);
+      }
+
+      final ext = file.path.split('.').last.toLowerCase();
+      final MediaType contentType;
+      if (ext == 'png') {
+        contentType = MediaType('image', 'png');
+      } else if (ext == 'svg') {
+        contentType = MediaType('image', 'svg+xml');
+      } else {
+        contentType = MediaType('image', 'jpeg');
+      }
+
+      final multipartFile = await http.MultipartFile.fromPath(
+        fieldName,
+        file.path,
+        contentType: contentType,
+      );
+      request.files.add(multipartFile);
+
+      final streamedResponse = await request.send();
+      return http.Response.fromStream(streamedResponse);
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    var token = prefs.getString('accessToken');
+    var response = await executeUpload(token);
+
+    if (requiresAuth && (response.statusCode == 401 || response.statusCode == 498 || response.body.contains('expirado'))) {
+      debugPrint('[ApiClient] Token expirado detectado durante upload (${response.statusCode}). Renovando...');
+      final newToken = await _refreshToken();
+      if (newToken != null && newToken.isNotEmpty) {
+        response = await executeUpload(newToken);
+      }
+    }
+
+    return response;
   }
 }

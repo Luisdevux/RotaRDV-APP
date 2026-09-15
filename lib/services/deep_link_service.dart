@@ -3,6 +3,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:app_links/app_links.dart';
+import '../core/theme/app_theme.dart';
 import '../routes.dart';
 
 class DeepLinkService {
@@ -50,7 +51,7 @@ class DeepLinkService {
         if (context != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              backgroundColor: Color(0xFF2E7D32),
+              backgroundColor: AppColors.success,
               behavior: SnackBarBehavior.floating,
               content: Row(
                 children: [

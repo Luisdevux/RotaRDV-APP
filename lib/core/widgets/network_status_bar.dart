@@ -69,8 +69,9 @@ class _NetworkStatusBarState extends State<NetworkStatusBar> {
 
   @override
   Widget build(BuildContext context) {
-    final backgroundColor = _isOffline ? AppColors.warning : AppColors.success;
-    final textColor = AppColors.textDark;
+    final colors = context.colors;
+    final backgroundColor = _isOffline ? colors.warning : colors.success;
+    final textColor = colors.textDark;
     final statusIcon = _isOffline ? Icons.wifi_off : Icons.wifi;
     final statusText = _isOffline ? 'Status: Offline' : 'Status: Online';
 

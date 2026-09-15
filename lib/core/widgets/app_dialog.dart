@@ -59,12 +59,18 @@ class AppDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+    final isDark = context.isDarkMode;
+
+    final primaryActionColor = isDestructive ? colors.error : colors.primary;
+    final resolvedIconColor = iconColor ?? primaryActionColor;
+
     return Dialog(
-      backgroundColor: AppColors.headerBackground,
-      elevation: 8,
+      backgroundColor: colors.cardBackground,
+      elevation: isDark ? 8 : 4,
       shape: RoundedRectangleBorder(
         borderRadius: AppRadius.xlRadius,
-        side: const BorderSide(color: AppColors.border),
+        side: BorderSide(color: colors.border),
       ),
       insetPadding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.xxl,
@@ -83,13 +89,12 @@ class AppDialog extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(AppSpacing.md),
                     decoration: BoxDecoration(
-                      color: (iconColor ?? (isDestructive ? AppColors.error : AppColors.primary))
-                          .withValues(alpha: 0.15),
+                      color: resolvedIconColor.withValues(alpha: 0.12),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
                       icon,
-                      color: iconColor ?? (isDestructive ? AppColors.error : AppColors.primary),
+                      color: resolvedIconColor,
                       size: 28,
                     ),
                   ),
@@ -102,7 +107,7 @@ class AppDialog extends StatelessWidget {
                 style: GoogleFonts.lexend(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+                  color: colors.textPrimary,
                 ),
               ),
               const SizedBox(height: AppSpacing.sm),
@@ -112,7 +117,7 @@ class AppDialog extends StatelessWidget {
                 style: GoogleFonts.lexend(
                   fontSize: 14,
                   height: 1.4,
-                  color: AppColors.textMuted,
+                  color: colors.textMuted,
                 ),
               ),
               const SizedBox(height: AppSpacing.xxl),
@@ -123,8 +128,8 @@ class AppDialog extends StatelessWidget {
                       child: OutlinedButton(
                         onPressed: isLoading ? null : onCancel,
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.textMuted,
-                          side: const BorderSide(color: AppColors.border),
+                          foregroundColor: colors.textMuted,
+                          side: BorderSide(color: colors.border),
                           padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
                           shape: RoundedRectangleBorder(
                             borderRadius: AppRadius.mdRadius,
@@ -135,7 +140,7 @@ class AppDialog extends StatelessWidget {
                           style: GoogleFonts.lexend(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: AppColors.textMuted,
+                            color: colors.textMuted,
                           ),
                         ),
                       ),
@@ -146,8 +151,8 @@ class AppDialog extends StatelessWidget {
                     child: ElevatedButton(
                       onPressed: isLoading ? null : onConfirm,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: isDestructive ? AppColors.error : AppColors.primary,
-                        foregroundColor: AppColors.textPrimary,
+                        backgroundColor: primaryActionColor,
+                        foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
                         shape: RoundedRectangleBorder(
                           borderRadius: AppRadius.mdRadius,
@@ -159,7 +164,7 @@ class AppDialog extends StatelessWidget {
                               width: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: AppColors.textPrimary,
+                                color: Colors.white,
                               ),
                             )
                           : Text(
@@ -167,7 +172,7 @@ class AppDialog extends StatelessWidget {
                               style: GoogleFonts.lexend(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,
-                                color: AppColors.textPrimary,
+                                color: Colors.white,
                               ),
                             ),
                     ),

@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../../core/theme/app_theme.dart';
-import '../../../core/widgets/thousands_formatter.dart';
+import '../theme/app_theme.dart';
+import 'thousands_formatter.dart';
 
 class OdometerInputField extends StatelessWidget {
   final String label;
@@ -20,31 +19,36 @@ class OdometerInputField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Icon(icon, color: AppColors.primary, size: 18),
-            const SizedBox(width: 8),
+            Icon(icon, color: colors.primary, size: 18),
+            const SizedBox(width: AppSpacing.sm),
             Text(
               label,
               style: GoogleFonts.lexend(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: const Color(0xFFCBD5E1),
+                color: colors.textSecondary,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.sm),
         Container(
           decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.05),
-            border: Border.all(color: AppColors.primary.withValues(alpha: 0.20)),
-            borderRadius: BorderRadius.circular(16),
+            color: colors.primaryLight,
+            border: Border.all(color: colors.primary.withValues(alpha: 0.20)),
+            borderRadius: AppRadius.lgRadius,
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15.5),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.lg,
+            vertical: AppSpacing.lg,
+          ),
           child: Row(
             children: [
               Expanded(
@@ -53,17 +57,17 @@ class OdometerInputField extends StatelessWidget {
                   keyboardType: TextInputType.number,
                   inputFormatters: [ThousandsFormatter()],
                   style: GoogleFonts.lexend(
-                    fontSize: 30,
+                    fontSize: 26,
                     fontWeight: FontWeight.w700,
-                    color: const Color(0xFFE2E8F0),
+                    color: colors.textPrimary,
                     height: 1.25,
                   ),
                   decoration: InputDecoration(
                     hintText: hintText,
                     hintStyle: GoogleFonts.lexend(
-                      fontSize: 30,
+                      fontSize: 26,
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFF64748B),
+                      color: colors.textHint,
                     ),
                     border: InputBorder.none,
                     enabledBorder: InputBorder.none,
@@ -74,13 +78,13 @@ class OdometerInputField extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.sm),
               Text(
                 'KM',
                 style: GoogleFonts.lexend(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
-                  color: const Color(0xFF64748B),
+                  color: colors.textHint,
                 ),
               ),
             ],

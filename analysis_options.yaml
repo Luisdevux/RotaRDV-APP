@@ -13,6 +13,7 @@ analyzer:
     - android/**
     - ios/**
     - web/**
+    - "**/*.g.dart"
     - windows/**
     - macos/**
     - linux/**

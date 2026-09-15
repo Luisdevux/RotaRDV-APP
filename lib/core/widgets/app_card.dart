@@ -26,11 +26,11 @@ class AppCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final effectiveRadius = borderRadius ?? AppRadius.xlRadius;
-    final effectiveBg = backgroundColor ??
-        (isHighlighted ? AppColors.cardBackground : AppColors.cardBackground);
+    final effectiveBg = backgroundColor ?? colors.cardBackground;
     final effectiveBorder = borderColor ??
-        (isHighlighted ? AppColors.primaryBorder : AppColors.borderSubtle);
+        (isHighlighted ? colors.primaryBorder : colors.borderSubtle);
 
     final cardContent = Container(
       padding: padding ?? const EdgeInsets.all(AppSpacing.lg),
@@ -54,8 +54,8 @@ class AppCard extends StatelessWidget {
           child: InkWell(
             onTap: onTap,
             borderRadius: effectiveRadius,
-            splashColor: AppColors.primary.withValues(alpha: 0.1),
-            highlightColor: AppColors.primary.withValues(alpha: 0.05),
+            splashColor: colors.primary.withValues(alpha: 0.1),
+            highlightColor: colors.primary.withValues(alpha: 0.05),
             child: cardContent,
           ),
         ),
