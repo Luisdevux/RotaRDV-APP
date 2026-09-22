@@ -12,7 +12,7 @@ class DeepLinkService {
 
   /// Inicializa o listener de Deep Links no Flutter
   static Future<void> init(GlobalKey<NavigatorState> navigatorKey) async {
-    // 1. Captura o link inicial caso o app tenha sido aberto a partir do estado fechado
+    // Captura o link inicial caso o app tenha sido aberto a partir do estado fechado
     try {
       final initialUri = await _appLinks.getInitialLink();
       if (initialUri != null) {
@@ -22,7 +22,7 @@ class DeepLinkService {
       debugPrint('[DeepLink] Erro ao obter link inicial: $e');
     }
 
-    // 2. Escuta novos links recebidos enquanto o app estiver aberto ou em segundo plano
+    // Escuta novos links recebidos enquanto o app estiver aberto ou em segundo plano
     _linkSubscription = _appLinks.uriLinkStream.listen(
       (uri) {
         _handleUri(uri, navigatorKey);
@@ -40,7 +40,7 @@ class DeepLinkService {
     if (uri.scheme == 'rotardv') {
       final context = navigatorKey.currentContext;
 
-      // Caso 1: Verificação de E-mail concluída
+      // Verificação de E-mail concluída
       // Exemplo: rotardv://auth/verified
       if (uri.host == 'auth' && (uri.path == '/verified' || uri.path == 'verified')) {
         navigatorKey.currentState?.pushNamedAndRemoveUntil(

@@ -34,8 +34,8 @@ class CustomBottomNavBar extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               _buildNavItem(context, 0, LucideIcons.home, 'Início'),
-              _buildNavItem(context, 1, LucideIcons.truck, 'Viagens'),
-              _buildNavItem(context, 2, LucideIcons.receiptText, 'Gastos'),
+              _buildNavItem(context, 1, LucideIcons.truck, 'Viagem'),
+              _buildNavItem(context, 2, LucideIcons.history, 'Histórico'),
               _buildNavItem(context, 3, LucideIcons.user, 'Perfil'),
             ],
           ),

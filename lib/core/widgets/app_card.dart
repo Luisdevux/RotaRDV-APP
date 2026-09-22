@@ -27,7 +27,7 @@ class AppCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final effectiveRadius = borderRadius ?? AppRadius.xlRadius;
+    final effectiveRadius = borderRadius ?? AppRadius.mdRadius;
     final effectiveBg = backgroundColor ?? colors.cardBackground;
     final effectiveBorder = borderColor ??
         (isHighlighted ? colors.primaryBorder : colors.borderSubtle);

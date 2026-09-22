@@ -10,7 +10,7 @@ class StorageCleanerService {
   factory StorageCleanerService() => _instance;
   StorageCleanerService._internal();
 
-  /// Executa o expurgo de fotos de comprovantes locais no celular:
+  /// Executa a exclusão de fotos de comprovantes locais no celular:
   /// - Apenas de viagens concluídas há mais de 15 dias.
   /// - Apenas de despesas já 100% sincronizadas com backup na nuvem (fotoAnexoUrl preenchida).
   /// - Apenas de fotos tiradas de DENTRO do app pela câmera (fotoTiradaNoApp == true).
@@ -32,7 +32,7 @@ class StorageCleanerService {
         return 0;
       }
 
-      int totalExpurgado = 0;
+      int totalExcluidas = 0;
 
       for (var viagem in viagensAntigas) {
         final despesas = await isar.despesaCollections
@@ -52,7 +52,7 @@ class StorageCleanerService {
             final file = File(despesa.fotoAnexoLocalPath!);
             if (await file.exists()) {
               await file.delete();
-              debugPrint('[StorageCleaner] Foto interna expurgada com sucesso: ${file.path} (Viagem finalizada em ${viagem.dataFim})');
+              debugPrint('[StorageCleaner] Foto interna excluída com sucesso: ${file.path} (Viagem finalizada em ${viagem.dataFim})');
             }
 
             await isar.writeTxn(() async {
@@ -60,18 +60,19 @@ class StorageCleanerService {
               await isar.despesaCollections.put(despesa);
             });
 
-            totalExpurgado++;
+            totalExcluidas++;
           }
         }
       }
 
-      if (totalExpurgado > 0) {
-        debugPrint('[StorageCleaner] Limpeza concluída: $totalExpurgado fotos antigas expurgadas do celular.');
+
+      if (totalExcluidas > 0) {
+        debugPrint('[StorageCleaner] Limpeza concluída: $totalExcluidas fotos antigas excluídas do celular.');
       }
 
-      return totalExpurgado;
+      return totalExcluidas;
     } catch (e) {
-      debugPrint('[StorageCleaner] Erro durante o expurgo de fotos antigas: $e');
+      debugPrint('[StorageCleaner] Erro durante a exclusão de fotos antigas: $e');
       return 0;
     }
   }

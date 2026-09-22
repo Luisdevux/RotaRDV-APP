@@ -9,7 +9,93 @@ import '../core/database/local_database.dart';
 import '../core/network/api_client.dart';
 import '../models/despesa_collection.dart';
 import '../models/viagem_collection.dart';
+import 'package:path_provider/path_provider.dart';
 import 'storage_cleaner_service.dart';
+
+class PendingSyncSummary {
+  final int viagensPendentes;
+  final int despesasPendentes;
+  final int fotosPendentes;
+
+  const PendingSyncSummary({
+    required this.viagensPendentes,
+    required this.despesasPendentes,
+    required this.fotosPendentes,
+  });
+
+  int get totalPendencias => viagensPendentes + despesasPendentes + fotosPendentes;
+  bool get hasPending => totalPendencias > 0;
+}
+
+/// Localiza ou recupera o arquivo físico de comprovante para uma despesa,
+/// garantindo resiliência contra caminhos perdidos, arquivos órfãos e cache temporário.
+Future<String?> resolverOuRecuperarFotoLocal(String despesaUuid, String? caminhoAtual) async {
+  try {
+    // 1. Se já tem caminho e o arquivo existe fisicamente no aparelho, mantém ele
+    if (caminhoAtual != null && caminhoAtual.isNotEmpty) {
+      final f = File(caminhoAtual);
+      if (await f.exists()) return caminhoAtual;
+    }
+
+    final appDir = await getApplicationDocumentsDirectory();
+    final comprovantesDir = Directory('${appDir.path}/comprovantes');
+    if (!await comprovantesDir.exists()) {
+      await comprovantesDir.create(recursive: true);
+    }
+
+    // 2. Procura pelo nome padronizado vinculado ao UUID da despesa na pasta permanente
+    final arquivoPorUuid = File('${comprovantesDir.path}/comprovante_$despesaUuid.jpg');
+    if (await arquivoPorUuid.exists()) {
+      debugPrint('[AutoRecovery] Foto encontrada pelo UUID da despesa: ${arquivoPorUuid.path}');
+      return arquivoPorUuid.path;
+    }
+
+    // 3. Procura por qualquer arquivo na pasta comprovantes contendo o UUID
+    final entries = await comprovantesDir.list().toList();
+    final files = entries.whereType<File>().toList();
+    for (var f in files) {
+      if (f.path.contains(despesaUuid)) {
+        debugPrint('[AutoRecovery] Foto encontrada por correspondência parcial de UUID: ${f.path}');
+        return f.path;
+      }
+    }
+
+    // 4. Procura no diretório temporário/cache do app (onde o ImagePicker grava originalmente)
+    final tempDir = await getTemporaryDirectory();
+    if (await tempDir.exists()) {
+      final tempEntries = await tempDir.list().toList();
+      final tempImages = tempEntries.whereType<File>().where((f) {
+        final p = f.path.toLowerCase();
+        return p.endsWith('.jpg') || p.endsWith('.jpeg') || p.endsWith('.png');
+      }).toList();
+
+      if (tempImages.isNotEmpty) {
+        // Ordena por data de modificação decrescente (o mais recente primeiro)
+        tempImages.sort((a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()));
+        final maisRecente = tempImages.first;
+        final arquivoPermanente = await maisRecente.copy(arquivoPorUuid.path);
+        debugPrint('[AutoRecovery] Arquivo recuperado do cache temporário e salvo permanentemente: ${arquivoPermanente.path}');
+        return arquivoPermanente.path;
+      }
+    }
+
+    // 5. Procura no diretório comprovantes por arquivos .jpg órfãos existentes
+    final jpgs = files.where((f) {
+      final p = f.path.toLowerCase();
+      return p.endsWith('.jpg') || p.endsWith('.jpeg') || p.endsWith('.png');
+    }).toList();
+
+    if (jpgs.isNotEmpty) {
+      jpgs.sort((a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()));
+      final recuperado = jpgs.first;
+      debugPrint('[AutoRecovery] Arquivo órfão mais recente recuperado: ${recuperado.path}');
+      return recuperado.path;
+    }
+  } catch (e) {
+    debugPrint('[AutoRecovery] Erro ao tentar recuperar foto local: $e');
+  }
+  return null;
+}
 
 class SyncService {
   // Singleton
@@ -70,7 +156,7 @@ class SyncService {
         // PULL: Baixa as alterações e novidades da nuvem
         await pullSync();
 
-        // EXPURGO: Limpa fotos locais de viagens concluídas há mais de 15 dias tiradas no app
+        // Exclusão de fotos antigas: Limpa fotos locais de viagens concluídas há mais de 15 dias tiradas no app
         await StorageCleanerService().purgeOldSyncedPhotos();
 
         success = true;
@@ -93,20 +179,26 @@ class SyncService {
     return success;
   }
 
-  /// Verifica se há registros locais ou fotos pendentes de envio para a API
-  Future<bool> hasPendingSync() async {
+  /// Resumo detalhado de todas as pendências de sincronização locais
+  Future<PendingSyncSummary> getPendingSyncSummary() async {
     final isar = LocalDatabase.isar;
 
     final viagensParaSincronizar = await isar.viagemCollections
         .filter()
-        .not()
-        .statusSincronizacaoEqualTo('sincronizado')
+        .group((q) => q
+            .statusSincronizacaoEqualTo('criado')
+            .or()
+            .statusSincronizacaoEqualTo('editado')
+            .or()
+            .statusSincronizacaoEqualTo('deletado'))
         .count();
 
     final despesasParaSincronizar = await isar.despesaCollections
         .filter()
-        .not()
-        .statusSincronizacaoEqualTo('sincronizado')
+        .group((q) => q
+            .statusSincronizacaoEqualTo('criado')
+            .or()
+            .statusSincronizacaoEqualTo('deletado'))
         .count();
 
     final fotosPendentes = await isar.despesaCollections
@@ -119,7 +211,17 @@ class SyncService {
         .statusSincronizacaoEqualTo('deletado')
         .count();
 
-    return viagensParaSincronizar > 0 || despesasParaSincronizar > 0 || fotosPendentes > 0;
+    return PendingSyncSummary(
+      viagensPendentes: viagensParaSincronizar,
+      despesasPendentes: despesasParaSincronizar,
+      fotosPendentes: fotosPendentes,
+    );
+  }
+
+  /// Verifica se há registros locais ou fotos pendentes de envio para a API
+  Future<bool> hasPendingSync() async {
+    final summary = await getPendingSyncSummary();
+    return summary.hasPending;
   }
 
   /// Envia alterações locais e fotos de comprovantes para a nuvem (Garage)
@@ -128,14 +230,22 @@ class SyncService {
 
     final viagensParaSincronizar = await isar.viagemCollections
         .filter()
-        .not()
-        .statusSincronizacaoEqualTo('sincronizado')
+        .group((q) => q
+            .statusSincronizacaoEqualTo('criado')
+            .or()
+            .statusSincronizacaoEqualTo('editado')
+            .or()
+            .statusSincronizacaoEqualTo('deletado'))
         .findAll();
 
+    // Despesas são imutáveis após o lançamento (motoristas não possuem permissão de edição).
+    // Apenas registros criados ou deletados pendentes de envio são processados no lote.
     final despesasParaSincronizar = await isar.despesaCollections
         .filter()
-        .not()
-        .statusSincronizacaoEqualTo('sincronizado')
+        .group((q) => q
+            .statusSincronizacaoEqualTo('criado')
+            .or()
+            .statusSincronizacaoEqualTo('deletado'))
         .findAll();
 
     // 1. Envia registros de texto/metadados para o backend
@@ -149,8 +259,8 @@ class SyncService {
           'destino': { 'cidade': v.destinoCidade, 'estado': v.destinoEstado },
           'km_inicial': v.kmInicial,
           'km_final': v.kmFinal,
-          'data_inicio': v.dataInicio.toIso8601String(),
-          'data_fim': v.dataFim?.toIso8601String(),
+          'data_inicio': v.dataInicio.toUtc().toIso8601String(),
+          'data_fim': v.dataFim?.toUtc().toIso8601String(),
           'status': v.status,
           'is_deleted': v.statusSincronizacao == 'deletado'
         }).toList(),
@@ -159,7 +269,7 @@ class SyncService {
           'viagem_id': d.viagemId,
           'tipo': d.tipo,
           'valor_total': d.valorTotal,
-          'data': d.data.toIso8601String(),
+          'data': d.data.toUtc().toIso8601String(),
           'local': d.local,
           'descricao': d.descricao,
           'litros': d.litros,
@@ -173,10 +283,26 @@ class SyncService {
       final response = await ApiClient.post('/sync/push', body: payload);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
+        // Extrai eventuais itens rejeitados pelos validadores de domínio do backend
+        final Map<String, dynamic> responseData = jsonDecode(response.body);
+        final dynamic dataField = responseData['data'];
+        final List<dynamic> rejeitadosList = (dataField is Map && dataField['rejeitados'] is List)
+            ? dataField['rejeitados'] as List
+            : [];
+
+        final Set<String> idsRejeitados = rejeitadosList
+            .map((r) => r['id']?.toString() ?? '')
+            .where((id) => id.isNotEmpty)
+            .toSet();
+
         await isar.writeTxn(() async {
           // Viagens
           for (var v in viagensParaSincronizar) {
-            if (v.statusSincronizacao == 'deletado') {
+            if (idsRejeitados.contains(v.uuid)) {
+              v.statusSincronizacao = 'erro_validacao';
+              await isar.viagemCollections.put(v);
+              debugPrint('[SyncService] Viagem ${v.uuid} rejeitada pelo servidor por inconsistência de domínio.');
+            } else if (v.statusSincronizacao == 'deletado') {
               await isar.viagemCollections.delete(v.id);
             } else {
               v.statusSincronizacao = 'sincronizado';
@@ -185,7 +311,11 @@ class SyncService {
           }
           // Despesas
           for (var d in despesasParaSincronizar) {
-            if (d.statusSincronizacao == 'deletado') {
+            if (idsRejeitados.contains(d.uuid)) {
+              d.statusSincronizacao = 'erro_validacao';
+              await isar.despesaCollections.put(d);
+              debugPrint('[SyncService] Despesa ${d.uuid} rejeitada pelo servidor por inconsistência de domínio.');
+            } else if (d.statusSincronizacao == 'deletado') {
               await isar.despesaCollections.delete(d.id);
             } else {
               d.statusSincronizacao = 'sincronizado';
@@ -193,28 +323,36 @@ class SyncService {
             }
           }
         });
-        debugPrint('[SyncService] PushSync concluído e registros marcados como sincronizados.');
+        debugPrint('[SyncService] PushSync concluído (${viagensParaSincronizar.length} viagens, ${despesasParaSincronizar.length} despesas). Rejeitados: ${idsRejeitados.length}');
       } else {
         throw Exception('Falha no PushSync (Status ${response.statusCode}): ${response.body}');
       }
     }
 
     // 2. Upload de Fotos/Comprovantes pendentes para o Storage (Garage)
-    final despesasComFotoPendente = await isar.despesaCollections
+    final despesasSemFotoRemota = await isar.despesaCollections
         .filter()
-        .fotoAnexoLocalPathIsNotNull()
-        .and()
         .group((q) => q.fotoAnexoUrlIsNull().or().fotoAnexoUrlEqualTo(''))
         .and()
         .not()
         .statusSincronizacaoEqualTo('deletado')
         .findAll();
 
-    if (despesasComFotoPendente.isNotEmpty) {
-      debugPrint('[SyncService] Iniciando upload de ${despesasComFotoPendente.length} foto(s) de comprovante para o Garage...');
+    if (despesasSemFotoRemota.isNotEmpty) {
+      debugPrint('[SyncService] Verificando fotos pendentes para ${despesasSemFotoRemota.length} despesa(s)...');
 
-      for (var d in despesasComFotoPendente) {
-        if (d.fotoAnexoLocalPath == null || d.fotoAnexoLocalPath!.isEmpty) continue;
+      for (var d in despesasSemFotoRemota) {
+        if (d.fotoAnexoLocalPath == null || d.fotoAnexoLocalPath!.isEmpty || !await File(d.fotoAnexoLocalPath!).exists()) {
+          final recuperado = await resolverOuRecuperarFotoLocal(d.uuid, d.fotoAnexoLocalPath);
+          if (recuperado != null) {
+            d.fotoAnexoLocalPath = recuperado;
+            await isar.writeTxn(() async {
+              await isar.despesaCollections.put(d);
+            });
+          } else {
+            continue;
+          }
+        }
         final file = File(d.fotoAnexoLocalPath!);
         if (!await file.exists()) continue;
 
@@ -251,9 +389,20 @@ class SyncService {
   }
 
   /// Baixa alterações recentes da nuvem para o banco local Isar
-  Future<void> pullSync() async {
+  Future<void> pullSync({bool forceFullSync = false}) async {
     final prefs = await SharedPreferences.getInstance();
-    final lastSyncStr = prefs.getString('last_pull_sync_date');
+    final isar = LocalDatabase.isar;
+
+    // Se o banco local estiver vazio de viagens, ou forceFullSync for true:
+    // Faz PULL COMPLETO sem updatedAfter para restaurar todo o histórico do motorista da nuvem
+    final localCount = await isar.viagemCollections.count();
+    final shouldFullSync = forceFullSync || localCount == 0;
+
+    String? lastSyncStr = shouldFullSync ? null : prefs.getString('last_pull_sync_date');
+    if (shouldFullSync) {
+      await prefs.remove('last_pull_sync_date');
+      debugPrint('[SyncService] Banco local vazio ou full sync solicitado ($localCount registros). Puxando histórico completo da nuvem...');
+    }
     
     String endpoint = '/sync/pull';
     if (lastSyncStr != null) {
@@ -288,13 +437,13 @@ class SyncService {
             viagem.kmInicial = (vRaw['km_inicial'] as num).toDouble();
             viagem.kmFinal = vRaw['km_final'] != null ? (vRaw['km_final'] as num).toDouble() : null;
             
-            // Helper para lidar com ambos os formatos de data: ISO e DD/MM/YYYY
             DateTime parseDate(String d) {
               if (d.contains('/')) {
                 final parts = d.split(' ')[0].split('/');
                 return DateTime(int.parse(parts[2]), int.parse(parts[1]), int.parse(parts[0]));
               }
-              return DateTime.parse(d).toLocal();
+              final parsed = DateTime.parse(d);
+              return parsed.isUtc ? parsed.toLocal() : parsed;
             }
 
             viagem.dataInicio = parseDate(vRaw['data_inicio']);
@@ -314,28 +463,47 @@ class SyncService {
           var despesa = await isar.despesaCollections.filter().uuidEqualTo(uuid).findFirst();
           despesa ??= DespesaCollection()..uuid = uuid;
 
+          // Localiza ou recupera foto física localmente caso ela já exista no aparelho
+          final fotoLocal = await resolverOuRecuperarFotoLocal(uuid, despesa.fotoAnexoLocalPath);
+          if (fotoLocal != null) {
+            despesa.fotoAnexoLocalPath = fotoLocal;
+          }
+
           if (despesa.id == Isar.autoIncrement || despesa.statusSincronizacao == 'sincronizado') {
             despesa.viagemId = dRaw['viagem_id'];
             despesa.tipo = dRaw['tipo'];
             despesa.valorTotal = (dRaw['valor_total'] as num).toDouble();
             
-            // Helper para lidar com ambos os formatos de data: ISO e DD/MM/YYYY
             DateTime parseDate(String d) {
               if (d.contains('/')) {
                 final parts = d.split(' ')[0].split('/');
                 return DateTime(int.parse(parts[2]), int.parse(parts[1]), int.parse(parts[0]));
               }
-              return DateTime.parse(d).toLocal();
+              final parsed = DateTime.parse(d);
+              return parsed.isUtc ? parsed.toLocal() : parsed;
             }
 
             despesa.data = parseDate(dRaw['data']);
             despesa.local = dRaw['local'];
             despesa.descricao = dRaw['descricao'];
-            despesa.litros = dRaw['litros'] != null ? (dRaw['litros'] as num).toDouble() : null;
-            despesa.valorLitro = dRaw['valor_litro'] != null ? (dRaw['valor_litro'] as num).toDouble() : null;
-            despesa.tipoCombustivel = dRaw['tipo_combustivel'];
-            despesa.kmAtual = dRaw['km_atual'] != null ? (dRaw['km_atual'] as num).toDouble() : null;
-            despesa.fotoAnexoUrl = dRaw['foto_anexo'];
+            if (dRaw['litros'] != null) {
+              despesa.litros = (dRaw['litros'] as num).toDouble();
+            }
+            if (dRaw['valor_litro'] != null) {
+              despesa.valorLitro = (dRaw['valor_litro'] as num).toDouble();
+            }
+            if (dRaw['tipo_combustivel'] != null) {
+              despesa.tipoCombustivel = dRaw['tipo_combustivel'];
+            }
+            if (dRaw['km_atual'] != null) {
+              despesa.kmAtual = (dRaw['km_atual'] as num).toDouble();
+            }
+
+            final remoteUrl = dRaw['foto_anexo'];
+            if (remoteUrl != null && remoteUrl.toString().isNotEmpty) {
+              despesa.fotoAnexoUrl = remoteUrl.toString();
+            }
+
             despesa.statusSincronizacao = 'sincronizado';
 
             await isar.despesaCollections.put(despesa);

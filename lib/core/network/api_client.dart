@@ -34,6 +34,14 @@ class ApiClient {
     return headers;
   }
 
+  /// Notificador reativo de expiração irrecuperável de sessão (quando o refresh token falha)
+  static final ValueNotifier<bool> sessionExpiredNotifier = ValueNotifier<bool>(false);
+
+  /// Reseta o alerta de sessão expirada (após novo login bem-sucedido)
+  static void resetSessionExpired() {
+    sessionExpiredNotifier.value = false;
+  }
+
   /// Tenta renovar o Access Token usando o Refresh Token salvo
   static Future<String?> _refreshToken() async {
     try {
@@ -42,6 +50,7 @@ class ApiClient {
 
       if (storedRefreshToken == null || storedRefreshToken.isEmpty) {
         debugPrint('[ApiClient] Nenhum refresh token disponível no SharedPreferences.');
+        sessionExpiredNotifier.value = true;
         return null;
       }
 
@@ -62,12 +71,16 @@ class ApiClient {
           if (newAccessToken.isNotEmpty) {
             await prefs.setString('accessToken', newAccessToken);
             await prefs.setString('refreshToken', newRefreshToken);
+            resetSessionExpired();
             debugPrint('[ApiClient] Token renovado com sucesso via Interceptor!');
             return newAccessToken;
           }
         }
       }
       debugPrint('[ApiClient] Falha na resposta do endpoint /refresh: ${response.body}');
+      if (response.statusCode == 401 || response.statusCode == 403 || response.statusCode == 498) {
+        sessionExpiredNotifier.value = true;
+      }
       return null;
     } catch (e) {
       debugPrint('[ApiClient] Erro ao tentar renovar token: $e');
@@ -91,6 +104,8 @@ class ApiClient {
       if (newToken != null && newToken.isNotEmpty) {
         headers = await _buildHeaders(customHeaders: customHeaders, requiresAuth: requiresAuth);
         response = await requestFn(headers);
+      } else {
+        sessionExpiredNotifier.value = true;
       }
     }
 

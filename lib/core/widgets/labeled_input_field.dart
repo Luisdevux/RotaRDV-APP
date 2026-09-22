@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../theme/app_theme.dart';
 
 class LabeledInputField extends StatelessWidget {
@@ -8,6 +9,8 @@ class LabeledInputField extends StatelessWidget {
   final TextEditingController controller;
   final String hintText;
   final TextInputType? keyboardType;
+  final String? errorText;
+  final ValueChanged<String>? onChanged;
 
   const LabeledInputField({
     super.key,
@@ -16,6 +19,8 @@ class LabeledInputField extends StatelessWidget {
     required this.controller,
     required this.hintText,
     this.keyboardType,
+    this.errorText,
+    this.onChanged,
   });
 
   @override
@@ -42,22 +47,26 @@ class LabeledInputField extends StatelessWidget {
         const SizedBox(height: AppSpacing.sm),
         Container(
           decoration: BoxDecoration(
-            color: colors.primaryLight,
-            border: Border.all(color: colors.primary.withValues(alpha: 0.20)),
+            color: colors.inputBackground,
+            border: Border.all(
+              color: errorText != null ? colors.error : colors.border,
+              width: errorText != null ? 1.5 : 1.0,
+            ),
             borderRadius: AppRadius.lgRadius,
           ),
           child: TextField(
             controller: controller,
             keyboardType: keyboardType,
+            onChanged: onChanged,
             style: GoogleFonts.lexend(
-              fontSize: 18,
-              fontWeight: FontWeight.w400,
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
               color: colors.textPrimary,
             ),
             decoration: InputDecoration(
               hintText: hintText,
               hintStyle: GoogleFonts.lexend(
-                fontSize: 18,
+                fontSize: 16,
                 fontWeight: FontWeight.w400,
                 color: colors.textHint,
               ),
@@ -66,12 +75,31 @@ class LabeledInputField extends StatelessWidget {
               focusedBorder: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: AppSpacing.lg,
-                vertical: AppSpacing.lg,
+                vertical: 14,
               ),
               filled: false,
             ),
           ),
         ),
+        if (errorText != null) ...[
+          const SizedBox(height: AppSpacing.xs),
+          Row(
+            children: [
+              Icon(LucideIcons.alertCircle, size: 14, color: colors.error),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  errorText!,
+                  style: GoogleFonts.lexend(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: colors.error,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ],
     );
   }

@@ -32,5 +32,5 @@ class DespesaCollection {
 
   // Para controle Offline-First
   @Index()
-  late String statusSincronizacao; // 'criado', 'editado', 'sincronizado'
+  late String statusSincronizacao; // 'criado', 'sincronizado', 'deletado', 'erro_validacao'
 }
