@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
-import '../../../../core/theme/app_theme.dart';
-import '../../auth_viewmodel.dart';
-import '../../../../routes.dart';
-import '../../../../core/widgets/network_status_bar.dart';
+import '../../core/theme/app_theme.dart';
+import 'auth_viewmodel.dart';
+import '../../routes.dart';
+import '../../core/widgets/network_status_bar.dart';
+import '../../core/widgets/app_dialog.dart';
+import '../../services/sync_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -18,6 +22,31 @@ class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _senhaController = TextEditingController();
   bool _obscurePassword = true;
+  int _pendingCount = 0;
+  String? _lastUserEmail;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkPendingLocalData();
+  }
+
+  Future<void> _checkPendingLocalData() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final lastEmail = prefs.getString('lastUserEmail');
+      if (lastEmail != null && lastEmail.isNotEmpty) {
+        _emailController.text = lastEmail;
+        _lastUserEmail = lastEmail;
+      }
+      final summary = await SyncService().getPendingSyncSummary();
+      if (mounted && summary.hasPending) {
+        setState(() {
+          _pendingCount = summary.totalPendencias;
+        });
+      }
+    } catch (_) {}
+  }
 
   @override
   void dispose() {
@@ -43,7 +72,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _handleLocalLogin() async {
-    final email = _emailController.text;
+    final email = _emailController.text.trim();
     final senha = _senhaController.text;
 
     if (email.isEmpty || senha.isEmpty) {
@@ -55,6 +84,25 @@ class _LoginPageState extends State<LoginPage> {
       );
       return;
     }
+
+    if (_pendingCount > 0 &&
+        _lastUserEmail != null &&
+        _lastUserEmail!.isNotEmpty &&
+        email.toLowerCase() != _lastUserEmail!.toLowerCase()) {
+      final bool? confirmar = await AppDialog.show(
+        context: context,
+        title: 'Troca de Motorista',
+        message:
+            'Existem $_pendingCount registro(s) offline do motorista $_lastUserEmail neste celular.\n\nSe você entrar com $email, os dados locais anteriores serão descartados.\n\nDeseja continuar?',
+        confirmText: 'Substituir dados',
+        cancelText: 'Cancelar',
+        isDestructive: true,
+        icon: LucideIcons.alertTriangle,
+      );
+      if (confirmar != true) return;
+    }
+
+    if (!mounted) return;
 
     final authVM = context.read<AuthViewModel>();
     final success = await authVM.login(email, senha);
@@ -146,7 +194,37 @@ class _LoginPageState extends State<LoginPage> {
                         style: Theme.of(context).textTheme.titleLarge,
                         textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 16),
+
+                      if (_pendingCount > 0) ...[
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppColors.primary.withValues(alpha: 0.35)),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(LucideIcons.cloudAlert, color: AppColors.primary, size: 20),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  'Você possui $_pendingCount registro(s) salvo(s) offline neste aparelho. Entre para enviá-los.',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ] else ...[
+                        const SizedBox(height: 8),
+                      ],
 
                       // Email Input
                       Text(

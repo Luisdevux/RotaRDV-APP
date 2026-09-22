@@ -2,6 +2,9 @@ import 'package:flutter/foundation.dart';
 import '../../services/auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import '../../core/network/api_client.dart';
+import '../../services/sync_service.dart';
+import '../../core/database/local_database.dart';
 
 class AuthViewModel extends ChangeNotifier {
   final AuthService _authService = AuthService();
@@ -28,6 +31,24 @@ class AuthViewModel extends ChangeNotifier {
         currentUser = user;
 
         final prefs = await SharedPreferences.getInstance();
+        final lastUserId = prefs.getString('lastUserId');
+        final currentUserId = (user['_id'] ?? user['id'] ?? '').toString();
+
+        // Se for um usuário DIFERENTE do anterior:
+        if (lastUserId != null && lastUserId.isNotEmpty && currentUserId.isNotEmpty && lastUserId != currentUserId) {
+          debugPrint('[AuthViewModel] Novo usuário detectado ($lastUserId -> $currentUserId)');
+          final hasPending = await SyncService().hasPendingSync();
+          if (!hasPending) {
+            final isar = LocalDatabase.isar;
+            await isar.writeTxn(() async {
+              await isar.clear();
+            });
+            debugPrint('[AuthViewModel] Banco Isar resetado para o novo motorista (sem pendências).');
+          } else {
+            debugPrint('[AuthViewModel] Há pendências locais do motorista anterior. Registros preservados no Isar.');
+          }
+        }
+
         await prefs.setString('currentUser', jsonEncode(currentUser));
         await prefs.setString('accessToken', accessToken);
         if (refreshToken.isNotEmpty) {
@@ -36,9 +57,20 @@ class AuthViewModel extends ChangeNotifier {
         if (user['veiculo_id'] is Map) {
           await prefs.setString('currentVehicle', jsonEncode(user['veiculo_id']));
         }
+        await prefs.setString('lastUserId', currentUserId);
+        if (user['email'] != null) {
+          await prefs.setString('lastUserEmail', user['email'].toString());
+        }
+
+        // Reseta o estado de sessão expirada
+        ApiClient.resetSessionExpired();
 
         isLoadingLocal = false;
         notifyListeners();
+
+        // Dispara sincronização em segundo plano imediatamente após reautenticação
+        SyncService().syncAll();
+
         return true;
       }
       isLoadingLocal = false;
@@ -69,6 +101,24 @@ class AuthViewModel extends ChangeNotifier {
         currentUser = user;
 
         final prefs = await SharedPreferences.getInstance();
+        final lastUserId = prefs.getString('lastUserId');
+        final currentUserId = (user['_id'] ?? user['id'] ?? '').toString();
+
+        // Se for um usuário DIFERENTE do anterior:
+        if (lastUserId != null && lastUserId.isNotEmpty && currentUserId.isNotEmpty && lastUserId != currentUserId) {
+          debugPrint('[AuthViewModel] Novo usuário Google detectado ($lastUserId -> $currentUserId)');
+          final hasPending = await SyncService().hasPendingSync();
+          if (!hasPending) {
+            final isar = LocalDatabase.isar;
+            await isar.writeTxn(() async {
+              await isar.clear();
+            });
+            debugPrint('[AuthViewModel] Banco Isar resetado para o novo motorista (sem pendências).');
+          } else {
+            debugPrint('[AuthViewModel] Há pendências locais do motorista anterior. Registros preservados no Isar.');
+          }
+        }
+
         await prefs.setString('currentUser', jsonEncode(currentUser));
         await prefs.setString('accessToken', accessToken);
         if (refreshToken.isNotEmpty) {
@@ -77,9 +127,20 @@ class AuthViewModel extends ChangeNotifier {
         if (user['veiculo_id'] is Map) {
           await prefs.setString('currentVehicle', jsonEncode(user['veiculo_id']));
         }
+        await prefs.setString('lastUserId', currentUserId);
+        if (user['email'] != null) {
+          await prefs.setString('lastUserEmail', user['email'].toString());
+        }
+
+        // Reseta o estado de sessão expirada
+        ApiClient.resetSessionExpired();
 
         isLoadingGoogle = false;
         notifyListeners();
+
+        // Dispara sincronização em segundo plano imediatamente após reautenticação
+        SyncService().syncAll();
+
         return true;
       }
       isLoadingGoogle = false;
@@ -100,14 +161,53 @@ class AuthViewModel extends ChangeNotifier {
     return null;
   }
 
-  Future<void> logout() async {
-    await _authService.signOut();
+  /// Recarrega os dados do motorista e veículo salvos no SharedPreferences
+  Future<void> reloadUserFromStorage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userStr = prefs.getString('currentUser');
+      if (userStr != null) {
+        currentUser = Map<String, dynamic>.from(jsonDecode(userStr));
+      }
+      final vehicleStr = prefs.getString('currentVehicle');
+      if (vehicleStr != null && currentUser != null) {
+        currentUser!['veiculo_id'] = jsonDecode(vehicleStr);
+      }
+      notifyListeners();
+    } catch (e) {
+      debugPrint('[AuthViewModel] Erro ao recarregar dados do usuário: $e');
+    }
+  }
+
+  /// Busca os dados cadastrais mais recentes do motorista na API (/usuarios/:id)
+  Future<void> fetchProfile() async {
+    try {
+      final userId = currentUser?['_id'] ?? currentUser?['id'];
+      if (userId == null) return;
+
+      final response = await ApiClient.get('/usuarios/$userId');
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final body = jsonDecode(response.body);
+        final userData = body['data'];
+        if (userData != null && userData is Map) {
+          currentUser = {...?currentUser, ...Map<String, dynamic>.from(userData)};
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('currentUser', jsonEncode(currentUser));
+          if (userData['veiculo_id'] is Map) {
+            await prefs.setString('currentVehicle', jsonEncode(userData['veiculo_id']));
+          }
+          notifyListeners();
+          debugPrint('[AuthViewModel] Perfil do motorista atualizado com sucesso da API.');
+        }
+      }
+    } catch (e) {
+      debugPrint('[AuthViewModel] Não foi possível atualizar perfil da API (offline ou erro): $e');
+    }
+  }
+
+  Future<void> logout({bool clearDatabase = false}) async {
+    await _authService.signOut(clearDatabase: clearDatabase);
     currentUser = null;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('currentUser');
-    await prefs.remove('currentVehicle');
-    await prefs.remove('accessToken');
-    await prefs.remove('refreshToken');
     notifyListeners();
   }
 

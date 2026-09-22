@@ -99,18 +99,47 @@ class AuthService {
     }
   }
 
-  Future<void> signOut() async {
-    await _googleSignIn.signOut();
+  Future<void> signOut({bool clearDatabase = false}) async {
+    try {
+      await _googleSignIn.signOut();
+    } catch (e) {
+      debugPrint('[AuthService] Erro ao deslogar Google: $e');
+    }
 
-    // Limpar o banco de dados Isar
-    final isar = LocalDatabase.isar;
-    await isar.writeTxn(() async {
-      await isar.clear(); // Limpa todas as coleções!
-    });
+    // Apenas limpa o banco se explicitamente solicitado (ex: troca de usuário confirmada)
+    if (clearDatabase) {
+      final isar = LocalDatabase.isar;
+      await isar.writeTxn(() async {
+        await isar.clear();
+      });
+      debugPrint('[AuthService] Banco Isar limpo com segurança.');
+    } else {
+      debugPrint('[AuthService] Banco Isar preservado para integridade offline.');
+    }
 
-    // Limpar os SharedPreferences (tokens, datas de sync, etc) para não deixar resquícios de dados do usuário anterior
     final prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
+
+    // Preserva o último email e ID logado para validação em próximos logins
+    final userStr = prefs.getString('currentUser');
+    if (userStr != null) {
+      try {
+        final userMap = jsonDecode(userStr);
+        if (userMap['email'] != null) {
+          await prefs.setString('lastUserEmail', userMap['email'].toString());
+        }
+        final uid = userMap['_id'] ?? userMap['id'];
+        if (uid != null) {
+          await prefs.setString('lastUserId', uid.toString());
+        }
+      } catch (_) {}
+    }
+
+    // Remove apenas as chaves de sessão ativa, preservando configurações e logs
+    await prefs.remove('currentUser');
+    await prefs.remove('currentVehicle');
+    await prefs.remove('accessToken');
+    await prefs.remove('refreshToken');
+    await prefs.remove('last_pull_sync_date');
   }
 }
 
