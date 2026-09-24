@@ -39,7 +39,7 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  void _navegarParaViagem(ViagemCollection viagem) {
+  void _navegarParaViagemAtiva(ViagemCollection viagem) {
     if (widget.onNavigateToTab != null) {
       widget.onNavigateToTab!(1);
     } else {
@@ -50,6 +50,15 @@ class _HomePageState extends State<HomePage> {
         ),
       );
     }
+  }
+
+  void _abrirDetalhesViagem(ViagemCollection viagem) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => DetalhesViagemPage(viagem: viagem),
+      ),
+    );
   }
 
   @override
@@ -93,7 +102,7 @@ class _HomePageState extends State<HomePage> {
               viagemAtiva: viagemAtiva,
               onAcessarViagem: () {
                 if (viagemAtiva != null) {
-                  _navegarParaViagem(viagemAtiva);
+                  _navegarParaViagemAtiva(viagemAtiva);
                 }
               },
             ),
@@ -187,7 +196,7 @@ class _HomePageState extends State<HomePage> {
                                       final viagem = homeVM.ultimasViagens[index];
                                       return ViagemCard(
                                         viagem: viagem,
-                                        onTap: () => _navegarParaViagem(viagem),
+                                        onTap: () => _abrirDetalhesViagem(viagem),
                                       );
                                     },
                                   ),
