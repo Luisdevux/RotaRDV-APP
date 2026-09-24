@@ -58,11 +58,9 @@ class CidadeEstadoPicker extends StatelessWidget {
               vertical: 14,
             ),
             decoration: BoxDecoration(
-              color: colors.primaryLight,
+              color: colors.inputBackground,
               border: Border.all(
-                color: hasValue 
-                    ? colors.primary.withValues(alpha: 0.40) 
-                    : colors.primary.withValues(alpha: 0.20),
+                color: colors.border,
               ),
               borderRadius: AppRadius.lgRadius,
             ),
@@ -84,15 +82,16 @@ class CidadeEstadoPicker extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: hasValue ? colors.primary : colors.surfaceOverlay,
+                    color: colors.cardBackground,
                     borderRadius: AppRadius.smRadius,
+                    border: Border.all(color: colors.borderSubtle),
                   ),
                   child: Text(
                     hasValue ? uf! : hintUF,
                     style: GoogleFonts.lexend(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
-                      color: hasValue ? Colors.white : colors.textMuted,
+                      color: hasValue ? colors.textPrimary : colors.textMuted,
                     ),
                   ),
                 ),

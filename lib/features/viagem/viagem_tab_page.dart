@@ -79,23 +79,6 @@ class ViagemTabPage extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          color: colors.primaryLight,
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: colors.primaryBorder,
-                            width: 1.5,
-                          ),
-                        ),
-                        child: Icon(
-                          LucideIcons.truck,
-                          size: 38,
-                          color: colors.primary,
-                        ),
-                      ),
                       const SizedBox(height: AppSpacing.xl),
                       Text(
                         'Nenhuma viagem em andamento',
