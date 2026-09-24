@@ -1,5 +1,13 @@
+// lib/core/constants/api_constants.dart
+
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+// Classe para armazenar constantes relacionadas a API
 class ApiConstants {
-  // ATENÇÃO: Se estiver rodando no celular físico, trocar localhost (ou 10.0.2.2) 
-  // pelo IP da máquina na rede local (ex: 192.168.1.15)
-  static const String baseUrl = 'https://rotardv-api.luisfelipe.dpdns.org';
+  static String get baseUrl {
+    if (!dotenv.isInitialized) {
+      return 'https://rotardv-api.luisfelipe.dpdns.org';
+    }
+    return dotenv.env['API_BASE_URL'] ?? 'https://rotardv-api.luisfelipe.dpdns.org';
+  }
 }

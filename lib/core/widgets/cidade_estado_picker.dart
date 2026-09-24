@@ -1,3 +1,5 @@
+// lib/core/widgets/cidade_estado_picker.dart
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -26,6 +28,7 @@ class CidadeEstadoPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final bool hasValue = (cidade != null && cidade!.isNotEmpty) && (uf != null && uf!.isNotEmpty);
 
     return Column(
@@ -33,32 +36,35 @@ class CidadeEstadoPicker extends StatelessWidget {
       children: [
         Row(
           children: [
-            Icon(icon, color: AppColors.primary, size: 18),
-            const SizedBox(width: 8),
+            Icon(icon, color: colors.primary, size: 18),
+            const SizedBox(width: AppSpacing.sm),
             Text(
               label,
               style: GoogleFonts.lexend(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: const Color(0xFFCBD5E1),
+                color: colors.textSecondary,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.sm),
         InkWell(
           onTap: () => _openPicker(context),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: AppRadius.lgRadius,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.lg,
+              vertical: 14,
+            ),
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.05),
+              color: colors.primaryLight,
               border: Border.all(
                 color: hasValue 
-                    ? AppColors.primary.withValues(alpha: 0.40) 
-                    : AppColors.primary.withValues(alpha: 0.20),
+                    ? colors.primary.withValues(alpha: 0.40) 
+                    : colors.primary.withValues(alpha: 0.20),
               ),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: AppRadius.lgRadius,
             ),
             child: Row(
               children: [
@@ -68,7 +74,7 @@ class CidadeEstadoPicker extends StatelessWidget {
                     style: GoogleFonts.lexend(
                       fontSize: 16,
                       fontWeight: hasValue ? FontWeight.w600 : FontWeight.w400,
-                      color: hasValue ? const Color(0xFFE2E8F0) : const Color(0xFF64748B),
+                      color: hasValue ? colors.textPrimary : colors.textHint,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -78,20 +84,20 @@ class CidadeEstadoPicker extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: hasValue ? AppColors.primary : const Color(0xFF1E293B),
-                    borderRadius: BorderRadius.circular(8),
+                    color: hasValue ? colors.primary : colors.surfaceOverlay,
+                    borderRadius: AppRadius.smRadius,
                   ),
                   child: Text(
                     hasValue ? uf! : hintUF,
                     style: GoogleFonts.lexend(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
-                      color: hasValue ? Colors.white : const Color(0xFF94A3B8),
+                      color: hasValue ? Colors.white : colors.textMuted,
                     ),
                   ),
                 ),
                 const SizedBox(width: 6),
-                const Icon(LucideIcons.chevronDown, color: Color(0xFF94A3B8), size: 18),
+                Icon(LucideIcons.chevronDown, color: colors.textHint, size: 18),
               ],
             ),
           ),
@@ -192,13 +198,15 @@ class _CidadeEstadoBottomSheetState extends State<_CidadeEstadoBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
-      decoration: const BoxDecoration(
-        color: Color(0xFF0F172A),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: colors.cardBackground,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         border: Border(
-          top: BorderSide(color: Color(0xFF334155), width: 1),
+          top: BorderSide(color: colors.border, width: 1),
         ),
       ),
       child: Column(
@@ -210,7 +218,7 @@ class _CidadeEstadoBottomSheetState extends State<_CidadeEstadoBottomSheet> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: const Color(0xFF475569),
+                color: colors.border,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -218,12 +226,12 @@ class _CidadeEstadoBottomSheetState extends State<_CidadeEstadoBottomSheet> {
 
           // Header
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
             child: Row(
               children: [
                 if (_currentStep == _Step.selecionarCidade)
                   IconButton(
-                    icon: const Icon(LucideIcons.arrowLeft, color: AppColors.primary, size: 22),
+                    icon: Icon(LucideIcons.arrowLeft, color: colors.primary, size: 22),
                     onPressed: () {
                       setState(() {
                         _currentStep = _Step.selecionarEstado;
@@ -233,7 +241,7 @@ class _CidadeEstadoBottomSheetState extends State<_CidadeEstadoBottomSheet> {
                     },
                   )
                 else
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -245,7 +253,7 @@ class _CidadeEstadoBottomSheetState extends State<_CidadeEstadoBottomSheet> {
                         style: GoogleFonts.lexend(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
-                          color: const Color(0xFFF1F5F9),
+                          color: colors.textPrimary,
                         ),
                       ),
                       Text(
@@ -254,14 +262,14 @@ class _CidadeEstadoBottomSheetState extends State<_CidadeEstadoBottomSheet> {
                             : 'Cidades de ${_selectedEstado?['name']}',
                         style: GoogleFonts.lexend(
                           fontSize: 12,
-                          color: const Color(0xFF94A3B8),
+                          color: colors.textMuted,
                         ),
                       ),
                     ],
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(LucideIcons.x, color: Color(0xFF94A3B8), size: 20),
+                  icon: Icon(LucideIcons.x, color: colors.textHint, size: 20),
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
@@ -270,25 +278,25 @@ class _CidadeEstadoBottomSheetState extends State<_CidadeEstadoBottomSheet> {
 
           // Search Field
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
             child: Container(
               decoration: BoxDecoration(
-                color: const Color(0xFF1E293B),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: const Color(0xFF334155)),
+                color: colors.inputBackground,
+                borderRadius: AppRadius.mdRadius,
+                border: Border.all(color: colors.border),
               ),
               child: TextField(
                 controller: _searchController,
-                style: GoogleFonts.lexend(color: Colors.white, fontSize: 15),
+                style: GoogleFonts.lexend(color: colors.textPrimary, fontSize: 15),
                 decoration: InputDecoration(
                   hintText: _currentStep == _Step.selecionarEstado
                       ? 'Filtrar estado (ex: MT, Mato Grosso)...'
                       : 'Filtrar cidade...',
-                  hintStyle: GoogleFonts.lexend(color: const Color(0xFF64748B), fontSize: 14),
-                  prefixIcon: const Icon(LucideIcons.search, color: AppColors.primary, size: 18),
+                  hintStyle: GoogleFonts.lexend(color: colors.textHint, fontSize: 14),
+                  prefixIcon: Icon(LucideIcons.search, color: colors.primary, size: 18),
                   suffixIcon: _searchController.text.isNotEmpty
                       ? IconButton(
-                          icon: const Icon(LucideIcons.x, color: Color(0xFF94A3B8), size: 16),
+                          icon: Icon(LucideIcons.x, color: colors.textHint, size: 16),
                           onPressed: () {
                             _searchController.clear();
                             setState(() {
@@ -298,7 +306,10 @@ class _CidadeEstadoBottomSheetState extends State<_CidadeEstadoBottomSheet> {
                         )
                       : null,
                   border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                  filled: false,
                 ),
                 onChanged: (val) {
                   setState(() {
@@ -310,36 +321,36 @@ class _CidadeEstadoBottomSheetState extends State<_CidadeEstadoBottomSheet> {
           ),
 
           const SizedBox(height: 4),
-          const Divider(color: Color(0xFF334155), height: 1),
+          Divider(color: colors.border, height: 1),
 
           // Content List
           Expanded(
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+                ? Center(child: CircularProgressIndicator(color: colors.primary))
                 : _currentStep == _Step.selecionarEstado
-                    ? _buildEstadosList()
-                    : _buildCidadesList(),
+                    ? _buildEstadosList(colors)
+                    : _buildCidadesList(colors),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildEstadosList() {
+  Widget _buildEstadosList(AppColorsExtension colors) {
     if (_filteredEstados.isEmpty) {
       return Center(
         child: Text(
           'Nenhum estado encontrado',
-          style: GoogleFonts.lexend(color: const Color(0xFF94A3B8), fontSize: 14),
+          style: GoogleFonts.lexend(color: colors.textMuted, fontSize: 14),
         ),
       );
     }
 
     return ListView.separated(
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
       itemCount: _filteredEstados.length,
-      separatorBuilder: (context, index) => const Divider(color: Color(0xFF1E293B), height: 1),
+      separatorBuilder: (context, index) => Divider(color: colors.borderSubtle, height: 1),
       itemBuilder: (context, index) {
         final estado = _filteredEstados[index];
         final nome = estado['name'] as String;
@@ -352,16 +363,16 @@ class _CidadeEstadoBottomSheetState extends State<_CidadeEstadoBottomSheet> {
             height: 44,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.15),
+              color: colors.primary.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
+              border: Border.all(color: colors.primary.withValues(alpha: 0.25)),
             ),
             child: Text(
               sigla,
               style: GoogleFonts.lexend(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: AppColors.primary,
+                color: colors.primary,
               ),
             ),
           ),
@@ -370,10 +381,10 @@ class _CidadeEstadoBottomSheetState extends State<_CidadeEstadoBottomSheet> {
             style: GoogleFonts.lexend(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: const Color(0xFFF1F5F9),
+              color: colors.textPrimary,
             ),
           ),
-          trailing: const Icon(LucideIcons.chevronRight, color: Color(0xFF94A3B8), size: 18),
+          trailing: Icon(LucideIcons.chevronRight, color: colors.textHint, size: 18),
           onTap: () {
             setState(() {
               _selectedEstado = estado;
@@ -387,21 +398,21 @@ class _CidadeEstadoBottomSheetState extends State<_CidadeEstadoBottomSheet> {
     );
   }
 
-  Widget _buildCidadesList() {
+  Widget _buildCidadesList(AppColorsExtension colors) {
     if (_filteredCidades.isEmpty) {
       return Center(
         child: Text(
           'Nenhuma cidade encontrada em ${_selectedEstado?['sigla']}',
-          style: GoogleFonts.lexend(color: const Color(0xFF94A3B8), fontSize: 14),
+          style: GoogleFonts.lexend(color: colors.textMuted, fontSize: 14),
         ),
       );
     }
 
     return ListView.separated(
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
       itemCount: _filteredCidades.length,
-      separatorBuilder: (context, index) => const Divider(color: Color(0xFF1E293B), height: 1),
+      separatorBuilder: (context, index) => Divider(color: colors.borderSubtle, height: 1),
       itemBuilder: (context, index) {
         final cidadeItem = _filteredCidades[index];
         final nomeCidade = cidadeItem['name'] as String;
@@ -412,32 +423,32 @@ class _CidadeEstadoBottomSheetState extends State<_CidadeEstadoBottomSheet> {
           leading: Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: const Color(0xFF1E293B),
-              borderRadius: BorderRadius.circular(8),
+              color: colors.surfaceOverlay,
+              borderRadius: AppRadius.smRadius,
             ),
-            child: const Icon(LucideIcons.mapPin, color: AppColors.primary, size: 18),
+            child: Icon(LucideIcons.mapPin, color: colors.primary, size: 18),
           ),
           title: Text(
             nomeCidade,
             style: GoogleFonts.lexend(
               fontSize: 15,
               fontWeight: FontWeight.w600,
-              color: const Color(0xFFF1F5F9),
+              color: colors.textPrimary,
             ),
           ),
           trailing: Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: const Color(0xFF1E293B),
+              color: colors.surfaceOverlay,
               borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: const Color(0xFF334155)),
+              border: Border.all(color: colors.border),
             ),
             child: Text(
               sigla,
               style: GoogleFonts.lexend(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
-                color: AppColors.primary,
+                color: colors.primary,
               ),
             ),
           ),

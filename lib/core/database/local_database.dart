@@ -5,6 +5,7 @@ import 'package:path_provider/path_provider.dart';
 import '../../models/viagem_collection.dart';
 import '../../models/despesa_collection.dart';
 
+// Classe responsável pela inicicialização do banco de dados local IsarDB
 class LocalDatabase {
   static late Isar isar;
 

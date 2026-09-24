@@ -3,15 +3,16 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:app_links/app_links.dart';
+import '../core/theme/app_theme.dart';
 import '../routes.dart';
 
 class DeepLinkService {
   static final AppLinks _appLinks = AppLinks();
   static StreamSubscription<Uri>? _linkSubscription;
 
-  /// Inicializa o listener de Deep Links no Flutter
+  // Inicializa o listener de Deep Links no Flutter
   static Future<void> init(GlobalKey<NavigatorState> navigatorKey) async {
-    // 1. Captura o link inicial caso o app tenha sido aberto a partir do estado fechado
+    // Captura o link inicial caso o app tenha sido aberto a partir do estado fechado
     try {
       final initialUri = await _appLinks.getInitialLink();
       if (initialUri != null) {
@@ -21,7 +22,7 @@ class DeepLinkService {
       debugPrint('[DeepLink] Erro ao obter link inicial: $e');
     }
 
-    // 2. Escuta novos links recebidos enquanto o app estiver aberto ou em segundo plano
+    // Escuta novos links recebidos enquanto o app estiver aberto ou em segundo plano
     _linkSubscription = _appLinks.uriLinkStream.listen(
       (uri) {
         _handleUri(uri, navigatorKey);
@@ -32,14 +33,14 @@ class DeepLinkService {
     );
   }
 
-  /// Trata a rota e ação solicitada pelo Deep Link
+  // Trata a rota e ação solicitada pelo Deep Link
   static void _handleUri(Uri uri, GlobalKey<NavigatorState> navigatorKey) {
     debugPrint('[DeepLink] Link recebido: $uri');
 
     if (uri.scheme == 'rotardv') {
       final context = navigatorKey.currentContext;
 
-      // Caso 1: Verificação de E-mail concluída
+      // Verificação de E-mail concluída
       // Exemplo: rotardv://auth/verified
       if (uri.host == 'auth' && (uri.path == '/verified' || uri.path == 'verified')) {
         navigatorKey.currentState?.pushNamedAndRemoveUntil(
@@ -50,7 +51,7 @@ class DeepLinkService {
         if (context != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              backgroundColor: Color(0xFF2E7D32),
+              backgroundColor: AppColors.success,
               behavior: SnackBarBehavior.floating,
               content: Row(
                 children: [
@@ -71,7 +72,7 @@ class DeepLinkService {
     }
   }
 
-  /// Cancela o listener quando necessário
+  // Cancela o listener quando necessário
   static void dispose() {
     _linkSubscription?.cancel();
   }
