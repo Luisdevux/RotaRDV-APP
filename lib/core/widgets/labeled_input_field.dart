@@ -1,8 +1,11 @@
+// lib/core/widgets/labeled_input_field.dart
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../theme/app_theme.dart';
 
+// Campos de entrada de texto o label, ícone e validação de erros
 class LabeledInputField extends StatelessWidget {
   final String label;
   final IconData icon;

@@ -11,13 +11,7 @@ import '../../routes.dart';
 import '../home/home_viewmodel.dart';
 import 'detalhes_viagem_page.dart';
 
-/*──────────────────────────────────────────────────────────────*/
-/* ABA: STATUS DA JORNADA ATIVA OU CONVITE DE OPERAÇÃO          */
-/*──────────────────────────────────────────────────────────────*/
-
-/// Aba intermediária do shell de navegação. Caso haja uma viagem em andamento,
-/// apresenta imediatamente a tela de gestão detalhada; caso contrário, apresenta
-/// o estado de boas-vindas com atalho para abertura de nova rota.
+// Aba intermediária do shell de navegação. Caso haja uma viagem em andamento, apresenta a tela de gestão detalhada, se não, apresenta o estado de boas-vindas com atalho para abertura de nova rota
 class ViagemTabPage extends StatelessWidget {
   final ValueChanged<int>? onNavigateToTab;
 

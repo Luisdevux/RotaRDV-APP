@@ -1,3 +1,5 @@
+// lib/features/auth/auth_viewmodel.dart
+
 import 'package:flutter/foundation.dart';
 import '../../services/auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';

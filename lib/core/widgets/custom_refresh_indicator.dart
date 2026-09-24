@@ -1,6 +1,9 @@
+// lib/core/widgets/custom_refresh_indicator.dart
+
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
+// Refresh do sistema com as cores padrão do sistema
 class CustomRefreshIndicator extends StatelessWidget {
   final Widget child;
   final Future<void> Function() onRefresh;

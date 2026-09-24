@@ -1,4 +1,6 @@
-/// Escala padronizada de espaçamentos (Padding / Margin / Gap) do Figma.
+// lib/core/theme/app_spacing.dart
+
+// Escala de espaçamentos do sistema (Padding / Margin / Gap)
 class AppSpacing {
   static const double xs = 4.0;
   static const double sm = 8.0;

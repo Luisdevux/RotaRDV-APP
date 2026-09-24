@@ -1,7 +1,9 @@
+// lib/core/widgets/app_card.dart
+
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
-/// Componente modular e reutilizável de Cartão (Surface / Card) do Figma.
+// Componente modular e reutilizável de cards do aplicativo, permitindo personalizações para cada objetivo diferente
 class AppCard extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry? padding;

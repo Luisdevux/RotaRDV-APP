@@ -1,3 +1,5 @@
+// lib/features/home/home_page.dart
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -18,12 +20,7 @@ import 'widgets/home_header_widget.dart';
 import 'widgets/home_jornada_card.dart';
 import 'widgets/home_session_expired_banner.dart';
 
-/*──────────────────────────────────────────────────────────────*/
-/* TELA PRINCIPAL: PAINEL OPERACIONAL DO MOTORISTA              */
-/*──────────────────────────────────────────────────────────────*/
-
-/// Página inicial da aplicação móvel. Centraliza o resumo da operação atual,
-/// status de conectividade, atalhos de rota e histórico de viagens recentes.
+// Página inicial da aplicação móvel. Centraliza o resumo da operação atual, status de conectividade, atalhos de rota e histórico de viagens recentes
 class HomePage extends StatefulWidget {
   final ValueChanged<int>? onNavigateToTab;
 

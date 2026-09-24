@@ -10,7 +10,7 @@ class DeepLinkService {
   static final AppLinks _appLinks = AppLinks();
   static StreamSubscription<Uri>? _linkSubscription;
 
-  /// Inicializa o listener de Deep Links no Flutter
+  // Inicializa o listener de Deep Links no Flutter
   static Future<void> init(GlobalKey<NavigatorState> navigatorKey) async {
     // Captura o link inicial caso o app tenha sido aberto a partir do estado fechado
     try {
@@ -33,7 +33,7 @@ class DeepLinkService {
     );
   }
 
-  /// Trata a rota e ação solicitada pelo Deep Link
+  // Trata a rota e ação solicitada pelo Deep Link
   static void _handleUri(Uri uri, GlobalKey<NavigatorState> navigatorKey) {
     debugPrint('[DeepLink] Link recebido: $uri');
 
@@ -72,7 +72,7 @@ class DeepLinkService {
     }
   }
 
-  /// Cancela o listener quando necessário
+  // Cancela o listener quando necessário
   static void dispose() {
     _linkSubscription?.cancel();
   }

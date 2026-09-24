@@ -1,3 +1,5 @@
+// lib/features/home/home_viewmodel.dart
+
 import 'package:flutter/foundation.dart';
 import 'package:isar/isar.dart';
 import '../../core/database/local_database.dart';
@@ -6,6 +8,7 @@ import '../../models/viagem_collection.dart';
 import '../../services/sync_service.dart';
 import '../auth/auth_viewmodel.dart';
 
+// ViewModel responsável por gerenciar o estado da tela inicial, incluindo carregamento de dados locais, sincronização com a API e gerenciamento de sessão expirada
 class HomeViewModel extends ChangeNotifier {
   final SyncService _syncService = SyncService();
   AuthViewModel authViewModel;

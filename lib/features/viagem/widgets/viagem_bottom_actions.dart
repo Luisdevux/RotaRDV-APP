@@ -1,14 +1,11 @@
+// lib/features/viagem/widgets/viagem_bottom_actions.dart
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../core/theme/app_theme.dart';
 
-/*──────────────────────────────────────────────────────────────*/
-/* COMPONENTE: BARRA INFERIOR FIXA DE AÇÕES OPERACIONAIS        */
-/*──────────────────────────────────────────────────────────────*/
-
-/// Componente modular fixado na base da tela com botões de ação rápida:
-/// encerramento da jornada e novo lançamento financeiro com comprovante.
+// Componente modular fixado na base da tela com botões de ação rápida: encerramento da jornada e novo lançamento financeiro com comprovante
 class ViagemBottomActions extends StatelessWidget {
   final VoidCallback onEncerrarViagem;
   final VoidCallback onLancarDespesa;

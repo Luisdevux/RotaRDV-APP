@@ -13,13 +13,8 @@ import '../../services/sync_service.dart';
 import '../auth/auth_viewmodel.dart';
 import '../home/home_viewmodel.dart';
 
-/*──────────────────────────────────────────────────────────────*/
-/* TELA: ABERTURA E REGISTRO DE NOVA VIAGEM                     */
-/*──────────────────────────────────────────────────────────────*/
-
-/// Formulário operacional para início de uma nova jornada rodoviária.
-/// Permite definir a origem e destino utilizando a base geográfica do IBGE,
-/// odômetro inicial do veículo e validação de concorrência com rotas ativas.
+// Formulário operacional para início de uma nova viagem
+// Permite definir a origem e destino utilizando a base geográfica do IBGE, odômetro inicial do veículo e validação de concorrência com rotas ativas
 class NovaViagemPage extends StatefulWidget {
   const NovaViagemPage({super.key});
 
@@ -57,10 +52,6 @@ class _NovaViagemPageState extends State<NovaViagemPage> {
     }
     return null;
   }
-
-  /*──────────────────────────────────────────────────────────────*/
-  /* GRAVAÇÃO LOCAL E DISPARO DE SINCRONIZAÇÃO                    */
-  /*──────────────────────────────────────────────────────────────*/
 
   Future<void> _iniciarViagem(AppColorsExtension colors) async {
     final origem = _origemCidade?.trim() ?? '';

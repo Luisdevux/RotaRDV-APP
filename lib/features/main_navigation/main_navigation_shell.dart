@@ -1,3 +1,5 @@
+// lib/features/main_navigation/main_navigation_shell.dart
+
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -14,6 +16,7 @@ import '../viagem/viagem_tab_page.dart';
 import '../viagem/viagens_list_page.dart';
 import '../perfil/perfil_page.dart';
 
+// Shell de navegação principal da aplicação, gerenciando a troca de abas e a persistência do estado da interface
 class MainNavigationShell extends StatefulWidget {
   final int initialIndex;
 

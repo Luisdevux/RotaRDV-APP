@@ -1,3 +1,5 @@
+// lib/features/viagem/widgets/viagem_odometro_resumo_card.dart
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -7,12 +9,7 @@ import '../../../core/widgets/app_card.dart';
 import '../../../models/viagem_collection.dart';
 import '../../despesas/despesa_viewmodel.dart';
 
-/*──────────────────────────────────────────────────────────────*/
-/* COMPONENTE: MÉTRICAS OPERACIONAIS E GASTOS DA VIAGEM         */
-/*──────────────────────────────────────────────────────────────*/
-
-/// Componente modular que renderiza lado a lado os indicadores de odômetro
-/// (KM percorrido no trecho) e o total financeiro de despesas lançadas.
+// Componente modular que renderiza lado a lado os indicadores de odômetro (KM percorrido no trecho) e o total financeiro de despesas lançadas.
 class ViagemOdometroResumoCard extends StatelessWidget {
   final ViagemCollection viagem;
   final DespesaViewModel despesaVM;

@@ -1,3 +1,5 @@
+// lib/features/despesas/despesa_viewmodel.dart
+
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
@@ -8,12 +10,7 @@ import '../../models/despesa_collection.dart';
 import '../../models/viagem_collection.dart';
 import '../../services/sync_service.dart';
 
-/*──────────────────────────────────────────────────────────────*/
-/* MODELO: MÉTRICAS CONSOLIDADAS DE CONSUMO DE COMBUSTÍVEL      */
-/*──────────────────────────────────────────────────────────────*/
-
-/// Encapsula os cálculos estatísticos e de eficiência energética do veículo
-/// para um trecho específico ou para a totalidade da jornada.
+// Encapsula os cálculos estatísticos e de eficiência energética do veículo para um trecho específico ou para a totalidade da jornada.
 class MetricasConsumoViagem {
   final double totalLitros;
   final double kmPercorridoTotal;
@@ -38,10 +35,7 @@ class MetricasConsumoViagem {
   bool get temDadosAbastecimento => totalAbastecimentos > 0;
 }
 
-/*──────────────────────────────────────────────────────────────*/
-/* ENUM: CATEGORIAS DE DESPESA OPERACIONAL                      */
-/*──────────────────────────────────────────────────────────────*/
-
+// ENUM: CATEGORIAS DE DESPESA OPERACIONAL
 enum CategoriaDespesa {
   abastecimento('ABASTECIMENTO', 'Abastecimento'),
   alimentacao('ALIMENTACAO', 'Alimentação'),
@@ -61,12 +55,7 @@ enum CategoriaDespesa {
   }
 }
 
-/*──────────────────────────────────────────────────────────────*/
-/* VIEWMODEL: GERENCIAMENTO DE DESPESAS E CONSUMO               */
-/*──────────────────────────────────────────────────────────────*/
-
-/// ViewModel responsável pelo ciclo de vida das despesas operacionais,
-/// validação estrita de consistência de odômetro e cálculos de eficiência energética.
+// ViewModel responsável pelo ciclo de vida das despesas operacionais, validação estrita de consistência de odômetro e cálculos de eficiência de consumo
 class DespesaViewModel extends ChangeNotifier {
   final Isar _isar = LocalDatabase.isar;
   final SyncService _syncService = SyncService();
@@ -96,10 +85,9 @@ class DespesaViewModel extends ChangeNotifier {
     return mapa;
   }
 
-  // ──────────────────────── 1 • VALIDAÇÃO DE DOMÍNIO ────────────────────────
+  // ──────────────────────── VALIDAÇÃO DE DOMÍNIO ──────────────────────── //
 
-  /// Valida as regras de negócio para lançamento de despesa, impedindo inconsistências
-  /// de odômetro e campos numéricos ausentes antes da persistência.
+  // Valida as regras de negócio para lançamento de despesa, impedindo inconsistências de odômetro e campos numéricos ausentes antes da persistência.
   static String? validarLancamento({
     required double valorTotal,
     required String tipo,
@@ -128,9 +116,9 @@ class DespesaViewModel extends ChangeNotifier {
     return null;
   }
 
-  // ──────────────────────── 2 • CARREGAMENTO DE DADOS ───────────────────────
+  // ──────────────────────── CARREGAMENTO DE DADOS ─────────────────────── //
 
-  /// Carrega as despesas registradas para a rota especificada
+  // Carrega as despesas registradas para a rota especificada
   Future<void> carregarDespesas(String viagemId) async {
     _currentViagemId = viagemId;
     _isLoading = true;
@@ -180,9 +168,9 @@ class DespesaViewModel extends ChangeNotifier {
     }
   }
 
-  // ──────────────────────── 3 • CÁLCULOS DE CONSUMO ─────────────────────────
+  // ──────────────────────── CÁLCULOS DE CONSUMO ───────────────────────── //
 
-  /// Calcula as métricas consolidadas de consumo e eficiência (km/l)
+  // Calcula as métricas consolidadas de consumo e eficiência (km/l)
   MetricasConsumoViagem calcularMetricasConsumo(
     ViagemCollection viagem, {
     double? kmFinalTemporario,
@@ -293,9 +281,9 @@ class DespesaViewModel extends ChangeNotifier {
     return (media: media, distancia: distancia, litros: litros);
   }
 
-  // ──────────────────────── 4 • PERSISTÊNCIA DE DESPESA ─────────────────────
+  // ──────────────────────── PERSISTÊNCIA DE DESPESA ───────────────────── //
 
-  /// Persiste a nova despesa no banco local após validação de consistência
+  // Persiste a nova despesa no banco local após validação de consistência
   Future<bool> salvarDespesa({
     required String viagemId,
     required String tipo,
@@ -379,9 +367,9 @@ class DespesaViewModel extends ChangeNotifier {
     return arquivoSalvo.path;
   }
 
-  // ──────────────────────── 5 • EXCLUSÃO DE DESPESA ─────────────────────────
+  // ──────────────────────── EXCLUSÃO DE DESPESA ───────────────────────── //
 
-  /// Realiza a exclusão da despesa (com soft delete para sincronização quando já sincronizado)
+  // Realiza a exclusão da despesa (com soft delete para sincronização quando já sincronizado)
   Future<bool> excluirDespesa(DespesaCollection despesa) async {
     try {
       await _limparArquivoLocalSeApp(despesa);
@@ -409,6 +397,7 @@ class DespesaViewModel extends ChangeNotifier {
     }
   }
 
+  // Limpa o arquivo local da despesa se ela foi tirada no app
   Future<void> _limparArquivoLocalSeApp(DespesaCollection despesa) async {
     if (despesa.fotoTiradaNoApp != true || despesa.fotoAnexoLocalPath == null) return;
     final file = File(despesa.fotoAnexoLocalPath!);

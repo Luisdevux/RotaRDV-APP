@@ -6,12 +6,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../models/viagem_collection.dart';
 
-/*──────────────────────────────────────────────────────────────*/
-/* COMPONENTE: CARTÃO DE ROTA OPERACIONAL E LINHA DO TEMPO      */
-/*──────────────────────────────────────────────────────────────*/
-
-/// Componente modular que renderiza o itinerário da rota com timeline gráfica
-/// de origem e destino, além das credenciais do veículo tracionador vinculado.
+// Componente modular que renderiza o itinerário da rota com timeline gráfica de origem e destino, além das credenciais do veículo tracionador vinculado.
 class ViagemRotaCard extends StatelessWidget {
   final ViagemCollection viagem;
   final Map<String, dynamic>? veiculo;

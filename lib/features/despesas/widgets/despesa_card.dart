@@ -1,3 +1,5 @@
+// lib/features/despesas/widgets/despesa_card.dart
+
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -8,12 +10,8 @@ import '../../../core/widgets/app_card.dart';
 import '../../../models/despesa_collection.dart';
 import '../despesa_viewmodel.dart';
 
-/*──────────────────────────────────────────────────────────────*/
-/* COMPONENTE: ITEM DE LISTAGEM DE DESPESA INDIVIDUAL           */
-/*──────────────────────────────────────────────────────────────*/
-
-/// Card representativo de uma despesa cadastrada, exibindo
-/// metadados de categoria, valor, data, posto e status de sincronização.
+// Card representativo de uma despesa cadastrada, exibindo
+// metadados de categoria, valor, data, posto e status de sincronização.
 class DespesaCard extends StatelessWidget {
   final DespesaCollection despesa;
   final VoidCallback? onTap;

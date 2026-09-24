@@ -1,3 +1,5 @@
+// lib/main.dart
+
 import 'package:app_despesas/core/theme/app_theme.dart';
 import 'package:app_despesas/core/theme/theme_provider.dart';
 import 'package:flutter/material.dart';

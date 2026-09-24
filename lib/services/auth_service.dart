@@ -1,3 +1,5 @@
+// lib/services/auth_service.dart
+
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -6,6 +8,7 @@ import '../core/database/local_database.dart';
 import '../core/network/api_client.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+// Serviço responsável por autenticação de usuários (login, logout, refresh token)
 class AuthService {
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     scopes: [

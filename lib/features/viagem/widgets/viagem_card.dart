@@ -1,3 +1,5 @@
+// lib/features/viagem/widgets/viagem_card.dart
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -7,12 +9,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../models/viagem_collection.dart';
 
-/*──────────────────────────────────────────────────────────────*/
-/* COMPONENTE: CARTÃO RESUMO DE VIAGEM E AUDITORIA DE ROTA      */
-/*──────────────────────────────────────────────────────────────*/
-
-/// Componente modular e desacoplado que renderiza o resumo visual de uma viagem,
-/// incluindo trajeto de origem/destino, status operacional, data e odômetros.
+// Componente modular e desacoplado que renderiza o resumo visual de uma viagem, incluindo trajeto de origem/destino, status operacional, data e odômetros.
 class ViagemCard extends StatelessWidget {
   final ViagemCollection viagem;
   final VoidCallback? onTap;

@@ -1,9 +1,12 @@
+// lib/core/widgets/network_status_bar.dart
+
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
 
+// Barra de status de rede que exibe o status da conexão
 class NetworkStatusBar extends StatefulWidget {
   final bool persistentWhenOffline;
 
@@ -16,6 +19,7 @@ class NetworkStatusBar extends StatefulWidget {
   State<NetworkStatusBar> createState() => _NetworkStatusBarState();
 }
 
+// Estado da barra de status de rede
 class _NetworkStatusBarState extends State<NetworkStatusBar> {
   late StreamSubscription<List<ConnectivityResult>> _subscription;
   bool _isVisible = false;

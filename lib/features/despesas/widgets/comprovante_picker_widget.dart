@@ -1,3 +1,5 @@
+// lib/features/despesas/widgets/comprovante_picker_widget.dart
+
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -6,14 +8,9 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_card.dart';
 
-/*──────────────────────────────────────────────────────────────*/
-/* COMPONENTE: SELETOR E CAPTURA DE COMPROVANTE FISCAL          */
-/*──────────────────────────────────────────────────────────────*/
-
 typedef OnComprovanteImageChanged = void Function(File? file, bool isCamera);
 
-/// Componente para captura por câmera nativa ou anexo da galeria
-/// de comprovantes fiscais com suporte à persistência antes do encerramento de processo.
+// Componente para captura por câmera nativa ou anexo da galeria de comprovantes fiscais com suporte à persistência antes do encerramento de processo
 class ComprovantePickerWidget extends StatelessWidget {
   final File? selectedImage;
   final OnComprovanteImageChanged onImageChanged;

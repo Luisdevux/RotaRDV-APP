@@ -1,3 +1,5 @@
+// lib/features/viagem/widgets/encerrar_viagem_consumo_card.dart
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -5,12 +7,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../despesas/despesa_viewmodel.dart';
 
-/*──────────────────────────────────────────────────────────────*/
-/* COMPONENTE: PREVISÃO DE CONSUMO NO ENCERRAMENTO DA VIAGEM    */
-/*──────────────────────────────────────────────────────────────*/
-
-/// Componente modular que exibe o cálculo dinâmico da média final de consumo (km/l)
-/// atualizada em tempo real conforme o odômetro de chegada digitado pelo condutor.
+// Componente modular que exibe o cálculo dinâmico da média final de consumo (km/l) atualizada em tempo real conforme o odômetro de chegada digitado pelo condutor
 class EncerrarViagemConsumoCard extends StatelessWidget {
   final MetricasConsumoViagem metricas;
 

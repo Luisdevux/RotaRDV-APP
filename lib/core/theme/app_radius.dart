@@ -1,6 +1,8 @@
+// lib/core/theme/app_radius.dart
+
 import 'package:flutter/material.dart';
 
-/// Escala padronizada de raios de borda (Border Radius) do Figma.
+// Escala padronizada de Border Radius para facilitar o uso em todo o projeto em um único lugar
 class AppRadius {
   static const double xs = 4.0;
   static const double sm = 8.0;

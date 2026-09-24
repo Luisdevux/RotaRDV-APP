@@ -18,13 +18,7 @@ import 'widgets/viagem_consumo_card.dart';
 import 'widgets/viagem_odometro_resumo_card.dart';
 import 'widgets/viagem_rota_card.dart';
 
-/*──────────────────────────────────────────────────────────────*/
-/* TELA: GERENCIAMENTO E DETALHES DA VIAGEM                     */
-/*──────────────────────────────────────────────────────────────*/
-
-/// Página responsável por exibir a visão consolidada da viagem selecionada:
-/// trajeto de origem/destino, indicadores de consumo energético, registros
-/// financeiros de despesas e controles de encerramento da rota.
+// Página responsável por exibir a visão consolidada da viagem selecionada: trajeto de origem/destino, indicadores de consumo, registros financeiros de despesas e controles de encerramento da rota
 class DetalhesViagemPage extends StatefulWidget {
   final ViagemCollection viagem;
   final bool isTab;

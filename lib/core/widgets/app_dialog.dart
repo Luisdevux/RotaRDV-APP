@@ -1,8 +1,10 @@
+// lib/core/widgets/app_dialog.dart
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
 
-/// Componente modular e reutilizável para exibição de Diálogos / Modais de Alerta e Confirmação.
+// Componente modular e reutilizável para exibição de Diálogos / Modais de Alerta e Confirmação
 class AppDialog extends StatelessWidget {
   final String title;
   final String message;
@@ -29,7 +31,7 @@ class AppDialog extends StatelessWidget {
     this.isLoading = false,
   });
 
-  /// Método utilitário estático para abrir o diálogo de forma padronizada.
+  // Método utilitário estático para abrir o diálogo de forma padronizada
   static Future<bool?> show({
     required BuildContext context,
     required String title,

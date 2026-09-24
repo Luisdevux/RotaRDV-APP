@@ -1,3 +1,5 @@
+// lib/features/viagem/widgets/viagem_consumo_card.dart
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -6,12 +8,7 @@ import '../../../core/widgets/app_card.dart';
 import '../../../models/viagem_collection.dart';
 import '../../despesas/despesa_viewmodel.dart';
 
-/*──────────────────────────────────────────────────────────────*/
-/* COMPONENTE: INDICADOR DE EFICIÊNCIA ENERGÉTICA E CONSUMO     */
-/*──────────────────────────────────────────────────────────────*/
-
-/// Componente modular que renderiza as médias consolidadas de consumo (km/l)
-/// da viagem e do último trecho abastecido.
+// Componente modular que renderiza as médias consolidadas de consumo (km/l) da viagem e do último trecho abastecido
 class ViagemConsumoCard extends StatelessWidget {
   final ViagemCollection viagem;
   final DespesaViewModel despesaVM;

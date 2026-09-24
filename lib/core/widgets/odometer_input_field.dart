@@ -1,8 +1,11 @@
+// lib/core/widgets/odometer_input_field.dart
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
 import 'thousands_formatter.dart';
 
+// Iput personalizado para odômetro, com ícone, label, campo de texto e unidade de medida (KM).
 class OdometerInputField extends StatelessWidget {
   final String label;
   final IconData icon;

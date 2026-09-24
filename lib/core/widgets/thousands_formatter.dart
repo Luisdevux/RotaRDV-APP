@@ -1,5 +1,8 @@
+// lib/core/widgets/thousands_formatter.dart
+
 import 'package:flutter/services.dart';
 
+// Formata o valor do odômetro com pontos a cada 3 dígitos, da direita para a esquerda.
 class ThousandsFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(

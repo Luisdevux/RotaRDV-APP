@@ -10,12 +10,7 @@ import '../home/home_viewmodel.dart';
 import 'detalhes_viagem_page.dart';
 import 'widgets/viagem_card.dart';
 
-/*──────────────────────────────────────────────────────────────*/
-/* TELA: HISTÓRICO GERAL E CONSULTA DE VIAGENS                  */
-/*──────────────────────────────────────────────────────────────*/
-
-/// Página responsável por listar o histórico completo de viagens do condutor,
-/// com suporte a pesquisa por texto (cidade/UF) e filtros por período e status operacional.
+// Página responsável por listar o histórico completo de viagens do condutor, com suporte a pesquisa por texto (cidade/UF) e filtros por período e status operacional
 class ViagensListPage extends StatefulWidget {
   final bool isTab;
   final ValueChanged<int>? onNavigateToTab;

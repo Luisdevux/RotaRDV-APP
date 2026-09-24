@@ -1,14 +1,11 @@
+// lib/features/home/widgets/home_header_widget.dart
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../core/theme/app_theme.dart';
 
-/*──────────────────────────────────────────────────────────────*/
-/* COMPONENTE: CABEÇALHO DO MOTORISTA E VEÍCULO VINCULADO       */
-/*──────────────────────────────────────────────────────────────*/
-
-/// Componente modular para exibição da identificação do condutor,
-/// foto de perfil e os dados essenciais do veículo vinculado à operação.
+// Componente modular para exibição da identificação do condutor, foto de perfil e os dados essenciais do veículo vinculado à operação
 class HomeHeaderWidget extends StatelessWidget {
   final String userName;
   final String? userPhotoUrl;

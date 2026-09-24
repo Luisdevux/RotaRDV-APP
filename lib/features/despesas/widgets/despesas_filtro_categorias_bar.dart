@@ -1,14 +1,11 @@
+// lib/features/despesas/widgets/despesas_filtro_categorias_bar.dart
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../core/theme/app_theme.dart';
 
-/*──────────────────────────────────────────────────────────────*/
-/* COMPONENTE: BARRA HORIZONTAL DE FILTROS POR CATEGORIA        */
-/*──────────────────────────────────────────────────────────────*/
-
-/// Barra de filtros com rolagem horizontal e chevrons indicadores
-/// para segmentar a visualização dos lançamentos de despesa.
+// Barra de filtros com rolagem horizontal e chevrons indicadores para segmentar a visualização dos lançamentos de despesa.
 class DespesasFiltroCategoriasBar extends StatefulWidget {
   final String filtroSelecionado;
   final ValueChanged<String> onFiltroChanged;

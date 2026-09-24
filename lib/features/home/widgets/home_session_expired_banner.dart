@@ -1,15 +1,13 @@
+// lib/features/home/widgets/home_session_expired_banner.dart
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../auth/widgets/reauth_bottom_sheet.dart';
 
-/*──────────────────────────────────────────────────────────────*/
-/* COMPONENTE: BANNER DE SESSÃO EXPIRADA E SEGURANÇA OFFLINE    */
-/*──────────────────────────────────────────────────────────────*/
-
-/// Alerta visual que notifica o condutor sobre a expiração do token remoto,
-/// garantindo a persistência local dos dados e permitindo reautenticação imediata.
+// Alerta visual que notifica o condutor sobre a expiração do token remoto,
+// garantindo a persistência local dos dados e permitindo reautenticação imediata
 class HomeSessionExpiredBanner extends StatelessWidget {
   final String? userEmail;
 

@@ -1,3 +1,5 @@
+// lib/features/despesas/despesa_viewmodel.dart
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -16,12 +18,7 @@ import 'widgets/despesa_card.dart';
 import 'widgets/despesas_filtro_categorias_bar.dart';
 import 'widgets/despesas_resumo_gastos_card.dart';
 
-/*──────────────────────────────────────────────────────────────*/
-/* TELA: RELATÓRIO E GERENCIAMENTO DE DESPESAS DA VIAGEM        */
-/*──────────────────────────────────────────────────────────────*/
-
-/// Página responsável por consolidar e listar todas as despesas lançadas
-/// para uma determinada rota, permitindo filtragem por categoria e novo registro.
+// Página responsável por listar todas as despesas lançadas para uma determinada rota, permitindo filtragem por categoria e novo registro.
 class DespesasViagemPage extends StatefulWidget {
   final ViagemCollection? viagem;
   final String? viagemId;

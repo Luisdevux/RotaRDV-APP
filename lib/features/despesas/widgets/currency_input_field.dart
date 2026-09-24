@@ -1,3 +1,5 @@
+// lib/features/despesas/widgets/currency_input_field.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -5,11 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../core/theme/app_theme.dart';
 
-/*──────────────────────────────────────────────────────────────*/
-/* COMPONENTE: CAMPO DE ENTRADA MONETÁRIA (BRL)                 */
-/*──────────────────────────────────────────────────────────────*/
-
-/// Campo de texto com máscara automática para digitação de moeda em reais (R$).
+// Campo de texto com máscara automática para digitação de moeda em reais (R$)
 class CurrencyInputField extends StatelessWidget {
   final String label;
   final TextEditingController controller;

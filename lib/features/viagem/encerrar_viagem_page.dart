@@ -17,12 +17,7 @@ import '../home/home_viewmodel.dart';
 import 'widgets/encerrar_viagem_consumo_card.dart';
 import 'widgets/viagem_rota_card.dart';
 
-/*──────────────────────────────────────────────────────────────*/
-/* TELA: CONCLUSÃO E AUDITORIA DE FECHAMENTO DA VIAGEM          */
-/*──────────────────────────────────────────────────────────────*/
-
-/// Página responsável pelo registro do odômetro final, cálculo de fechamento
-/// da rota, auditoria de abastecimentos e encerramento da jornada com persistência offline.
+// Página responsável pelo registro do odômetro final, cálculo de fechamento da rota, auditoria de abastecimentos e encerramento da jornada com persistência offline
 class EncerrarViagemPage extends StatefulWidget {
   final ViagemCollection viagem;
 
@@ -78,10 +73,6 @@ class _EncerrarViagemPageState extends State<EncerrarViagemPage> {
       return 'R\$ ${val.toStringAsFixed(2)}';
     }
   }
-
-  /*──────────────────────────────────────────────────────────────*/
-  /* PERSISTÊNCIA E TRANSAÇÃO LOCAL DE ENCERRAMENTO               */
-  /*──────────────────────────────────────────────────────────────*/
 
   Future<void> _confirmarEncerramento(BuildContext context, AppColorsExtension colors) async {
     final bool? confirm = await AppDialog.show(

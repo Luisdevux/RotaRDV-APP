@@ -1,8 +1,10 @@
+// lib/core/widgets/app_loading_indicator.dart
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
 
-/// Indicador de progresso centralizado padronizado com as cores do tema.
+// Indicador de progresso centralizado padronizado com as cores do tema
 class AppLoadingIndicator extends StatelessWidget {
   final String? message;
   final double size;

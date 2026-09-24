@@ -1,9 +1,10 @@
+// lib/core/widgets/app_empty_state.dart
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
 
-/// Componente padronizado para exibir estado vazio em listas e consultas.
-/// Design sóbrio, limpo e direto, sem poluição de IA.
+// Componente padronizado para exibir estado vazio em listas e consultas
 class AppEmptyState extends StatelessWidget {
   final IconData? icon;
   final String title;

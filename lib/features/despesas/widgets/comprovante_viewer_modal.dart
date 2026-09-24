@@ -13,12 +13,7 @@ import '../../../models/despesa_collection.dart';
 import '../../../services/sync_service.dart';
 import '../despesa_viewmodel.dart';
 
-/*──────────────────────────────────────────────────────────────*/
-/* MODAL: VISUALIZADOR DE COMPROVANTE E DETALHES DA DESPESA     */
-/*──────────────────────────────────────────────────────────────*/
-
-/// Bottom Sheet modal que exibe a auditoria completa de um lançamento financeiro,
-/// foto do comprovante com zoom, dados fiscais e opção de exclusão offline-first.
+// Bottom Sheet modal que exibe a auditoria completa de um lançamento financeiro, foto do comprovante com zoom, dados fiscais e opção de exclusão offline-first
 class ComprovanteViewerModal extends StatefulWidget {
   final DespesaCollection despesa;
 

@@ -1,3 +1,5 @@
+// lib/services/storage_cleaner_service.dart
+
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:isar/isar.dart';
@@ -5,16 +7,17 @@ import '../core/database/local_database.dart';
 import '../models/despesa_collection.dart';
 import '../models/viagem_collection.dart';
 
+// Serviço responsável por limpar fotos antigas de comprovantes locais no celular
 class StorageCleanerService {
   static final StorageCleanerService _instance = StorageCleanerService._internal();
   factory StorageCleanerService() => _instance;
   StorageCleanerService._internal();
 
-  /// Executa a exclusão de fotos de comprovantes locais no celular:
-  /// - Apenas de viagens concluídas há mais de 15 dias.
-  /// - Apenas de despesas já 100% sincronizadas com backup na nuvem (fotoAnexoUrl preenchida).
-  /// - Apenas de fotos tiradas de DENTRO do app pela câmera (fotoTiradaNoApp == true).
-  /// - NUNCA apaga fotos selecionadas da galeria pessoal do motorista.
+  // Executa a exclusão de fotos de comprovantes locais no celular:
+  // - Apenas de viagens concluídas há mais de 15 dias
+  // - Apenas de despesas já 100% sincronizadas com backup na nuvem (fotoAnexoUrl preenchida)
+  // - Apenas de fotos tiradas de DENTRO do app pela câmera (fotoTiradaNoApp == true).
+  // - NUNCA apaga fotos selecionadas da galeria pessoal do motorista
   Future<int> purgeOldSyncedPhotos() async {
     try {
       final isar = LocalDatabase.isar;

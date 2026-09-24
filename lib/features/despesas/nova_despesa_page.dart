@@ -1,3 +1,5 @@
+// lib/features/despesas/nova_despesa_page.dart
+
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -18,12 +20,8 @@ import 'widgets/comprovante_picker_widget.dart';
 import 'widgets/currency_input_field.dart';
 import 'widgets/nova_despesa_categoria_banner.dart';
 
-/*──────────────────────────────────────────────────────────────*/
-/* TELA: LANÇAMENTO DE DESPESA OPERACIONAL OU ABASTECIMENTO     */
-/*──────────────────────────────────────────────────────────────*/
-
-/// Formulário para cadastro e auditoria de gastos operacionais e abastecimentos.
-/// Implementa validação estrita de odômetro e proteção contra encerramento de processo Android.
+// Formulário para cadastro e auditoria de gastos operacionais e abastecimentos
+// Implementa validação estrita de odômetro e proteção contra encerramento de processo Android
 class NovaDespesaPage extends StatefulWidget {
   final String? viagemId;
   final CategoriaDespesa? initialCategoria;
@@ -648,12 +646,7 @@ class _NovaDespesaPageState extends State<NovaDespesaPage> {
   }
 }
 
-/*──────────────────────────────────────────────────────────────*/
-/* SERVIÇO AUXILIAR: PERSISTÊNCIA TEMPORÁRIA DO FORMULÁRIO       */
-/*──────────────────────────────────────────────────────────────*/
-
-/// Gerenciador isolado para guardar e recuperar dados digitados
-/// quando o sistema operacional descarta a Activity da câmera.
+// Gerenciador isolado para guardar e recuperar dados digitados quando o sistema operacional descarta a Activity da câmera
 abstract class _NovaDespesaDraftManager {
   static Future<void> salvar({
     required String viagemId,

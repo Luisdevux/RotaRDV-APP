@@ -1,7 +1,9 @@
+// lib/core/theme/app_colors.dart
+
 import 'package:flutter/material.dart';
 
-/// Extensão de cores personalizada do RotaRDV para suporte nativo a Tema Claro e Escuro.
-/// Use sempre `context.colors.<nome_da_cor>` nos widgets.
+// Extensão de cores personalizada do sistema para suporte nativo a Tema Claro e Escuro.
+// A forma de uso é sempre `context.colors.<nome_da_cor>` nos widgets.
 @immutable
 class AppColorsExtension extends ThemeExtension<AppColorsExtension> {
   const AppColorsExtension({
@@ -62,7 +64,7 @@ class AppColorsExtension extends ThemeExtension<AppColorsExtension> {
   final Color borderSubtle;
   final Color deepNavy;
 
-  // ═══════════════════ DARK THEME (Tema Escuro Profundo) ═══════════════════
+  // ═══════════════════ DARK THEME ═══════════════════ //
   static const dark = AppColorsExtension(
     background: Color(0xFF0A0F1A),
     backgroundAlt: Color(0xFF0C1326),
@@ -93,7 +95,7 @@ class AppColorsExtension extends ThemeExtension<AppColorsExtension> {
     deepNavy: Color(0xFF001F3F),
   );
 
-  // ═══════════════════ LIGHT THEME (Tema Claro Limpo e Elegante) ═══════════════════
+  // ═══════════════════ LIGHT THEME ═══════════════════ //
   static const light = AppColorsExtension(
     background: Color(0xFFF8FAFC),       // Slate 50
     backgroundAlt: Color(0xFFF1F5F9),    // Slate 100
@@ -220,14 +222,14 @@ class AppColorsExtension extends ThemeExtension<AppColorsExtension> {
   }
 }
 
-/// Helper para acessar as cores sem boilerplate com `context.colors`.
+// Helper para acessar as cores sem boilerplate com `context.colors`.
 extension AppColorsContext on BuildContext {
   AppColorsExtension get colors =>
       Theme.of(this).extension<AppColorsExtension>() ?? AppColorsExtension.dark;
   bool get isDarkMode => Theme.of(this).brightness == Brightness.dark;
 }
 
-/// Paleta de cores centralizada estática mantida para compatibilidade e serviços sem BuildContext.
+// Paleta de cores centralizada estática mantida para compatibilidade e serviços sem BuildContext.
 class AppColors {
   static const Color background = Color(0xFF0A0F1A);
   static const Color backgroundAlt = Color(0xFF0C1326);

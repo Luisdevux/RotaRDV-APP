@@ -1,14 +1,12 @@
+// lib/features/despesas/widgets/nova_despesa_categoria_banner.dart
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../core/theme/app_theme.dart';
 import '../despesa_viewmodel.dart';
 
-/*──────────────────────────────────────────────────────────────*/
-/* COMPONENTE: BANNER DA CATEGORIA SELECIONADA                  */
-/*──────────────────────────────────────────────────────────────*/
-
-/// Exibe a categoria ativa selecionada para a despesa atual com opção de troca.
+// Exibe a categoria ativa selecionada para a despesa atual com opção de troca.
 class NovaDespesaCategoriaBanner extends StatelessWidget {
   final CategoriaDespesa categoria;
   final bool podeTrocar;

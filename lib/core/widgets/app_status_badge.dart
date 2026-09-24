@@ -1,10 +1,11 @@
+// lib/core/widgets/app_status_badge.dart
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../constants/app_constants.dart';
 import '../theme/app_theme.dart';
 
-/// Badge visual padronizado, limpo e elegante para status do sistema.
-/// Sem ícones excessivos — tipografia clara com fundo translúcido sutil.
+// Badge visual padronizado para exibir o status de sincronização
 class AppStatusBadge extends StatelessWidget {
   final String status;
   final Color? customColor;

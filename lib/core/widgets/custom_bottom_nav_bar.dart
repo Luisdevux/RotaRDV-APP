@@ -1,8 +1,11 @@
+// lib/core/widgets/custom_bottom_nav_bar.dart
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../theme/app_theme.dart';
 
+// Barra de navegação inferior personalizada com os ícones
 class CustomBottomNavBar extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;

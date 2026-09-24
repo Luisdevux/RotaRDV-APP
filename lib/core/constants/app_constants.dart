@@ -1,5 +1,7 @@
-/// Constantes padronizadas do sistema RotaRDV.
-/// Elimina strings mágicas espalhadas pelo código.
+// lib/core/constants/app_constants.dart
+
+// Constantes padronizadas do sistema
+// Elimina strings mágicas espalhadas pelo código.
 abstract class ViagemStatus {
   static const String emAndamento = 'em_andamento';
   static const String concluida = 'concluida';

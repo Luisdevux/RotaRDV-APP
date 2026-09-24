@@ -1,3 +1,5 @@
+// lib/features/home/widgets/home_jornada_card.dart
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -7,12 +9,8 @@ import '../../../core/widgets/app_card.dart';
 import '../../../models/viagem_collection.dart';
 import '../../../routes.dart';
 
-/*──────────────────────────────────────────────────────────────*/
-/* COMPONENTE: CARTÃO DE STATUS DA JORNADA OPERACIONAL          */
-/*──────────────────────────────────────────────────────────────*/
-
-/// Componente modular que apresenta o status atual da operação:
-/// exibe a viagem ativa e atalho de navegação, ou o convite para início de jornada.
+// Componente modular que apresenta o status atual da operação:
+// exibe a viagem ativa e atalho de navegação, ou o convite para início de jornada
 class HomeJornadaCard extends StatelessWidget {
   final ViagemCollection? viagemAtiva;
   final VoidCallback onAcessarViagem;

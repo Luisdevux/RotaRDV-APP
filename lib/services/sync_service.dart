@@ -1,3 +1,5 @@
+// lib/services/sync_service.dart
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -27,11 +29,10 @@ class PendingSyncSummary {
   bool get hasPending => totalPendencias > 0;
 }
 
-/// Localiza ou recupera o arquivo físico de comprovante para uma despesa,
-/// garantindo resiliência contra caminhos perdidos, arquivos órfãos e cache temporário.
+// Localiza ou recupera o arquivo físico de comprovante para uma despesa, garantindo resiliência contra caminhos perdidos, arquivos órfãos e cache temporário
 Future<String?> resolverOuRecuperarFotoLocal(String despesaUuid, String? caminhoAtual) async {
   try {
-    // 1. Se já tem caminho e o arquivo existe fisicamente no aparelho, mantém ele
+    // 1 Se já tem caminho e o arquivo existe fisicamente no aparelho, mantém ele
     if (caminhoAtual != null && caminhoAtual.isNotEmpty) {
       final f = File(caminhoAtual);
       if (await f.exists()) return caminhoAtual;
@@ -43,14 +44,14 @@ Future<String?> resolverOuRecuperarFotoLocal(String despesaUuid, String? caminho
       await comprovantesDir.create(recursive: true);
     }
 
-    // 2. Procura pelo nome padronizado vinculado ao UUID da despesa na pasta permanente
+    // 2 Procura pelo nome padronizado vinculado ao UUID da despesa na pasta permanente
     final arquivoPorUuid = File('${comprovantesDir.path}/comprovante_$despesaUuid.jpg');
     if (await arquivoPorUuid.exists()) {
       debugPrint('[AutoRecovery] Foto encontrada pelo UUID da despesa: ${arquivoPorUuid.path}');
       return arquivoPorUuid.path;
     }
 
-    // 3. Procura por qualquer arquivo na pasta comprovantes contendo o UUID
+    // 3 Procura por qualquer arquivo na pasta comprovantes contendo o UUID
     final entries = await comprovantesDir.list().toList();
     final files = entries.whereType<File>().toList();
     for (var f in files) {
@@ -60,7 +61,7 @@ Future<String?> resolverOuRecuperarFotoLocal(String despesaUuid, String? caminho
       }
     }
 
-    // 4. Procura no diretório temporário/cache do app (onde o ImagePicker grava originalmente)
+    // 4 Procura no diretório temporário/cache do app (onde o ImagePicker grava originalmente)
     final tempDir = await getTemporaryDirectory();
     if (await tempDir.exists()) {
       final tempEntries = await tempDir.list().toList();
@@ -79,7 +80,7 @@ Future<String?> resolverOuRecuperarFotoLocal(String despesaUuid, String? caminho
       }
     }
 
-    // 5. Procura no diretório comprovantes por arquivos .jpg órfãos existentes
+    // 5 Procura no diretório comprovantes por arquivos .jpg órfãos existentes
     final jpgs = files.where((f) {
       final p = f.path.toLowerCase();
       return p.endsWith('.jpg') || p.endsWith('.jpeg') || p.endsWith('.png');
@@ -108,11 +109,11 @@ class SyncService {
 
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
   
-  /// Notificador reativo de eventos de sincronização para atualizar as telas da UI
+  // Notificador reativo de eventos de sincronização para atualizar as telas da UI
   final ValueNotifier<int> syncEventNotifier = ValueNotifier<int>(0);
 
-  /// Inicializa o listener de conectividade do aparelho.
-  /// Sempre que o aparelho voltar a ter rede (Wi-Fi ou Dados Móveis), dispara automaticamente o syncAll.
+  // Inicializa o listener de conectividade do aparelho.
+  // Sempre que o aparelho voltar a ter rede (Wi-Fi ou Dados Móveis), dispara automaticamente o syncAll.
   void initConnectivityListener() {
     _connectivitySubscription?.cancel();
     _connectivitySubscription = Connectivity().onConnectivityChanged.listen((List<ConnectivityResult> results) async {
@@ -127,14 +128,14 @@ class SyncService {
     debugPrint('[SyncService] Listener de conectividade inicializado com sucesso.');
   }
 
-  /// Cancela o listener de conectividade
+  // Cancela o listener de conectividade
   void dispose() {
     _connectivitySubscription?.cancel();
     _connectivitySubscription = null;
   }
 
-  /// Executa o ciclo completo de sincronização (Push -> Pull) com política de até [maxRetries] tentativas.
-  /// Se não conseguir conectar após as tentativas, os dados locais são mantidos sem percas e o sync aguarda o próximo ciclo.
+  // Executa o ciclo completo de sincronização (Push -> Pull) com política de até [maxRetries] tentativas
+  // Se não conseguir conectar após as tentativas, os dados locais são mantidos sem percas e o sync aguarda o próximo ciclo
   Future<bool> syncAll({int maxRetries = 3}) async {
     if (_isSyncing) {
       debugPrint('[SyncService] Sincronização já está em andamento. Ignorando chamada concorrente.');
@@ -179,7 +180,7 @@ class SyncService {
     return success;
   }
 
-  /// Resumo detalhado de todas as pendências de sincronização locais
+  // Resumo detalhado de todas as pendências de sincronização locais
   Future<PendingSyncSummary> getPendingSyncSummary() async {
     final isar = LocalDatabase.isar;
 
@@ -218,13 +219,13 @@ class SyncService {
     );
   }
 
-  /// Verifica se há registros locais ou fotos pendentes de envio para a API
+  // Verifica se há registros locais ou fotos pendentes de envio para a API
   Future<bool> hasPendingSync() async {
     final summary = await getPendingSyncSummary();
     return summary.hasPending;
   }
 
-  /// Envia alterações locais e fotos de comprovantes para a nuvem (Garage)
+  // Envia alterações locais e fotos de comprovantes para a nuvem (Garage)
   Future<void> pushSync() async {
     final isar = LocalDatabase.isar;
 
@@ -239,7 +240,7 @@ class SyncService {
         .findAll();
 
     // Despesas são imutáveis após o lançamento (motoristas não possuem permissão de edição).
-    // Apenas registros criados ou deletados pendentes de envio são processados no lote.
+    // Apenas registros criados ou deletados pendentes de envio são processados no lote
     final despesasParaSincronizar = await isar.despesaCollections
         .filter()
         .group((q) => q
@@ -248,7 +249,7 @@ class SyncService {
             .statusSincronizacaoEqualTo('deletado'))
         .findAll();
 
-    // 1. Envia registros de texto/metadados para o backend
+    // 1 Envia registros de texto/metadados para o backend
     if (viagensParaSincronizar.isNotEmpty || despesasParaSincronizar.isNotEmpty) {
       debugPrint('[SyncService] Enviando ${viagensParaSincronizar.length} viagem(ns) e ${despesasParaSincronizar.length} despesa(s) para o servidor...');
 
@@ -329,7 +330,7 @@ class SyncService {
       }
     }
 
-    // 2. Upload de Fotos/Comprovantes pendentes para o Storage (Garage)
+    // 2 Upload de Fotos/Comprovantes pendentes para o Storage (Garage)
     final despesasSemFotoRemota = await isar.despesaCollections
         .filter()
         .group((q) => q.fotoAnexoUrlIsNull().or().fotoAnexoUrlEqualTo(''))
@@ -388,7 +389,7 @@ class SyncService {
     }
   }
 
-  /// Baixa alterações recentes da nuvem para o banco local Isar
+  // Baixa alterações recentes da nuvem para o banco local Isar
   Future<void> pullSync({bool forceFullSync = false}) async {
     final prefs = await SharedPreferences.getInstance();
     final isar = LocalDatabase.isar;

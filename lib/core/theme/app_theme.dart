@@ -1,3 +1,5 @@
+// lib/core/theme/app_theme.dart
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
@@ -8,7 +10,7 @@ export 'app_colors.dart';
 export 'app_radius.dart';
 export 'app_spacing.dart';
 
-/// Configuração central do ThemeData no padrão Material 3 para Dark e Light Mode.
+// Configuração central do ThemeData no padrão Material 3 para Dark e Light Mode.
 class AppTheme {
   static ThemeData get darkTheme => _buildTheme(
         brightness: Brightness.dark,

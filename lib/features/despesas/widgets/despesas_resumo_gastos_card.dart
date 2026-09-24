@@ -7,12 +7,7 @@ import '../../../core/widgets/app_card.dart';
 import '../../../models/viagem_collection.dart';
 import '../despesa_viewmodel.dart';
 
-/*──────────────────────────────────────────────────────────────*/
-/* COMPONENTE: CARD DE RESUMO FINANCEIRO E CONSUMO DA VIAGEM    */
-/*──────────────────────────────────────────────────────────────*/
-
-/// Card de cabeçalho analítico que exibe a rota operacional,
-/// o somatório financeiro dos lançamentos e a eficiência energética do veículo.
+// Card de cabeçalho analítico que exibe a rota operacional, o somatório financeiro dos lançamentos e a eficiência energética do veículo.
 class DespesasResumoGastosCard extends StatelessWidget {
   final DespesaViewModel despesaVM;
   final ViagemCollection? viagem;

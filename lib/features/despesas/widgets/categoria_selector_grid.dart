@@ -1,3 +1,5 @@
+// lib/features/despesas/widgets/categoria_selector_grid.dart
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -5,11 +7,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_card.dart';
 import '../despesa_viewmodel.dart';
 
-/*──────────────────────────────────────────────────────────────*/
-/* COMPONENTE: GRADE DE SELEÇÃO DE CATEGORIAS DE DESPESA        */
-/*──────────────────────────────────────────────────────────────*/
-
-/// Componente modular para seleção da categoria do lançamento financeiro.
+// Componente modular para seleção da categoria do lançamento financeiro
 class CategoriaSelectorGrid extends StatelessWidget {
   final CategoriaDespesa? selectedCategoria;
   final ValueChanged<CategoriaDespesa> onSelected;
