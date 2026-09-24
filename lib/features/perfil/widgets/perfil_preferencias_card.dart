@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:provider/provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../../../core/widgets/app_card.dart';
@@ -37,7 +38,23 @@ class _PerfilPreferenciasCardState extends State<PerfilPreferenciasCard> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final currentMode = widget.themeProvider?.themeMode ?? ThemeMode.dark;
+    ThemeProvider? provider = widget.themeProvider;
+    if (provider == null) {
+      try {
+        provider = context.watch<ThemeProvider>();
+      } catch (_) {}
+    }
+    final currentMode = provider?.themeMode ?? ThemeMode.dark;
+
+    void selectMode(ThemeMode mode) {
+      if (widget.themeProvider != null) {
+        widget.themeProvider!.setThemeMode(mode);
+      } else {
+        try {
+          context.read<ThemeProvider>().setThemeMode(mode);
+        } catch (_) {}
+      }
+    }
 
     return AppCard(
       backgroundColor: colors.cardBackground,
@@ -131,7 +148,7 @@ class _PerfilPreferenciasCardState extends State<PerfilPreferenciasCard> {
                               currentMode: currentMode,
                               label: 'Escuro',
                               icon: LucideIcons.moon,
-                              onSelect: () => widget.themeProvider?.setThemeMode(ThemeMode.dark),
+                              onSelect: () => selectMode(ThemeMode.dark),
                             ),
                             const SizedBox(width: AppSpacing.sm),
                             _buildThemeOption(
@@ -140,7 +157,7 @@ class _PerfilPreferenciasCardState extends State<PerfilPreferenciasCard> {
                               currentMode: currentMode,
                               label: 'Claro',
                               icon: LucideIcons.sun,
-                              onSelect: () => widget.themeProvider?.setThemeMode(ThemeMode.light),
+                              onSelect: () => selectMode(ThemeMode.light),
                             ),
                             const SizedBox(width: AppSpacing.sm),
                             _buildThemeOption(
@@ -149,7 +166,7 @@ class _PerfilPreferenciasCardState extends State<PerfilPreferenciasCard> {
                               currentMode: currentMode,
                               label: 'Sistema',
                               icon: LucideIcons.smartphone,
-                              onSelect: () => widget.themeProvider?.setThemeMode(ThemeMode.system),
+                              onSelect: () => selectMode(ThemeMode.system),
                             ),
                           ],
                         ),

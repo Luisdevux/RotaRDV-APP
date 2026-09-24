@@ -5,7 +5,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/theme/theme_provider.dart';
 import '../../core/widgets/app_dialog.dart';
 import '../../core/widgets/network_status_bar.dart';
 import '../../routes.dart';
@@ -156,13 +155,6 @@ class _PerfilPageState extends State<PerfilPage> {
     final authVM = context.watch<AuthViewModel>();
     final homeVM = context.watch<HomeViewModel>();
 
-    ThemeProvider? themeProvider;
-    try {
-      themeProvider = context.watch<ThemeProvider>();
-    } catch (_) {
-      themeProvider = null;
-    }
-
     final user = authVM.currentUser;
     final veiculo = homeVM.veiculo;
 
@@ -230,7 +222,7 @@ class _PerfilPageState extends State<PerfilPage> {
                     PerfilVeiculoCard(veiculo: veiculo),
                     const SizedBox(height: AppSpacing.md),
 
-                    PerfilPreferenciasCard(themeProvider: themeProvider),
+                    const PerfilPreferenciasCard(),
                     const SizedBox(height: AppSpacing.md),
 
                     PerfilSincronizacaoCard(
