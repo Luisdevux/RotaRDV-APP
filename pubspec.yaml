@@ -50,6 +50,10 @@ dependencies:
   lucide_icons_flutter: ^3.1.15
   app_links: ^6.4.0
   path_provider: ^2.1.5
+  image_picker: ^1.1.2
+  intl: ^0.20.2
+  http_parser: ^4.1.2
+  dio: ^5.11.1
 
 dev_dependencies:
   flutter_test:
@@ -62,6 +66,8 @@ dev_dependencies:
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.13.1
+  build_runner: ^2.4.9
+  isar_generator: ^3.1.0+1
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

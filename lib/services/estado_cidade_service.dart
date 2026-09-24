@@ -1,3 +1,5 @@
+// lib/services/estado_cidade_service.dart
+
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -13,7 +15,7 @@ class EstadoCidadeService {
 
   bool get isLoaded => _isLoaded;
 
-  /// Carrega os estados e cidades do arquivo JSON em memória (apenas uma vez)
+  // Carrega os estados e cidades do arquivo JSON em memória (apenas uma vez)
   Future<void> loadEstadosECidades() async {
     if (_isLoaded) return;
 
@@ -61,12 +63,12 @@ class EstadoCidadeService {
     }
   }
 
-  /// Retorna a lista de todos os 27 estados do Brasil (ordenados de A a Z)
+  // Retorna a lista de todos os 27 estados do Brasil (ordenados de A a Z)
   List<Map<String, dynamic>> getEstados() {
     return _estados;
   }
 
-  /// Busca um estado específico pela sigla (ex: "MT", "SP", "PA")
+  // Busca um estado específico pela sigla (ex: "MT", "SP", "PA")
   Map<String, dynamic>? getEstadoPorSigla(String sigla) {
     try {
       final siglaUpper = sigla.toUpperCase().trim();
@@ -76,7 +78,7 @@ class EstadoCidadeService {
     }
   }
 
-  /// Filtra as cidades pelo estado selecionado (sigla: "MT", "RO", etc.)
+  // Filtra as cidades pelo estado selecionado (sigla: "MT", "RO", etc.)
   List<Map<String, dynamic>> getCidadesPorEstado(String estadoSigla) {
     try {
       final estadoSelecionado = getEstadoPorSigla(estadoSigla);
@@ -89,7 +91,7 @@ class EstadoCidadeService {
     }
   }
 
-  /// Busca cidades por texto (insensível a maiúsculas/minúsculas e acentos)
+  // Busca cidades por texto (insensível a maiúsculas/minúsculas e acentos)
   List<Map<String, dynamic>> buscarCidades(String query, {String? estadoSigla}) {
     final queryNormalizada = _removerAcentos(query.toLowerCase().trim());
     if (queryNormalizada.isEmpty) {
@@ -104,7 +106,7 @@ class EstadoCidadeService {
     }).toList();
   }
 
-  /// Utilitário para remover acentos e facilitar a digitação do motorista
+  // Utilitário para remover acentos e facilitar a digitação do motorista
   static String _removerAcentos(String str) {
     const comAcento = 'ÀÁÂÃÄÅàáâãäåÒÓÔÕÖØòóôõöøÈÉÊËèéêëðÇçÌÍÎÏìíîïÙÚÛÜùúûüÑñŠšŸÿýŽž';
     const semAcento = 'AAAAAAaaaaaaOOOOOOooooooEEEEeeeeeCcIIIIiiiiUUUUuuuuNnSsYyyZz';

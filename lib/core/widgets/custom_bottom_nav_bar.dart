@@ -1,9 +1,14 @@
+// lib/core/widgets/custom_bottom_nav_bar.dart
+
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../theme/app_theme.dart';
 
+// Barra de navegação inferior personalizada com os ícones
 class CustomBottomNavBar extends StatelessWidget {
   final int currentIndex;
-  final Function(int) onTap;
+  final ValueChanged<int> onTap;
 
   const CustomBottomNavBar({
     super.key,
@@ -13,26 +18,28 @@ class CustomBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+
     return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.background,
+      decoration: BoxDecoration(
+        color: colors.background,
         border: Border(
           top: BorderSide(
-            color: AppColors.border,
+            color: colors.borderSubtle,
             width: 1.0,
           ),
         ),
       ),
       child: SafeArea(
         child: SizedBox(
-          height: 72,
+          height: 68,
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildNavItem(context, 0, Icons.home_outlined, Icons.home, 'Início'),
-              _buildNavItem(context, 1, Icons.route_outlined, Icons.route, 'Viagens'),
-              _buildNavItem(context, 2, Icons.receipt_long_outlined, Icons.receipt_long, 'Gastos'),
-              _buildNavItem(context, 3, Icons.person_outline, Icons.person, 'Perfil'),
+              _buildNavItem(context, 0, LucideIcons.home, 'Início'),
+              _buildNavItem(context, 1, LucideIcons.truck, 'Viagem'),
+              _buildNavItem(context, 2, LucideIcons.history, 'Histórico'),
+              _buildNavItem(context, 3, LucideIcons.user, 'Perfil'),
             ],
           ),
         ),
@@ -40,39 +47,52 @@ class CustomBottomNavBar extends StatelessWidget {
     );
   }
 
-  Widget _buildNavItem(BuildContext context, int index, IconData icon, IconData activeIcon, String label) {
+  Widget _buildNavItem(
+    BuildContext context,
+    int index,
+    IconData icon,
+    String label,
+  ) {
+    final colors = context.colors;
     final isSelected = currentIndex == index;
-    final color = isSelected ? AppColors.primary : AppColors.textHint;
-    
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () => onTap(index),
-        borderRadius: BorderRadius.circular(12),
-        splashColor: AppColors.textSecondary.withValues(alpha: 0.1),
-        highlightColor: AppColors.primary.withValues(alpha: 0.05),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                isSelected ? activeIcon : icon,
-                color: color,
-                size: 24,
+    final itemColor = isSelected ? colors.primary : colors.textHint;
+
+    return Expanded(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => onTap(index),
+          borderRadius: AppRadius.lgRadius,
+          splashColor: colors.textHint.withValues(alpha: 0.15),
+          highlightColor: colors.textHint.withValues(alpha: 0.08),
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.sm,
+                vertical: AppSpacing.xs,
               ),
-              const SizedBox(height: 4),
-              Text(
-                label,
-                style: TextStyle(
-                  color: color,
-                  fontSize: 10,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                  height: 1.0,
-                ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    icon,
+                    color: itemColor,
+                    size: 24,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    label,
+                    style: GoogleFonts.lexend(
+                      color: itemColor,
+                      fontSize: 11,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                      height: 1.1,
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),

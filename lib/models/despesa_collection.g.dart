@@ -32,33 +32,63 @@ const DespesaCollectionSchema = CollectionSchema(
       name: r'fotoAnexoLocalPath',
       type: IsarType.string,
     ),
-    r'local': PropertySchema(
+    r'fotoAnexoUrl': PropertySchema(
       id: 3,
+      name: r'fotoAnexoUrl',
+      type: IsarType.string,
+    ),
+    r'fotoTiradaNoApp': PropertySchema(
+      id: 4,
+      name: r'fotoTiradaNoApp',
+      type: IsarType.bool,
+    ),
+    r'kmAtual': PropertySchema(
+      id: 5,
+      name: r'kmAtual',
+      type: IsarType.double,
+    ),
+    r'litros': PropertySchema(
+      id: 6,
+      name: r'litros',
+      type: IsarType.double,
+    ),
+    r'local': PropertySchema(
+      id: 7,
       name: r'local',
       type: IsarType.string,
     ),
     r'statusSincronizacao': PropertySchema(
-      id: 4,
+      id: 8,
       name: r'statusSincronizacao',
       type: IsarType.string,
     ),
     r'tipo': PropertySchema(
-      id: 5,
+      id: 9,
       name: r'tipo',
       type: IsarType.string,
     ),
+    r'tipoCombustivel': PropertySchema(
+      id: 10,
+      name: r'tipoCombustivel',
+      type: IsarType.string,
+    ),
     r'uuid': PropertySchema(
-      id: 6,
+      id: 11,
       name: r'uuid',
       type: IsarType.string,
     ),
+    r'valorLitro': PropertySchema(
+      id: 12,
+      name: r'valorLitro',
+      type: IsarType.double,
+    ),
     r'valorTotal': PropertySchema(
-      id: 7,
+      id: 13,
       name: r'valorTotal',
       type: IsarType.double,
     ),
     r'viagemId': PropertySchema(
-      id: 8,
+      id: 14,
       name: r'viagemId',
       type: IsarType.string,
     )
@@ -136,6 +166,12 @@ int _despesaCollectionEstimateSize(
     }
   }
   {
+    final value = object.fotoAnexoUrl;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
     final value = object.local;
     if (value != null) {
       bytesCount += 3 + value.length * 3;
@@ -143,6 +179,12 @@ int _despesaCollectionEstimateSize(
   }
   bytesCount += 3 + object.statusSincronizacao.length * 3;
   bytesCount += 3 + object.tipo.length * 3;
+  {
+    final value = object.tipoCombustivel;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   bytesCount += 3 + object.uuid.length * 3;
   bytesCount += 3 + object.viagemId.length * 3;
   return bytesCount;
@@ -157,12 +199,18 @@ void _despesaCollectionSerialize(
   writer.writeDateTime(offsets[0], object.data);
   writer.writeString(offsets[1], object.descricao);
   writer.writeString(offsets[2], object.fotoAnexoLocalPath);
-  writer.writeString(offsets[3], object.local);
-  writer.writeString(offsets[4], object.statusSincronizacao);
-  writer.writeString(offsets[5], object.tipo);
-  writer.writeString(offsets[6], object.uuid);
-  writer.writeDouble(offsets[7], object.valorTotal);
-  writer.writeString(offsets[8], object.viagemId);
+  writer.writeString(offsets[3], object.fotoAnexoUrl);
+  writer.writeBool(offsets[4], object.fotoTiradaNoApp);
+  writer.writeDouble(offsets[5], object.kmAtual);
+  writer.writeDouble(offsets[6], object.litros);
+  writer.writeString(offsets[7], object.local);
+  writer.writeString(offsets[8], object.statusSincronizacao);
+  writer.writeString(offsets[9], object.tipo);
+  writer.writeString(offsets[10], object.tipoCombustivel);
+  writer.writeString(offsets[11], object.uuid);
+  writer.writeDouble(offsets[12], object.valorLitro);
+  writer.writeDouble(offsets[13], object.valorTotal);
+  writer.writeString(offsets[14], object.viagemId);
 }
 
 DespesaCollection _despesaCollectionDeserialize(
@@ -175,13 +223,19 @@ DespesaCollection _despesaCollectionDeserialize(
   object.data = reader.readDateTime(offsets[0]);
   object.descricao = reader.readStringOrNull(offsets[1]);
   object.fotoAnexoLocalPath = reader.readStringOrNull(offsets[2]);
+  object.fotoAnexoUrl = reader.readStringOrNull(offsets[3]);
+  object.fotoTiradaNoApp = reader.readBoolOrNull(offsets[4]);
   object.id = id;
-  object.local = reader.readStringOrNull(offsets[3]);
-  object.statusSincronizacao = reader.readString(offsets[4]);
-  object.tipo = reader.readString(offsets[5]);
-  object.uuid = reader.readString(offsets[6]);
-  object.valorTotal = reader.readDouble(offsets[7]);
-  object.viagemId = reader.readString(offsets[8]);
+  object.kmAtual = reader.readDoubleOrNull(offsets[5]);
+  object.litros = reader.readDoubleOrNull(offsets[6]);
+  object.local = reader.readStringOrNull(offsets[7]);
+  object.statusSincronizacao = reader.readString(offsets[8]);
+  object.tipo = reader.readString(offsets[9]);
+  object.tipoCombustivel = reader.readStringOrNull(offsets[10]);
+  object.uuid = reader.readString(offsets[11]);
+  object.valorLitro = reader.readDoubleOrNull(offsets[12]);
+  object.valorTotal = reader.readDouble(offsets[13]);
+  object.viagemId = reader.readString(offsets[14]);
   return object;
 }
 
@@ -201,14 +255,26 @@ P _despesaCollectionDeserializeProp<P>(
     case 3:
       return (reader.readStringOrNull(offset)) as P;
     case 4:
-      return (reader.readString(offset)) as P;
+      return (reader.readBoolOrNull(offset)) as P;
     case 5:
-      return (reader.readString(offset)) as P;
+      return (reader.readDoubleOrNull(offset)) as P;
     case 6:
-      return (reader.readString(offset)) as P;
+      return (reader.readDoubleOrNull(offset)) as P;
     case 7:
-      return (reader.readDouble(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 8:
+      return (reader.readString(offset)) as P;
+    case 9:
+      return (reader.readString(offset)) as P;
+    case 10:
+      return (reader.readStringOrNull(offset)) as P;
+    case 11:
+      return (reader.readString(offset)) as P;
+    case 12:
+      return (reader.readDoubleOrNull(offset)) as P;
+    case 13:
+      return (reader.readDouble(offset)) as P;
+    case 14:
       return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -866,6 +932,188 @@ extension DespesaCollectionQueryFilter
   }
 
   QueryBuilder<DespesaCollection, DespesaCollection, QAfterFilterCondition>
+      fotoAnexoUrlIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'fotoAnexoUrl',
+      ));
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterFilterCondition>
+      fotoAnexoUrlIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'fotoAnexoUrl',
+      ));
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterFilterCondition>
+      fotoAnexoUrlEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'fotoAnexoUrl',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterFilterCondition>
+      fotoAnexoUrlGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'fotoAnexoUrl',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterFilterCondition>
+      fotoAnexoUrlLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'fotoAnexoUrl',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterFilterCondition>
+      fotoAnexoUrlBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'fotoAnexoUrl',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterFilterCondition>
+      fotoAnexoUrlStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'fotoAnexoUrl',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterFilterCondition>
+      fotoAnexoUrlEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'fotoAnexoUrl',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterFilterCondition>
+      fotoAnexoUrlContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'fotoAnexoUrl',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterFilterCondition>
+      fotoAnexoUrlMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'fotoAnexoUrl',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterFilterCondition>
+      fotoAnexoUrlIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'fotoAnexoUrl',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterFilterCondition>
+      fotoAnexoUrlIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'fotoAnexoUrl',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterFilterCondition>
+      fotoTiradaNoAppIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'fotoTiradaNoApp',
+      ));
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterFilterCondition>
+      fotoTiradaNoAppIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'fotoTiradaNoApp',
+      ));
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterFilterCondition>
+      fotoTiradaNoAppEqualTo(bool? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'fotoTiradaNoApp',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterFilterCondition>
       idEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -917,6 +1165,174 @@ extension DespesaCollectionQueryFilter
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterFilterCondition>
+      kmAtualIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'kmAtual',
+      ));
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterFilterCondition>
+      kmAtualIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'kmAtual',
+      ));
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterFilterCondition>
+      kmAtualEqualTo(
+    double? value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'kmAtual',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterFilterCondition>
+      kmAtualGreaterThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'kmAtual',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterFilterCondition>
+      kmAtualLessThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'kmAtual',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterFilterCondition>
+      kmAtualBetween(
+    double? lower,
+    double? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'kmAtual',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterFilterCondition>
+      litrosIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'litros',
+      ));
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterFilterCondition>
+      litrosIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'litros',
+      ));
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterFilterCondition>
+      litrosEqualTo(
+    double? value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'litros',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterFilterCondition>
+      litrosGreaterThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'litros',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterFilterCondition>
+      litrosLessThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'litros',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterFilterCondition>
+      litrosBetween(
+    double? lower,
+    double? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'litros',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
       ));
     });
   }
@@ -1348,6 +1764,160 @@ extension DespesaCollectionQueryFilter
   }
 
   QueryBuilder<DespesaCollection, DespesaCollection, QAfterFilterCondition>
+      tipoCombustivelIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'tipoCombustivel',
+      ));
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterFilterCondition>
+      tipoCombustivelIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'tipoCombustivel',
+      ));
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterFilterCondition>
+      tipoCombustivelEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'tipoCombustivel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterFilterCondition>
+      tipoCombustivelGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'tipoCombustivel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterFilterCondition>
+      tipoCombustivelLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'tipoCombustivel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterFilterCondition>
+      tipoCombustivelBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'tipoCombustivel',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterFilterCondition>
+      tipoCombustivelStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'tipoCombustivel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterFilterCondition>
+      tipoCombustivelEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'tipoCombustivel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterFilterCondition>
+      tipoCombustivelContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'tipoCombustivel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterFilterCondition>
+      tipoCombustivelMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'tipoCombustivel',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterFilterCondition>
+      tipoCombustivelIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'tipoCombustivel',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterFilterCondition>
+      tipoCombustivelIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'tipoCombustivel',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterFilterCondition>
       uuidEqualTo(
     String value, {
     bool caseSensitive = true,
@@ -1479,6 +2049,90 @@ extension DespesaCollectionQueryFilter
       return query.addFilterCondition(FilterCondition.greaterThan(
         property: r'uuid',
         value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterFilterCondition>
+      valorLitroIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'valorLitro',
+      ));
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterFilterCondition>
+      valorLitroIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'valorLitro',
+      ));
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterFilterCondition>
+      valorLitroEqualTo(
+    double? value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'valorLitro',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterFilterCondition>
+      valorLitroGreaterThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'valorLitro',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterFilterCondition>
+      valorLitroLessThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'valorLitro',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterFilterCondition>
+      valorLitroBetween(
+    double? lower,
+    double? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'valorLitro',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
       ));
     });
   }
@@ -1737,6 +2391,62 @@ extension DespesaCollectionQuerySortBy
   }
 
   QueryBuilder<DespesaCollection, DespesaCollection, QAfterSortBy>
+      sortByFotoAnexoUrl() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fotoAnexoUrl', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterSortBy>
+      sortByFotoAnexoUrlDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fotoAnexoUrl', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterSortBy>
+      sortByFotoTiradaNoApp() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fotoTiradaNoApp', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterSortBy>
+      sortByFotoTiradaNoAppDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fotoTiradaNoApp', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterSortBy>
+      sortByKmAtual() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'kmAtual', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterSortBy>
+      sortByKmAtualDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'kmAtual', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterSortBy>
+      sortByLitros() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'litros', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterSortBy>
+      sortByLitrosDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'litros', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterSortBy>
       sortByLocal() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'local', Sort.asc);
@@ -1779,6 +2489,20 @@ extension DespesaCollectionQuerySortBy
   }
 
   QueryBuilder<DespesaCollection, DespesaCollection, QAfterSortBy>
+      sortByTipoCombustivel() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'tipoCombustivel', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterSortBy>
+      sortByTipoCombustivelDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'tipoCombustivel', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterSortBy>
       sortByUuid() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'uuid', Sort.asc);
@@ -1789,6 +2513,20 @@ extension DespesaCollectionQuerySortBy
       sortByUuidDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'uuid', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterSortBy>
+      sortByValorLitro() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'valorLitro', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterSortBy>
+      sortByValorLitroDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'valorLitro', Sort.desc);
     });
   }
 
@@ -1865,6 +2603,34 @@ extension DespesaCollectionQuerySortThenBy
     });
   }
 
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterSortBy>
+      thenByFotoAnexoUrl() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fotoAnexoUrl', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterSortBy>
+      thenByFotoAnexoUrlDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fotoAnexoUrl', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterSortBy>
+      thenByFotoTiradaNoApp() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fotoTiradaNoApp', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterSortBy>
+      thenByFotoTiradaNoAppDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'fotoTiradaNoApp', Sort.desc);
+    });
+  }
+
   QueryBuilder<DespesaCollection, DespesaCollection, QAfterSortBy> thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
@@ -1875,6 +2641,34 @@ extension DespesaCollectionQuerySortThenBy
       thenByIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterSortBy>
+      thenByKmAtual() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'kmAtual', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterSortBy>
+      thenByKmAtualDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'kmAtual', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterSortBy>
+      thenByLitros() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'litros', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterSortBy>
+      thenByLitrosDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'litros', Sort.desc);
     });
   }
 
@@ -1921,6 +2715,20 @@ extension DespesaCollectionQuerySortThenBy
   }
 
   QueryBuilder<DespesaCollection, DespesaCollection, QAfterSortBy>
+      thenByTipoCombustivel() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'tipoCombustivel', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterSortBy>
+      thenByTipoCombustivelDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'tipoCombustivel', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterSortBy>
       thenByUuid() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'uuid', Sort.asc);
@@ -1931,6 +2739,20 @@ extension DespesaCollectionQuerySortThenBy
       thenByUuidDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'uuid', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterSortBy>
+      thenByValorLitro() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'valorLitro', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QAfterSortBy>
+      thenByValorLitroDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'valorLitro', Sort.desc);
     });
   }
 
@@ -1987,6 +2809,34 @@ extension DespesaCollectionQueryWhereDistinct
     });
   }
 
+  QueryBuilder<DespesaCollection, DespesaCollection, QDistinct>
+      distinctByFotoAnexoUrl({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'fotoAnexoUrl', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QDistinct>
+      distinctByFotoTiradaNoApp() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'fotoTiradaNoApp');
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QDistinct>
+      distinctByKmAtual() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'kmAtual');
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QDistinct>
+      distinctByLitros() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'litros');
+    });
+  }
+
   QueryBuilder<DespesaCollection, DespesaCollection, QDistinct> distinctByLocal(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -2009,10 +2859,25 @@ extension DespesaCollectionQueryWhereDistinct
     });
   }
 
+  QueryBuilder<DespesaCollection, DespesaCollection, QDistinct>
+      distinctByTipoCombustivel({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'tipoCombustivel',
+          caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<DespesaCollection, DespesaCollection, QDistinct> distinctByUuid(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'uuid', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<DespesaCollection, DespesaCollection, QDistinct>
+      distinctByValorLitro() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'valorLitro');
     });
   }
 
@@ -2059,6 +2924,32 @@ extension DespesaCollectionQueryProperty
     });
   }
 
+  QueryBuilder<DespesaCollection, String?, QQueryOperations>
+      fotoAnexoUrlProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'fotoAnexoUrl');
+    });
+  }
+
+  QueryBuilder<DespesaCollection, bool?, QQueryOperations>
+      fotoTiradaNoAppProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'fotoTiradaNoApp');
+    });
+  }
+
+  QueryBuilder<DespesaCollection, double?, QQueryOperations> kmAtualProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'kmAtual');
+    });
+  }
+
+  QueryBuilder<DespesaCollection, double?, QQueryOperations> litrosProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'litros');
+    });
+  }
+
   QueryBuilder<DespesaCollection, String?, QQueryOperations> localProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'local');
@@ -2078,9 +2969,23 @@ extension DespesaCollectionQueryProperty
     });
   }
 
+  QueryBuilder<DespesaCollection, String?, QQueryOperations>
+      tipoCombustivelProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'tipoCombustivel');
+    });
+  }
+
   QueryBuilder<DespesaCollection, String, QQueryOperations> uuidProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'uuid');
+    });
+  }
+
+  QueryBuilder<DespesaCollection, double?, QQueryOperations>
+      valorLitroProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'valorLitro');
     });
   }
 

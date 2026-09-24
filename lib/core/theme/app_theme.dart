@@ -1,95 +1,227 @@
+// lib/core/theme/app_theme.dart
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'app_colors.dart';
+import 'app_radius.dart';
+import 'app_spacing.dart';
 
-class AppColors {
-  // Backgrounds
-  static const Color background = Color(0xFF0A0F1A);
-  static const Color headerBackground = Color(0xFF0A1128);
-  static const Color cardBackground = Color(0xFF0F172A);
-  static const Color inputBackground = Color(0xFF1E293B);
+export 'app_colors.dart';
+export 'app_radius.dart';
+export 'app_spacing.dart';
 
-  // Brand / Actions
-  static const Color primary = Color(0xFFFF851A); // Safety Orange
-  static const Color success = Color(0xFF22C55E); // Green
-  static const Color warning = Color(0xFFFFBF00); // Amber (Status Bar)
-  static const Color error = Color(0xFFEF4444); // Red
-
-  // Text
-  static const Color textPrimary = Color(0xFFF1F5F9);
-  static const Color textSecondary = Color(0xFFCBD5E1); // Labels
-  static const Color textHint = Color(0xFF64748B); // Placeholders
-  
-  // Borders
-  static const Color border = Color(0xFF334155);
-}
-
+// Configuração central do ThemeData no padrão Material 3 para Dark e Light Mode.
 class AppTheme {
-  static ThemeData get darkTheme {
+  static ThemeData get darkTheme => _buildTheme(
+        brightness: Brightness.dark,
+        colors: AppColorsExtension.dark,
+      );
+
+  static ThemeData get lightTheme => _buildTheme(
+        brightness: Brightness.light,
+        colors: AppColorsExtension.light,
+      );
+
+  static ThemeData _buildTheme({
+    required Brightness brightness,
+    required AppColorsExtension colors,
+  }) {
+    final isDark = brightness == Brightness.dark;
+
     return ThemeData(
       useMaterial3: true,
-      brightness: Brightness.dark,
-      scaffoldBackgroundColor: AppColors.background,
-      appBarTheme: const AppBarTheme(
-        backgroundColor: AppColors.headerBackground,
+      brightness: brightness,
+      scaffoldBackgroundColor: colors.background,
+      extensions: [colors],
+      appBarTheme: AppBarTheme(
+        backgroundColor: colors.headerBackground,
         elevation: 0,
+        scrolledUnderElevation: 0,
         centerTitle: true,
-        iconTheme: IconThemeData(color: AppColors.textPrimary),
+        iconTheme: IconThemeData(color: colors.textPrimary),
+        titleTextStyle: GoogleFonts.lexend(
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+          color: colors.textPrimary,
+        ),
       ),
-      colorScheme: const ColorScheme.dark(
-        primary: AppColors.primary,
-        surface: AppColors.cardBackground,
-        error: AppColors.error,
+      colorScheme: ColorScheme(
+        brightness: brightness,
+        primary: colors.primary,
         onPrimary: Colors.white,
-        onSurface: AppColors.textPrimary,
+        secondary: colors.primary,
+        onSecondary: Colors.white,
+        error: colors.error,
+        onError: Colors.white,
+        surface: colors.cardBackground,
+        onSurface: colors.textPrimary,
       ),
       textTheme: TextTheme(
-        displayLarge: GoogleFonts.lexend(fontSize: 40, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-        displayMedium: GoogleFonts.lexend(fontSize: 30, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-        titleLarge: GoogleFonts.lexend(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-        titleMedium: GoogleFonts.lexend(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-        bodyLarge: GoogleFonts.lexend(fontSize: 16, fontWeight: FontWeight.normal, color: AppColors.textPrimary),
-        bodyMedium: GoogleFonts.lexend(fontSize: 14, fontWeight: FontWeight.normal, color: AppColors.textSecondary),
-        labelLarge: GoogleFonts.lexend(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.primary),
+        displayLarge: GoogleFonts.lexend(
+          fontSize: 36,
+          fontWeight: FontWeight.bold,
+          color: colors.textPrimary,
+        ),
+        displayMedium: GoogleFonts.lexend(
+          fontSize: 30,
+          fontWeight: FontWeight.bold,
+          color: colors.textPrimary,
+        ),
+        headlineLarge: GoogleFonts.lexend(
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+          color: colors.textPrimary,
+        ),
+        headlineMedium: GoogleFonts.lexend(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: colors.textPrimary,
+        ),
+        titleLarge: GoogleFonts.lexend(
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: colors.textPrimary,
+        ),
+        titleMedium: GoogleFonts.lexend(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          color: colors.textPrimary,
+        ),
+        bodyLarge: GoogleFonts.lexend(
+          fontSize: 16,
+          fontWeight: FontWeight.normal,
+          color: colors.textPrimary,
+        ),
+        bodyMedium: GoogleFonts.lexend(
+          fontSize: 14,
+          fontWeight: FontWeight.normal,
+          color: colors.textMuted,
+        ),
+        bodySmall: GoogleFonts.lexend(
+          fontSize: 12,
+          fontWeight: FontWeight.normal,
+          color: colors.textHint,
+        ),
+        labelLarge: GoogleFonts.lexend(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: colors.primary,
+        ),
+        labelSmall: GoogleFonts.lexend(
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 0.5,
+          color: colors.textSecondary,
+        ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.inputBackground,
+        fillColor: colors.inputBackground,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderRadius: AppRadius.mdRadius,
+          borderSide: BorderSide(color: colors.border),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderRadius: AppRadius.mdRadius,
+          borderSide: BorderSide(color: colors.border),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.primary),
+          borderRadius: AppRadius.mdRadius,
+          borderSide: BorderSide(color: colors.primary, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.error),
+          borderRadius: AppRadius.mdRadius,
+          borderSide: BorderSide(color: colors.error),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        labelStyle: GoogleFonts.lexend(fontSize: 14, fontWeight: FontWeight.w500, color: AppColors.textSecondary),
-        hintStyle: GoogleFonts.lexend(fontSize: 16, fontWeight: FontWeight.normal, color: AppColors.textHint),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: AppRadius.mdRadius,
+          borderSide: BorderSide(color: colors.error, width: 1.5),
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.lg,
+        ),
+        labelStyle: GoogleFonts.lexend(
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+          color: colors.textMuted,
+        ),
+        hintStyle: GoogleFonts.lexend(
+          fontSize: 14,
+          fontWeight: FontWeight.normal,
+          color: colors.textHint,
+        ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
+          backgroundColor: colors.primary,
           foregroundColor: Colors.white,
-          textStyle: GoogleFonts.lexend(fontSize: 16, fontWeight: FontWeight.w600),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+          textStyle: GoogleFonts.lexend(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
           ),
-          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: AppRadius.lgRadius,
+          ),
+          padding: const EdgeInsets.symmetric(
+            vertical: AppSpacing.lg,
+            horizontal: AppSpacing.xxl,
+          ),
           elevation: 0,
+          minimumSize: const Size(double.infinity, 52),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: colors.primary,
+          side: BorderSide(color: colors.primaryBorder),
+          textStyle: GoogleFonts.lexend(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: AppRadius.lgRadius,
+          ),
+          padding: const EdgeInsets.symmetric(
+            vertical: AppSpacing.md,
+            horizontal: AppSpacing.xl,
+          ),
+          minimumSize: const Size(double.infinity, 48),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: AppColors.primary,
-          textStyle: GoogleFonts.lexend(fontSize: 14, fontWeight: FontWeight.w500),
+          foregroundColor: colors.primary,
+          textStyle: GoogleFonts.lexend(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+      cardTheme: CardThemeData(
+        color: colors.cardBackground,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: AppRadius.xlRadius,
+          side: BorderSide(color: colors.borderSubtle),
+        ),
+        margin: EdgeInsets.zero,
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: colors.cardBackground,
+        elevation: isDark ? 8 : 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: AppRadius.xlRadius,
+          side: BorderSide(color: colors.border),
+        ),
+        titleTextStyle: GoogleFonts.lexend(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+          color: colors.textPrimary,
+        ),
+        contentTextStyle: GoogleFonts.lexend(
+          fontSize: 14,
+          color: colors.textMuted,
         ),
       ),
     );
