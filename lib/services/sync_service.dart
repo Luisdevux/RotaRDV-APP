@@ -8,7 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:isar/isar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/database/local_database.dart';
-import '../core/network/api_client.dart';
+import '../core/network/dio_client.dart';
 import '../models/despesa_collection.dart';
 import '../models/viagem_collection.dart';
 import 'package:path_provider/path_provider.dart';
@@ -281,7 +281,7 @@ class SyncService {
         }).toList()
       };
 
-      final response = await ApiClient.post('/sync/push', body: payload);
+      final response = await DioClient.post('/sync/push', body: payload);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         // Extrai eventuais itens rejeitados pelos validadores de domínio do backend
@@ -358,7 +358,7 @@ class SyncService {
         if (!await file.exists()) continue;
 
         try {
-          final uploadRes = await ApiClient.uploadFile(
+          final uploadRes = await DioClient.uploadFile(
             '/despesas/${d.uuid}/foto',
             file: file,
             fieldName: 'comprovante',
@@ -410,7 +410,7 @@ class SyncService {
       endpoint += '?updatedAfter=${Uri.encodeComponent(lastSyncStr)}';
     }
 
-    final response = await ApiClient.get(endpoint);
+    final response = await DioClient.get(endpoint);
 
     if (response.statusCode == 200 || response.statusCode == 201) {
       final jsonBody = jsonDecode(response.body);

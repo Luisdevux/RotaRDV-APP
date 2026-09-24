@@ -15,6 +15,7 @@ import 'package:app_despesas/services/sync_service.dart';
 import 'package:app_despesas/services/deep_link_service.dart';
 import 'package:app_despesas/services/estado_cidade_service.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:app_despesas/core/network/dio_client.dart';
 import 'package:app_despesas/routes.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -23,6 +24,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await LocalDatabase.init();
   await dotenv.load(fileName: ".env");
+  DioClient.init();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );

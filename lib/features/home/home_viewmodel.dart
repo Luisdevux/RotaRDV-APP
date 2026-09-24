@@ -3,7 +3,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:isar/isar.dart';
 import '../../core/database/local_database.dart';
-import '../../core/network/api_client.dart';
+import '../../core/network/dio_client.dart';
 import '../../models/viagem_collection.dart';
 import '../../services/sync_service.dart';
 import '../auth/auth_viewmodel.dart';
@@ -18,7 +18,7 @@ class HomeViewModel extends ChangeNotifier {
   VoidCallback? _syncListener;
   VoidCallback? _sessionExpiredListener;
 
-  bool get isSessionExpired => ApiClient.sessionExpiredNotifier.value;
+  bool get isSessionExpired => DioClient.sessionExpiredNotifier.value;
   Map<String, dynamic>? get veiculo => authViewModel.currentVehicle;
 
   HomeViewModel(this.authViewModel) {
@@ -31,7 +31,7 @@ class HomeViewModel extends ChangeNotifier {
     _sessionExpiredListener = () {
       notifyListeners();
     };
-    ApiClient.sessionExpiredNotifier.addListener(_sessionExpiredListener!);
+    DioClient.sessionExpiredNotifier.addListener(_sessionExpiredListener!);
   }
 
   @override
@@ -40,7 +40,7 @@ class HomeViewModel extends ChangeNotifier {
       _syncService.syncEventNotifier.removeListener(_syncListener!);
     }
     if (_sessionExpiredListener != null) {
-      ApiClient.sessionExpiredNotifier.removeListener(_sessionExpiredListener!);
+      DioClient.sessionExpiredNotifier.removeListener(_sessionExpiredListener!);
     }
     super.dispose();
   }

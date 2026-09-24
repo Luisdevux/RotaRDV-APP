@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../core/database/local_database.dart';
-import '../core/network/api_client.dart';
+import '../core/network/dio_client.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // Serviço responsável por autenticação de usuários (login, logout, refresh token)
@@ -21,7 +21,7 @@ class AuthService {
 
   Future<Map<String, dynamic>?> login(String email, String senha) async {
     try {
-      final response = await ApiClient.post(
+      final response = await DioClient.post(
         '/login',
         body: {
           'email': email,
@@ -62,7 +62,7 @@ class AuthService {
       }
 
       // 3. Enviar o token para a API Node.js
-      final response = await ApiClient.post(
+      final response = await DioClient.post(
         '/google',
         body: {'idToken': idToken},
         requiresAuth: false,
@@ -83,7 +83,7 @@ class AuthService {
 
   Future<Map<String, dynamic>?> refreshToken(String refreshToken) async {
     try {
-      final response = await ApiClient.post(
+      final response = await DioClient.post(
         '/refresh',
         body: {'refresh_token': refreshToken},
         requiresAuth: false,

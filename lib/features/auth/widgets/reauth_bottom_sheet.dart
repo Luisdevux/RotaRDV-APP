@@ -6,7 +6,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_theme.dart';
-import '../../../core/network/api_client.dart';
+import '../../../core/network/dio_client.dart';
 import '../../../services/sync_service.dart';
 import '../auth_viewmodel.dart';
 
@@ -70,7 +70,7 @@ class _ReauthBottomSheetState extends State<ReauthBottomSheet> {
     if (!mounted) return;
 
     if (success) {
-      ApiClient.resetSessionExpired();
+      DioClient.resetSessionExpired();
       Navigator.pop(context, true);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -99,7 +99,7 @@ class _ReauthBottomSheetState extends State<ReauthBottomSheet> {
     if (!mounted) return;
 
     if (success) {
-      ApiClient.resetSessionExpired();
+      DioClient.resetSessionExpired();
       Navigator.pop(context, true);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(

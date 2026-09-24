@@ -399,7 +399,7 @@ class _LoginPageState extends State<LoginPage> {
                       // Footer Info Centered
                       Center(
                         child: Text(
-                          '© 2026 Registro de Despesas • v1.4.0',
+                          '© 2026 Registro de Despesas',
                           style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(color: AppColors.textHint),
                         ),

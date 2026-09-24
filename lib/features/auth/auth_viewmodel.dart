@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import '../../services/auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-import '../../core/network/api_client.dart';
+import '../../core/network/dio_client.dart';
 import '../../services/sync_service.dart';
 import '../../core/database/local_database.dart';
 
@@ -65,7 +65,7 @@ class AuthViewModel extends ChangeNotifier {
         }
 
         // Reseta o estado de sessão expirada
-        ApiClient.resetSessionExpired();
+        DioClient.resetSessionExpired();
 
         isLoadingLocal = false;
         notifyListeners();
@@ -135,7 +135,7 @@ class AuthViewModel extends ChangeNotifier {
         }
 
         // Reseta o estado de sessão expirada
-        ApiClient.resetSessionExpired();
+        DioClient.resetSessionExpired();
 
         isLoadingGoogle = false;
         notifyListeners();
@@ -187,7 +187,7 @@ class AuthViewModel extends ChangeNotifier {
       final userId = currentUser?['_id'] ?? currentUser?['id'];
       if (userId == null) return;
 
-      final response = await ApiClient.get('/usuarios/$userId');
+      final response = await DioClient.get('/usuarios/$userId');
       if (response.statusCode == 200 || response.statusCode == 201) {
         final body = jsonDecode(response.body);
         final userData = body['data'];
