@@ -38,7 +38,7 @@ class PerfilSincronizacaoCard extends StatelessWidget {
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 0.6,
-                  color: colors.textHint,
+                  color: colors.textPrimary,
                 ),
               ),
             ],

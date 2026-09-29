@@ -30,6 +30,14 @@ class ViagemOdometroResumoCard extends StatelessWidget {
     }
   }
 
+  String _formatKm(num val) {
+    try {
+      return NumberFormat('#,###', 'pt_BR').format(val);
+    } catch (_) {
+      return val.toStringAsFixed(0);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
@@ -66,8 +74,8 @@ class ViagemOdometroResumoCard extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(
                   percorrido != null
-                      ? '${percorrido.toStringAsFixed(0)} KM'
-                      : (isEmAndamento ? 'Em andamento' : '${kmIni.toStringAsFixed(0)} KM'),
+                      ? '${_formatKm(percorrido)} KM'
+                      : (isEmAndamento ? 'Em andamento' : '${_formatKm(kmIni)} KM'),
                   style: GoogleFonts.lexend(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -76,7 +84,7 @@ class ViagemOdometroResumoCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Inicial: ${kmIni.toStringAsFixed(0)} KM',
+                  'Inicial: ${_formatKm(kmIni)} KM',
                   style: GoogleFonts.lexend(
                     fontSize: 11,
                     color: colors.textMuted,

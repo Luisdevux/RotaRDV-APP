@@ -83,13 +83,8 @@ class DespesaCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(
-              color: colors.primaryLight,
-              borderRadius: AppRadius.mdRadius,
-              border: Border.all(color: colors.primaryBorder),
-            ),
+          Padding(
+            padding: const EdgeInsets.only(top: 2, left: 4),
             child: Icon(icon, color: colors.primary, size: 22),
           ),
           const SizedBox(width: AppSpacing.md),
@@ -168,7 +163,7 @@ class DespesaCard extends StatelessWidget {
                     children: [
                       if (despesa.litros != null && despesa.litros! > 0)
                         Text(
-                          '${despesa.litros!.toStringAsFixed(1)}L ${despesa.tipoCombustivel != null ? "• ${despesa.tipoCombustivel}" : ""}',
+                          '${NumberFormat('#,##0.#', 'pt_BR').format(despesa.litros!)} L ${despesa.tipoCombustivel != null ? "• ${despesa.tipoCombustivel}" : ""}',
                           style: GoogleFonts.lexend(
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
@@ -185,7 +180,7 @@ class DespesaCard extends StatelessWidget {
                         ),
                       if (despesa.kmAtual != null && despesa.kmAtual! > 0)
                         Text(
-                          'KM ${despesa.kmAtual!.toStringAsFixed(0)}',
+                          'KM ${NumberFormat('#,###', 'pt_BR').format(despesa.kmAtual!.toInt())}',
                           style: GoogleFonts.lexend(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,

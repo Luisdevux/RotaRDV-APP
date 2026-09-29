@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:app_despesas/core/widgets/liters_formatter.dart';
 import 'package:app_despesas/features/despesas/despesa_viewmodel.dart';
 import 'package:app_despesas/models/viagem_collection.dart';
 
@@ -69,6 +70,30 @@ void main() {
       expect(erroSemKm, isNotNull);
     });
 
+    test('deve rejeitar abastecimento com litros superior a 50.000 L', () {
+      final erroExcessoLitros = DespesaViewModel.validarLancamento(
+        valorTotal: 400.0,
+        tipo: 'ABASTECIMENTO',
+        viagem: viagemMock,
+        litros: 50000.01,
+        kmAtual: 653400.0,
+      );
+      expect(erroExcessoLitros, isNotNull);
+      expect(erroExcessoLitros, contains('não pode ultrapassar 50.000 L'));
+    });
+
+    test('deve rejeitar abastecimento com odômetro superior a 10.000.000 KM', () {
+      final erroExcessoKm = DespesaViewModel.validarLancamento(
+        valorTotal: 400.0,
+        tipo: 'ABASTECIMENTO',
+        viagem: viagemMock,
+        litros: 60.0,
+        kmAtual: 10000001.0,
+      );
+      expect(erroExcessoKm, isNotNull);
+      expect(erroExcessoKm, contains('excede o limite máximo permitido'));
+    });
+
     test('deve aprovar abastecimento consistente com kmAtual superior ao inicial', () {
       final validacao = DespesaViewModel.validarLancamento(
         valorTotal: 400.0,
@@ -78,6 +103,42 @@ void main() {
         kmAtual: 653800.0,
       );
       expect(validacao, isNull);
+    });
+  });
+
+  group('LitersTextInputFormatter - Formatação e Limites de Entrada', () {
+    final formatter = LitersTextInputFormatter();
+
+    test('deve formatar milhares com ponto separador', () {
+      final result = formatter.formatEditUpdate(
+        TextEditingValue.empty,
+        const TextEditingValue(text: '65000'),
+      );
+      expect(result.text, equals('65.000'));
+    });
+
+    test('deve manter casas decimais com vírgula', () {
+      final result = formatter.formatEditUpdate(
+        TextEditingValue.empty,
+        const TextEditingValue(text: '65000,50'),
+      );
+      expect(result.text, equals('65.000,50'));
+    });
+
+    test('deve limitar dígitos inteiros a 6 posições impedindo números gigantes como 6500000000000', () {
+      final result = formatter.formatEditUpdate(
+        TextEditingValue.empty,
+        const TextEditingValue(text: '6500000000000'),
+      );
+      expect(result.text, equals('650.000'));
+    });
+
+    test('deve limitar casas decimais a no máximo 2', () {
+      final result = formatter.formatEditUpdate(
+        TextEditingValue.empty,
+        const TextEditingValue(text: '120,456'),
+      );
+      expect(result.text, equals('120,45'));
     });
   });
 }

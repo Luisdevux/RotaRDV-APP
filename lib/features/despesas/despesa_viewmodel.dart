@@ -103,8 +103,14 @@ class DespesaViewModel extends ChangeNotifier {
       if (litros == null || litros <= 0) {
         return 'Informe a quantidade de litros abastecidos.';
       }
+      if (litros > 50000) {
+        return 'A quantidade de litros não pode ultrapassar 50.000 L.';
+      }
       if (kmAtual == null || kmAtual <= 0) {
         return 'Informe o odômetro (KM) atual do veículo para o abastecimento.';
+      }
+      if (kmAtual > 10000000) {
+        return 'O odômetro informado excede o limite máximo permitido.';
       }
       if (viagem != null && kmAtual < viagem.kmInicial) {
         final kmIni = viagem.kmInicial.toInt();
@@ -367,42 +373,4 @@ class DespesaViewModel extends ChangeNotifier {
     return arquivoSalvo.path;
   }
 
-  // ──────────────────────── EXCLUSÃO DE DESPESA ───────────────────────── //
-
-  // Realiza a exclusão da despesa (com soft delete para sincronização quando já sincronizado)
-  Future<bool> excluirDespesa(DespesaCollection despesa) async {
-    try {
-      await _limparArquivoLocalSeApp(despesa);
-
-      await _isar.writeTxn(() async {
-        if (despesa.statusSincronizacao == 'criado') {
-          await _isar.despesaCollections.delete(despesa.id);
-        } else {
-          despesa.statusSincronizacao = 'deletado';
-          despesa.fotoAnexoLocalPath = null;
-          await _isar.despesaCollections.put(despesa);
-        }
-      });
-
-      if (_currentViagemId != null) {
-        await carregarDespesas(_currentViagemId!);
-      }
-
-      _syncService.syncAll();
-      return true;
-    } catch (e) {
-      debugPrint('[DespesaViewModel] Erro ao excluir despesa: $e');
-      errorMessage = 'Não foi possível excluir a despesa selecionada.';
-      return false;
-    }
-  }
-
-  // Limpa o arquivo local da despesa se ela foi tirada no app
-  Future<void> _limparArquivoLocalSeApp(DespesaCollection despesa) async {
-    if (despesa.fotoTiradaNoApp != true || despesa.fotoAnexoLocalPath == null) return;
-    final file = File(despesa.fotoAnexoLocalPath!);
-    if (await file.exists()) {
-      await file.delete();
-    }
-  }
 }

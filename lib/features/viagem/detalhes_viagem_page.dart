@@ -184,7 +184,7 @@ class _DetalhesViagemPageState extends State<DetalhesViagemPage> {
             Row(
               children: [
                 Text(
-                  'Lançamentos da rota',
+                  'Lançamentos da rota (recentes)',
                   style: GoogleFonts.lexend(
                     fontSize: 13,
                     fontWeight: FontWeight.bold,

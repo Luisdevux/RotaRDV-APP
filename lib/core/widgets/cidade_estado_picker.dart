@@ -13,6 +13,7 @@ class CidadeEstadoPicker extends StatelessWidget {
   final String? uf;
   final String hintCidade;
   final String hintUF;
+  final String? errorText;
   final Function(String cidade, String uf) onSelected;
 
   const CidadeEstadoPicker({
@@ -23,6 +24,7 @@ class CidadeEstadoPicker extends StatelessWidget {
     required this.uf,
     this.hintCidade = 'Selecione a cidade',
     this.hintUF = 'UF',
+    this.errorText,
     required this.onSelected,
   });
 
@@ -60,7 +62,7 @@ class CidadeEstadoPicker extends StatelessWidget {
             decoration: BoxDecoration(
               color: colors.inputBackground,
               border: Border.all(
-                color: colors.border,
+                color: errorText != null ? colors.error : colors.border,
               ),
               borderRadius: AppRadius.lgRadius,
             ),
@@ -101,6 +103,25 @@ class CidadeEstadoPicker extends StatelessWidget {
             ),
           ),
         ),
+        if (errorText != null) ...[
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Icon(LucideIcons.alertCircle, size: 14, color: colors.error),
+              const SizedBox(width: 5),
+              Expanded(
+                child: Text(
+                  errorText!,
+                  style: GoogleFonts.lexend(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: colors.error,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ],
     );
   }

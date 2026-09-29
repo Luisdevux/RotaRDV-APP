@@ -17,7 +17,7 @@ import 'widgets/perfil_preferencias_card.dart';
 import 'widgets/perfil_sincronizacao_card.dart';
 import 'widgets/perfil_veiculo_card.dart';
 
-// Página responsável por gerenciar a identidade do motorista autenticado, os dados do veículo designado, preferências de interface e sincronização de dados
+// Página responsável por gerenciar a identidade do motorista autenticado, os dados do veículo vínculado, preferências de interface e sincronização de dados
 class PerfilPage extends StatefulWidget {
   final bool isTab;
   final ValueChanged<int>? onNavigateToTab;
@@ -47,10 +47,7 @@ class _PerfilPageState extends State<PerfilPage> {
     });
   }
 
-  /*──────────────────────────────────────────────────────────────*/
-  /* MÉTODOS DE CONTROLE E SINCRONIZAÇÃO                          */
-  /*──────────────────────────────────────────────────────────────*/
-
+  // Métodos de controle de sincronização de dados e logout do usuário
   Future<void> _forcarSincronizacao() async {
     setState(() {
       _isSyncing = true;

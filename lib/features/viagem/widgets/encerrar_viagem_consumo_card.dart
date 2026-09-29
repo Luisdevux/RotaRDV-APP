@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_card.dart';
@@ -75,7 +76,7 @@ class EncerrarViagemConsumoCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  '${metricas.totalLitros.toStringAsFixed(1)} L',
+                  '${NumberFormat('#,##0.#', 'pt_BR').format(metricas.totalLitros)} L',
                   style: GoogleFonts.lexend(
                     fontSize: 13,
                     fontWeight: FontWeight.bold,

@@ -49,21 +49,14 @@ class _PerfilVeiculoCardState extends State<PerfilVeiculoCard> {
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 child: Row(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: colors.primary.withValues(alpha: 0.10),
-                        borderRadius: AppRadius.smRadius,
-                      ),
-                      child: Icon(LucideIcons.truck, size: 18, color: colors.primary),
-                    ),
+                    Icon(LucideIcons.truck, size: 20, color: colors.primary),
                     const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Veículo designado',
+                            'Veículo vínculado',
                             style: GoogleFonts.lexend(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
@@ -172,7 +165,7 @@ class _PerfilVeiculoCardState extends State<PerfilVeiculoCard> {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            'O veículo designado pela transportadora aparecerá aqui.',
+                            'O veículo vínculado pela transportadora aparecerá aqui.',
                             style: GoogleFonts.lexend(
                               fontSize: 12,
                               color: colors.textMuted,

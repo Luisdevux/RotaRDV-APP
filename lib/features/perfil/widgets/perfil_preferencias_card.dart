@@ -75,14 +75,7 @@ class _PerfilPreferenciasCardState extends State<PerfilPreferenciasCard> {
                 padding: const EdgeInsets.all(AppSpacing.lg),
                 child: Row(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: colors.primary.withValues(alpha: 0.10),
-                        borderRadius: AppRadius.smRadius,
-                      ),
-                      child: Icon(LucideIcons.palette, size: 18, color: colors.primary),
-                    ),
+                    Icon(LucideIcons.palette, size: 20, color: colors.primary),
                     const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Column(
