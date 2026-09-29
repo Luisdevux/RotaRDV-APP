@@ -161,7 +161,12 @@ class SyncService {
         await StorageCleanerService().purgeOldSyncedPhotos();
 
         success = true;
-        debugPrint('[SyncService] Sincronização concluída com sucesso na tentativa $attempt!');
+        final pendingSummary = await getPendingSyncSummary();
+        if (pendingSummary.hasPending) {
+          debugPrint('[SyncService] Ciclo de sincronização finalizado. Há ${pendingSummary.totalPendencias} item(ns) pendente(s).');
+        } else {
+          debugPrint('[SyncService] Sincronização concluída com sucesso na tentativa $attempt!');
+        }
         syncEventNotifier.value++;
       } catch (e) {
         debugPrint('[SyncService] Erro na tentativa $attempt/$maxRetries de sincronização: $e');
@@ -191,7 +196,9 @@ class SyncService {
             .or()
             .statusSincronizacaoEqualTo('editado')
             .or()
-            .statusSincronizacaoEqualTo('deletado'))
+            .statusSincronizacaoEqualTo('deletado')
+            .or()
+            .statusSincronizacaoEqualTo('erro_validacao'))
         .count();
 
     final despesasParaSincronizar = await isar.despesaCollections
@@ -199,7 +206,9 @@ class SyncService {
         .group((q) => q
             .statusSincronizacaoEqualTo('criado')
             .or()
-            .statusSincronizacaoEqualTo('deletado'))
+            .statusSincronizacaoEqualTo('deletado')
+            .or()
+            .statusSincronizacaoEqualTo('erro_validacao'))
         .count();
 
     final fotosPendentes = await isar.despesaCollections
@@ -236,7 +245,9 @@ class SyncService {
             .or()
             .statusSincronizacaoEqualTo('editado')
             .or()
-            .statusSincronizacaoEqualTo('deletado'))
+            .statusSincronizacaoEqualTo('deletado')
+            .or()
+            .statusSincronizacaoEqualTo('erro_validacao'))
         .findAll();
 
     // Despesas são imutáveis após o lançamento (motoristas não possuem permissão de edição).
@@ -246,7 +257,9 @@ class SyncService {
         .group((q) => q
             .statusSincronizacaoEqualTo('criado')
             .or()
-            .statusSincronizacaoEqualTo('deletado'))
+            .statusSincronizacaoEqualTo('deletado')
+            .or()
+            .statusSincronizacaoEqualTo('erro_validacao'))
         .findAll();
 
     // 1 Envia registros de texto/metadados para o backend
@@ -262,7 +275,9 @@ class SyncService {
           'km_final': v.kmFinal,
           'data_inicio': v.dataInicio.toUtc().toIso8601String(),
           'data_fim': v.dataFim?.toUtc().toIso8601String(),
-          'status': v.status,
+          'status': (v.status == 'concluida' || v.status == 'concluída')
+              ? 'concluída'
+              : (v.status == 'cancelada' ? 'cancelada' : 'em_andamento'),
           'is_deleted': v.statusSincronizacao == 'deletado'
         }).toList(),
         'despesas': despesasParaSincronizar.map((d) => {
@@ -302,7 +317,12 @@ class SyncService {
             if (idsRejeitados.contains(v.uuid)) {
               v.statusSincronizacao = 'erro_validacao';
               await isar.viagemCollections.put(v);
-              debugPrint('[SyncService] Viagem ${v.uuid} rejeitada pelo servidor por inconsistência de domínio.');
+              final itemRejeitado = rejeitadosList.firstWhere(
+                (r) => r is Map && r['id']?.toString() == v.uuid,
+                orElse: () => null,
+              );
+              final motivo = itemRejeitado is Map ? itemRejeitado['motivo'] : 'Inconsistência de domínio';
+              debugPrint('[SyncService] Viagem ${v.uuid} rejeitada pelo servidor: $motivo');
             } else if (v.statusSincronizacao == 'deletado') {
               await isar.viagemCollections.delete(v.id);
             } else {
@@ -315,7 +335,12 @@ class SyncService {
             if (idsRejeitados.contains(d.uuid)) {
               d.statusSincronizacao = 'erro_validacao';
               await isar.despesaCollections.put(d);
-              debugPrint('[SyncService] Despesa ${d.uuid} rejeitada pelo servidor por inconsistência de domínio.');
+              final itemRejeitado = rejeitadosList.firstWhere(
+                (r) => r is Map && r['id']?.toString() == d.uuid,
+                orElse: () => null,
+              );
+              final motivo = itemRejeitado is Map ? itemRejeitado['motivo'] : 'Inconsistência de domínio';
+              debugPrint('[SyncService] Despesa ${d.uuid} rejeitada pelo servidor: $motivo');
             } else if (d.statusSincronizacao == 'deletado') {
               await isar.despesaCollections.delete(d.id);
             } else {
@@ -324,7 +349,11 @@ class SyncService {
             }
           }
         });
-        debugPrint('[SyncService] PushSync concluído (${viagensParaSincronizar.length} viagens, ${despesasParaSincronizar.length} despesas). Rejeitados: ${idsRejeitados.length}');
+        if (idsRejeitados.isNotEmpty) {
+          debugPrint('[SyncService] PushSync concluído com ${idsRejeitados.length} rejeição(ões) do servidor.');
+        } else {
+          debugPrint('[SyncService] PushSync concluído com sucesso (${viagensParaSincronizar.length} viagens, ${despesasParaSincronizar.length} despesas).');
+        }
       } else {
         throw Exception('Falha no PushSync (Status ${response.statusCode}): ${response.body}');
       }

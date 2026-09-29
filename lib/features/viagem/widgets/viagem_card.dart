@@ -35,8 +35,10 @@ class ViagemCard extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.lg),
       backgroundColor: colors.cardBackground,
       borderColor: isEmAndamento
-          ? colors.primary.withValues(alpha: 0.3)
-          : (isCancelada ? colors.error.withValues(alpha: 0.3) : colors.borderSubtle),
+          ? colors.warning.withValues(alpha: 0.35)
+          : (isConcluida
+              ? colors.success.withValues(alpha: 0.35)
+              : (isCancelada ? colors.error.withValues(alpha: 0.35) : colors.borderSubtle)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -88,12 +90,12 @@ class ViagemCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'KM inicial: ${viagem.kmInicial.toStringAsFixed(0)} KM',
+                'KM inicial: ${NumberFormat('#,###', 'pt_BR').format(viagem.kmInicial.toInt())} KM',
                 style: GoogleFonts.lexend(fontSize: 12, color: colors.textSecondary),
               ),
               if (viagem.kmFinal != null)
                 Text(
-                  'KM final: ${viagem.kmFinal!.toStringAsFixed(0)} KM',
+                  'KM final: ${NumberFormat('#,###', 'pt_BR').format(viagem.kmFinal!.toInt())} KM',
                   style: GoogleFonts.lexend(fontSize: 12, color: colors.textSecondary),
                 ),
             ],

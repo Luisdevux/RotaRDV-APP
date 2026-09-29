@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/labeled_input_field.dart';
+import '../../core/widgets/liters_input_field.dart';
 import '../../core/widgets/network_status_bar.dart';
 import '../../core/widgets/odometer_input_field.dart';
 import '../../models/viagem_collection.dart';
@@ -143,6 +144,9 @@ class _NovaDespesaPageState extends State<NovaDespesaPage> {
     if (litros == null || litros <= 0) {
       return 'Litros devem ser maiores que zero';
     }
+    if (litros > 50000) {
+      return 'Quantidade excede o limite (máx. 50.000 L)';
+    }
     return null;
   }
 
@@ -152,6 +156,9 @@ class _NovaDespesaPageState extends State<NovaDespesaPage> {
     final km = _parseNumero(_kmAtualController.text);
     if (km == null || km <= 0) {
       return 'Informe uma quilometragem válida';
+    }
+    if (km > 10000000) {
+      return 'Quilometragem inválida (limite excedido)';
     }
     if (viagem != null && km < viagem.kmInicial) {
       return 'KM (${km.toInt()}) não pode ser menor que o início (${viagem.kmInicial.toInt()} KM)';
@@ -163,10 +170,10 @@ class _NovaDespesaPageState extends State<NovaDespesaPage> {
     if (_valorTotal <= 0) return false;
     if (_categoria == CategoriaDespesa.abastecimento) {
       final litros = _parseNumero(_litrosController.text);
-      if (litros == null || litros <= 0) return false;
+      if (litros == null || litros <= 0 || litros > 50000) return false;
 
       final km = _parseNumero(_kmAtualController.text);
-      if (km == null || km <= 0) return false;
+      if (km == null || km <= 0 || km > 10000000) return false;
       if (viagem != null && km < viagem.kmInicial) return false;
     }
     return true;
@@ -181,9 +188,15 @@ class _NovaDespesaPageState extends State<NovaDespesaPage> {
       if (litros == null || litros <= 0) {
         return 'Informe a quantidade de litros abastecidos.';
       }
+      if (litros > 50000) {
+        return 'A quantidade de litros não pode ultrapassar 50.000 L.';
+      }
       final km = _parseNumero(_kmAtualController.text);
       if (km == null || km <= 0) {
         return 'Informe a quilometragem atual do veículo.';
+      }
+      if (km > 10000000) {
+        return 'A quilometragem informada ultrapassa o limite permitido.';
       }
       if (viagem != null && km < viagem.kmInicial) {
         return 'O odômetro (${km.toInt()} KM) é menor que o início da viagem (${viagem.kmInicial.toInt()} KM).';
@@ -370,12 +383,11 @@ class _NovaDespesaPageState extends State<NovaDespesaPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: LabeledInputField(
+                child: LitersInputField(
                   label: 'Litros',
                   icon: LucideIcons.fuel,
                   controller: _litrosController,
-                  hintText: '0.00',
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  hintText: '0,00',
                   errorText: erroLitros,
                   onChanged: (_) => setState(() {}),
                 ),

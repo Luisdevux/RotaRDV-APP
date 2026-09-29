@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_card.dart';
@@ -26,19 +27,21 @@ class ViagemConsumoCard extends StatelessWidget {
     if (metricas.totalLitros <= 0) {
       return 'Informe litros para calcular';
     }
-    final km = metricas.kmPercorridoTotal.toStringAsFixed(0);
-    final l = metricas.totalLitros.toStringAsFixed(1);
+    final km = NumberFormat('#,###', 'pt_BR').format(metricas.kmPercorridoTotal.toInt());
+    final l = NumberFormat('#,##0.#', 'pt_BR').format(metricas.totalLitros);
     return '$km km • $l L';
   }
 
   String _formatarLegendaUltimoTrecho(bool isKmIncoerente, MetricasConsumoViagem metricas) {
     if (isKmIncoerente) {
-      final km = metricas.ultimoKmInformado?.toStringAsFixed(0) ?? '--';
+      final km = metricas.ultimoKmInformado != null
+          ? NumberFormat('#,###', 'pt_BR').format(metricas.ultimoKmInformado!.toInt())
+          : '--';
       return 'Odômetro ($km) < Inicial';
     }
     if (metricas.kmTrechoUltimo != null && metricas.litrosUltimoAbastecimento != null) {
-      final km = metricas.kmTrechoUltimo!.toStringAsFixed(0);
-      final l = metricas.litrosUltimoAbastecimento!.toStringAsFixed(1);
+      final km = NumberFormat('#,###', 'pt_BR').format(metricas.kmTrechoUltimo!.toInt());
+      final l = NumberFormat('#,##0.#', 'pt_BR').format(metricas.litrosUltimoAbastecimento!);
       return '$km km • $l L';
     }
     return 'Trecho inicial';
@@ -78,10 +81,10 @@ class ViagemConsumoCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: metricas.temDadosAbastecimento ? colors.primaryLight : colors.surfaceOverlay,
-                  borderRadius: AppRadius.pillRadius,
+                  color: metricas.temDadosAbastecimento ? colors.primary.withValues(alpha: 0.12) : colors.surfaceOverlay,
+                  borderRadius: BorderRadius.circular(6),
                   border: Border.all(
-                    color: metricas.temDadosAbastecimento ? colors.primaryBorder : colors.borderSubtle,
+                    color: metricas.temDadosAbastecimento ? colors.primary.withValues(alpha: 0.3) : colors.borderSubtle,
                   ),
                 ),
                 child: Text(

@@ -168,7 +168,7 @@ class ComprovantePickerWidget extends StatelessWidget {
             width: double.infinity,
             decoration: BoxDecoration(
               borderRadius: AppRadius.lgRadius,
-              border: Border.all(color: colors.primary.withValues(alpha: 0.5), width: 1.5),
+              border: Border.all(color: colors.textHint.withValues(alpha: 0.5), width: 1.5),
             ),
             child: ClipRRect(
               borderRadius: AppRadius.lgRadius,
@@ -217,21 +217,14 @@ class ComprovantePickerWidget extends StatelessWidget {
       child: Center(
         child: Column(
           children: [
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              decoration: BoxDecoration(
-                color: colors.primaryLight,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(LucideIcons.camera, color: colors.primary, size: 28),
-            ),
+            Icon(LucideIcons.camera, color: colors.primary, size: 32),
             const SizedBox(height: AppSpacing.sm),
             Text(
               'Tirar foto ou anexar da galeria',
               style: GoogleFonts.lexend(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: colors.primary,
+                color: colors.textPrimary,
               ),
             ),
             const SizedBox(height: 2),

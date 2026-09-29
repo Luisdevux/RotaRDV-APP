@@ -76,7 +76,7 @@ class CategoriaSelectorGrid extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
-              color: isSelected ? colors.primary : colors.primaryLight,
+              color: isSelected ? colors.primary : Colors.transparent,
               borderRadius: AppRadius.mdRadius,
             ),
             child: Icon(
@@ -118,7 +118,7 @@ class CategoriaSelectorGrid extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(AppSpacing.sm),
             decoration: BoxDecoration(
-              color: isSelected ? colors.primary : colors.primaryLight,
+              color: isSelected ? colors.primary : Colors.transparent,
               borderRadius: AppRadius.smRadius,
             ),
             child: Icon(

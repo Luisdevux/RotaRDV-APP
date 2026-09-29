@@ -42,14 +42,7 @@ class DespesasResumoGastosCard extends StatelessWidget {
             if (viagem != null) ...[
               Row(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: colors.primaryLight,
-                      borderRadius: AppRadius.xsRadius,
-                    ),
-                    child: Icon(LucideIcons.mapPin, size: 13, color: colors.primary),
-                  ),
+                  Icon(LucideIcons.mapPin, size: 15, color: colors.primary),
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Text(
@@ -83,8 +76,9 @@ class DespesasResumoGastosCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: colors.primaryLight,
-                    borderRadius: AppRadius.pillRadius,
+                    color: colors.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: colors.primary.withValues(alpha: 0.3)),
                   ),
                   child: Text(
                     '${despesaVM.despesas.length} ${despesaVM.despesas.length == 1 ? "registro" : "registros"}',
@@ -141,8 +135,8 @@ class DespesasResumoGastosCard extends StatelessWidget {
                             ),
                             Text(
                               metricas.mediaConsumoGeral != null
-                                  ? '${metricas.mediaConsumoGeral!.toStringAsFixed(2)} km/l (${metricas.totalLitros.toStringAsFixed(1)} L)'
-                                  : '${metricas.totalLitros.toStringAsFixed(1)} L abastecidos',
+                                  ? '${metricas.mediaConsumoGeral!.toStringAsFixed(2)} km/l (${NumberFormat('#,##0.#', 'pt_BR').format(metricas.totalLitros)} L)'
+                                  : '${NumberFormat('#,##0.#', 'pt_BR').format(metricas.totalLitros)} L abastecidos',
                               style: GoogleFonts.lexend(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,

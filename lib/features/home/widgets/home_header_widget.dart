@@ -35,12 +35,8 @@ class HomeHeaderWidget extends StatelessWidget {
           Container(
             width: 52,
             height: 52,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(
-                color: colors.primary.withValues(alpha: 0.3),
-                width: 2,
-              ),
             ),
             child: ClipOval(
               child: userPhotoUrl != null

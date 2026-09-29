@@ -13,6 +13,7 @@ class CidadeEstadoPicker extends StatelessWidget {
   final String? uf;
   final String hintCidade;
   final String hintUF;
+  final String? errorText;
   final Function(String cidade, String uf) onSelected;
 
   const CidadeEstadoPicker({
@@ -23,6 +24,7 @@ class CidadeEstadoPicker extends StatelessWidget {
     required this.uf,
     this.hintCidade = 'Selecione a cidade',
     this.hintUF = 'UF',
+    this.errorText,
     required this.onSelected,
   });
 
@@ -58,11 +60,9 @@ class CidadeEstadoPicker extends StatelessWidget {
               vertical: 14,
             ),
             decoration: BoxDecoration(
-              color: colors.primaryLight,
+              color: colors.inputBackground,
               border: Border.all(
-                color: hasValue 
-                    ? colors.primary.withValues(alpha: 0.40) 
-                    : colors.primary.withValues(alpha: 0.20),
+                color: errorText != null ? colors.error : colors.border,
               ),
               borderRadius: AppRadius.lgRadius,
             ),
@@ -84,15 +84,16 @@ class CidadeEstadoPicker extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: hasValue ? colors.primary : colors.surfaceOverlay,
+                    color: colors.cardBackground,
                     borderRadius: AppRadius.smRadius,
+                    border: Border.all(color: colors.borderSubtle),
                   ),
                   child: Text(
                     hasValue ? uf! : hintUF,
                     style: GoogleFonts.lexend(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
-                      color: hasValue ? Colors.white : colors.textMuted,
+                      color: hasValue ? colors.textPrimary : colors.textMuted,
                     ),
                   ),
                 ),
@@ -102,6 +103,25 @@ class CidadeEstadoPicker extends StatelessWidget {
             ),
           ),
         ),
+        if (errorText != null) ...[
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Icon(LucideIcons.alertCircle, size: 14, color: colors.error),
+              const SizedBox(width: 5),
+              Expanded(
+                child: Text(
+                  errorText!,
+                  style: GoogleFonts.lexend(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: colors.error,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ],
     );
   }

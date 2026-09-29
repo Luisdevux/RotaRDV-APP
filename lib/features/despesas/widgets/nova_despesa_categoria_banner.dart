@@ -47,14 +47,7 @@ class NovaDespesaCategoriaBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.sm),
-            decoration: BoxDecoration(
-              color: colors.primaryLight,
-              borderRadius: AppRadius.mdRadius,
-            ),
-            child: Icon(_getIconForCategoria(categoria), color: colors.primary, size: 20),
-          ),
+          Icon(_getIconForCategoria(categoria), color: colors.primary, size: 22),
           const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(

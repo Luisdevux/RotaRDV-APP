@@ -57,7 +57,7 @@ class CurrencyInputField extends StatelessWidget {
             border: Border.all(
               color: errorText != null
                   ? colors.error
-                  : colors.primary.withValues(alpha: 0.35),
+                  : colors.textHint.withValues(alpha: 0.3),
               width: 1.5,
             ),
           ),
@@ -68,7 +68,7 @@ class CurrencyInputField extends StatelessWidget {
                 style: GoogleFonts.lexend(
                   fontSize: 22,
                   fontWeight: FontWeight.w700,
-                  color: errorText != null ? colors.error : colors.primary,
+                  color: errorText != null ? colors.error : colors.textHint,
                 ),
               ),
               const SizedBox(width: AppSpacing.md),

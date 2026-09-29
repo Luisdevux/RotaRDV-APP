@@ -19,15 +19,15 @@ class Routes {
   static const String despesas = '/despesas';
   static const String perfil = '/perfil';
 
-  static Map<String, WidgetBuilder> getRoutes() {
-    return {
-      login: (_) => const LoginPage(),
-      home: (_) => const MainNavigationShell(),
-      novaViagem: (_) => const NovaViagemPage(),
-      viagens: (_) => const ViagensListPage(),
-      novaDespesa: (_) => const NovaDespesaPage(),
-      despesas: (_) => const DespesasViagemPage(),
-      perfil: (_) => const PerfilPage(),
-    };
-  }
+  static final Map<String, WidgetBuilder> _routes = {
+    login: (_) => const LoginPage(),
+    home: (_) => const MainNavigationShell(),
+    novaViagem: (_) => const NovaViagemPage(),
+    viagens: (_) => const ViagensListPage(),
+    novaDespesa: (_) => const NovaDespesaPage(),
+    despesas: (_) => const DespesasViagemPage(),
+    perfil: (_) => const PerfilPage(),
+  };
+
+  static Map<String, WidgetBuilder> getRoutes() => _routes;
 }

@@ -74,11 +74,19 @@ class _EncerrarViagemPageState extends State<EncerrarViagemPage> {
     }
   }
 
+  String _formatKm(num val) {
+    try {
+      return NumberFormat('#,###', 'pt_BR').format(val);
+    } catch (_) {
+      return val.toStringAsFixed(0);
+    }
+  }
+
   Future<void> _confirmarEncerramento(BuildContext context, AppColorsExtension colors) async {
     final bool? confirm = await AppDialog.show(
       context: context,
       title: 'Encerrar viagem',
-      message: 'Confirma o encerramento desta rota com KM final de ${_kmFinal!.toStringAsFixed(0)} KM?',
+      message: 'Confirma o encerramento desta rota com KM final de ${_formatKm(_kmFinal!)} KM?',
       confirmText: 'Encerrar viagem',
       cancelText: 'Cancelar',
       icon: LucideIcons.checkCircle2,
@@ -193,14 +201,14 @@ class _EncerrarViagemPageState extends State<EncerrarViagemPage> {
       kmPercorridoSubtituloColor = colors.error;
     } else if (isParcial && kmPercorridoExibido != null) {
       kmPercorridoSubtitulo = metricas.ultimoKmInformado != null
-          ? 'Último reg.: ${metricas.ultimoKmInformado!.toStringAsFixed(0)} KM'
+          ? 'Último reg.: ${_formatKm(metricas.ultimoKmInformado!)} KM'
           : 'Parcial dos abastecimentos';
       kmPercorridoSubtituloColor = colors.textMuted;
     } else if (_kmFinal != null && kmPercorridoExibido != null) {
-      kmPercorridoSubtitulo = 'Inicial: ${kmInicial.toStringAsFixed(0)} • Final: ${_kmFinal!.toStringAsFixed(0)}';
+      kmPercorridoSubtitulo = 'Inicial: ${_formatKm(kmInicial)} • Final: ${_formatKm(_kmFinal!)}';
       kmPercorridoSubtituloColor = colors.textMuted;
     } else {
-      kmPercorridoSubtitulo = 'Inicial: ${kmInicial.toStringAsFixed(0)} KM';
+      kmPercorridoSubtitulo = 'Inicial: ${_formatKm(kmInicial)} KM';
       kmPercorridoSubtituloColor = colors.textMuted;
     }
 
@@ -330,8 +338,8 @@ class _EncerrarViagemPageState extends State<EncerrarViagemPage> {
                               Expanded(
                                 child: Text(
                                   isKmMenorQueInicial
-                                      ? 'O KM final deve ser maior que o KM inicial (${kmInicial.toStringAsFixed(0)} KM)'
-                                      : 'O KM final não pode ser menor que o último abastecimento (${metricas.ultimoKmInformado!.toStringAsFixed(0)} KM)',
+                                      ? 'O KM final deve ser maior que o KM inicial (${_formatKm(kmInicial)} KM)'
+                                      : 'O KM final não pode ser menor que o último abastecimento (${_formatKm(metricas.ultimoKmInformado!)} KM)',
                                   style: GoogleFonts.lexend(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
@@ -395,7 +403,7 @@ class _EncerrarViagemPageState extends State<EncerrarViagemPage> {
                                 ),
                                 const SizedBox(height: 6),
                                 Text(
-                                  kmPercorridoExibido != null ? '${kmPercorridoExibido.toStringAsFixed(0)} KM' : '-- KM',
+                                  kmPercorridoExibido != null ? '${_formatKm(kmPercorridoExibido)} KM' : '-- KM',
                                   style: GoogleFonts.lexend(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
