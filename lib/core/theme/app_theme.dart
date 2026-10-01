@@ -12,12 +12,12 @@ export 'app_spacing.dart';
 
 // Configuração central do ThemeData no padrão Material 3 para Dark e Light Mode.
 class AppTheme {
-  static ThemeData get darkTheme => _buildTheme(
+  static final ThemeData darkTheme = _buildTheme(
         brightness: Brightness.dark,
         colors: AppColorsExtension.dark,
       );
 
-  static ThemeData get lightTheme => _buildTheme(
+  static final ThemeData lightTheme = _buildTheme(
         brightness: Brightness.light,
         colors: AppColorsExtension.light,
       );
@@ -30,6 +30,7 @@ class AppTheme {
 
     return ThemeData(
       useMaterial3: true,
+      splashFactory: InkRipple.splashFactory,
       brightness: brightness,
       scaffoldBackgroundColor: colors.background,
       extensions: [colors],

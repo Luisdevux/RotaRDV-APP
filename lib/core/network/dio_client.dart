@@ -23,6 +23,9 @@ class DioClient {
     sessionExpiredNotifier.value = false;
   }
 
+  // Retorna true se a sessão do usuário estiver expirada, false caso contrário, para evitar múltiplos diálogos de expiração de sessão
+  static bool get isSessionExpired => sessionExpiredNotifier.value;
+
   // Instância centralizada do Dio
   static Dio get instance {
     if (!_initialized) init();

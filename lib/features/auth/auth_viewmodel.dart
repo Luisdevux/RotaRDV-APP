@@ -39,15 +39,19 @@ class AuthViewModel extends ChangeNotifier {
         // Se for um usuário DIFERENTE do anterior:
         if (lastUserId != null && lastUserId.isNotEmpty && currentUserId.isNotEmpty && lastUserId != currentUserId) {
           debugPrint('[AuthViewModel] Novo usuário detectado ($lastUserId -> $currentUserId)');
-          final hasPending = await SyncService().hasPendingSync();
-          if (!hasPending) {
-            final isar = LocalDatabase.isar;
-            await isar.writeTxn(() async {
-              await isar.clear();
-            });
-            debugPrint('[AuthViewModel] Banco Isar resetado para o novo motorista (sem pendências).');
-          } else {
-            debugPrint('[AuthViewModel] Há pendências locais do motorista anterior. Registros preservados no Isar.');
+          try {
+            final hasPending = await SyncService().hasPendingSync();
+            if (!hasPending) {
+              final isar = LocalDatabase.isar;
+              await isar.writeTxn(() async {
+                await isar.clear();
+              });
+              debugPrint('[AuthViewModel] Banco Isar resetado para o novo motorista (sem pendências).');
+            } else {
+              debugPrint('[AuthViewModel] Há pendências locais do motorista anterior. Registros preservados no Isar.');
+            }
+          } catch (e) {
+            debugPrint('[AuthViewModel] Erro ao verificar pendências/resetar Isar: $e');
           }
         }
 
@@ -67,22 +71,18 @@ class AuthViewModel extends ChangeNotifier {
         // Reseta o estado de sessão expirada
         DioClient.resetSessionExpired();
 
-        isLoadingLocal = false;
-        notifyListeners();
-
         // Dispara sincronização em segundo plano imediatamente após reautenticação
         SyncService().syncAll();
 
         return true;
       }
-      isLoadingLocal = false;
-      notifyListeners();
       return false;
     } catch (e) {
       errorMessage = e.toString().replaceAll('Exception: ', '');
+      return false;
+    } finally {
       isLoadingLocal = false;
       notifyListeners();
-      return false;
     }
   }
 
@@ -109,15 +109,19 @@ class AuthViewModel extends ChangeNotifier {
         // Se for um usuário DIFERENTE do anterior:
         if (lastUserId != null && lastUserId.isNotEmpty && currentUserId.isNotEmpty && lastUserId != currentUserId) {
           debugPrint('[AuthViewModel] Novo usuário Google detectado ($lastUserId -> $currentUserId)');
-          final hasPending = await SyncService().hasPendingSync();
-          if (!hasPending) {
-            final isar = LocalDatabase.isar;
-            await isar.writeTxn(() async {
-              await isar.clear();
-            });
-            debugPrint('[AuthViewModel] Banco Isar resetado para o novo motorista (sem pendências).');
-          } else {
-            debugPrint('[AuthViewModel] Há pendências locais do motorista anterior. Registros preservados no Isar.');
+          try {
+            final hasPending = await SyncService().hasPendingSync();
+            if (!hasPending) {
+              final isar = LocalDatabase.isar;
+              await isar.writeTxn(() async {
+                await isar.clear();
+              });
+              debugPrint('[AuthViewModel] Banco Isar resetado para o novo motorista (sem pendências).');
+            } else {
+              debugPrint('[AuthViewModel] Há pendências locais do motorista anterior. Registros preservados no Isar.');
+            }
+          } catch (e) {
+            debugPrint('[AuthViewModel] Erro ao verificar pendências/resetar Isar: $e');
           }
         }
 
@@ -137,22 +141,18 @@ class AuthViewModel extends ChangeNotifier {
         // Reseta o estado de sessão expirada
         DioClient.resetSessionExpired();
 
-        isLoadingGoogle = false;
-        notifyListeners();
-
         // Dispara sincronização em segundo plano imediatamente após reautenticação
         SyncService().syncAll();
 
         return true;
       }
-      isLoadingGoogle = false;
-      notifyListeners();
       return false;
     } catch (e) {
       errorMessage = e.toString().replaceAll('Exception: ', '');
+      return false;
+    } finally {
       isLoadingGoogle = false;
       notifyListeners();
-      return false;
     }
   }
 
@@ -163,8 +163,12 @@ class AuthViewModel extends ChangeNotifier {
     return null;
   }
 
-  /// Recarrega os dados do motorista e veículo salvos no SharedPreferences
-  Future<void> reloadUserFromStorage() async {
+  // Variáveis de controle para evitar múltiplas requisições simultâneas de perfil
+  bool _isFetchingProfile = false;
+  DateTime? _lastFetchProfileTime;
+
+  // Recarrega os dados do motorista e veículo salvos no SharedPreferences
+  Future<void> reloadUserFromStorage({bool notify = true}) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final userStr = prefs.getString('currentUser');
@@ -175,14 +179,23 @@ class AuthViewModel extends ChangeNotifier {
       if (vehicleStr != null && currentUser != null) {
         currentUser!['veiculo_id'] = jsonDecode(vehicleStr);
       }
-      notifyListeners();
+      if (notify) {
+        notifyListeners();
+      }
     } catch (e) {
       debugPrint('[AuthViewModel] Erro ao recarregar dados do usuário: $e');
     }
   }
 
-  /// Busca os dados cadastrais mais recentes do motorista na API (/usuarios/:id)
-  Future<void> fetchProfile() async {
+  // Busca os dados cadastrais mais recentes do motorista na API (/usuarios/:id)
+  Future<void> fetchProfile({bool force = false}) async {
+    if (_isFetchingProfile) return;
+    if (!force && _lastFetchProfileTime != null &&
+        DateTime.now().difference(_lastFetchProfileTime!).inSeconds < 30) {
+      return;
+    }
+
+    _isFetchingProfile = true;
     try {
       final userId = currentUser?['_id'] ?? currentUser?['id'];
       if (userId == null) return;
@@ -198,12 +211,15 @@ class AuthViewModel extends ChangeNotifier {
           if (userData['veiculo_id'] is Map) {
             await prefs.setString('currentVehicle', jsonEncode(userData['veiculo_id']));
           }
+          _lastFetchProfileTime = DateTime.now();
           notifyListeners();
           debugPrint('[AuthViewModel] Perfil do motorista atualizado com sucesso da API.');
         }
       }
     } catch (e) {
       debugPrint('[AuthViewModel] Não foi possível atualizar perfil da API (offline ou erro): $e');
+    } finally {
+      _isFetchingProfile = false;
     }
   }
 

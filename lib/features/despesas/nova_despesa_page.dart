@@ -3,25 +3,29 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/labeled_input_field.dart';
+import '../../core/widgets/liters_input_field.dart';
 import '../../core/widgets/network_status_bar.dart';
 import '../../core/widgets/odometer_input_field.dart';
 import '../../models/viagem_collection.dart';
+import '../auth/auth_viewmodel.dart';
 import '../home/home_viewmodel.dart';
 import 'despesa_viewmodel.dart';
+import 'nova_despesa_draft_manager.dart';
+import 'nova_despesa_field_helper.dart';
+import 'nova_despesa_form_validator.dart';
 import 'widgets/categoria_selector_grid.dart';
 import 'widgets/comprovante_picker_widget.dart';
 import 'widgets/currency_input_field.dart';
 import 'widgets/nova_despesa_categoria_banner.dart';
+import 'widgets/nova_despesa_seletor_combustivel.dart';
+import 'widgets/nova_despesa_sem_viagem.dart';
 
-// Formulário para cadastro e auditoria de gastos operacionais e abastecimentos
-// Implementa validação estrita de odômetro e proteção contra encerramento de processo Android
+// Tela de lançamento e auditoria de despesas operacionais e abastecimentos
 class NovaDespesaPage extends StatefulWidget {
   final String? viagemId;
   final CategoriaDespesa? initialCategoria;
@@ -63,6 +67,25 @@ class _NovaDespesaPageState extends State<NovaDespesaPage> {
   final TextEditingController _kmAtualController = TextEditingController();
 
   String _tipoCombustivel = 'DIESEL_S10';
+  bool _combustivelInicializado = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Inicializa o combustível padrão com base nas preferências cadastradas do veículo
+    if (!_combustivelInicializado) {
+      _combustivelInicializado = true;
+      if (widget.initialCombustivel == null || widget.initialCombustivel!.isEmpty) {
+        final authVM = context.read<AuthViewModel>();
+        final veiculo = authVM.currentVehicle;
+        final pref = veiculo?['combustivel_preferencial']?.toString().toUpperCase();
+        if (pref != null && pref.isNotEmpty) {
+          final isDiesel = pref == 'DIESEL_S10' || pref == 'DIESEL_S500';
+          _tipoCombustivel = isDiesel ? pref : 'GASOLINA';
+        }
+      }
+    }
+  }
 
   @override
   void initState() {
@@ -72,6 +95,7 @@ class _NovaDespesaPageState extends State<NovaDespesaPage> {
     _recuperarFotoSePendente();
   }
 
+  // Restaura valores iniciais fornecidos por parâmetros de rota ou deep links
   void _inicializarCampos() {
     if (widget.fotoRecuperada != null) {
       _comprovanteFile = widget.fotoRecuperada;
@@ -99,8 +123,9 @@ class _NovaDespesaPageState extends State<NovaDespesaPage> {
     }
   }
 
+  // Recupera comprovante pendente caso a câmera externa tenha reiniciado o processo
   Future<void> _recuperarFotoSePendente() async {
-    final file = await _NovaDespesaDraftManager.recuperarFotoPerdida();
+    final file = await NovaDespesaDraftManager.recuperarFotoPerdida();
     if (file != null && mounted) {
       setState(() {
         _comprovanteFile = file;
@@ -119,83 +144,38 @@ class _NovaDespesaPageState extends State<NovaDespesaPage> {
     super.dispose();
   }
 
-  String _obterTitulo() {
-    if (_categoria == null) return 'Lançar despesa';
-    return 'Lançar ${_categoria!.label.toLowerCase()}';
-  }
-
-  double? _parseNumero(String texto) {
-    final limpo = texto.replaceAll('.', '').replaceAll(',', '.').trim();
-    return double.tryParse(limpo);
-  }
-
-  String? _validarValorEmTempoReal() {
-    if (_valorController.text.isNotEmpty && _valorTotal <= 0) {
-      return 'O valor total deve ser maior que R\$ 0,00';
+  // Trata a navegação de retorno (gesto do Android e botão voltar do AppBar)
+  void _aoPressionarVoltar() {
+    if (_categoria != null && widget.initialCategoria == null) {
+      setState(() => _categoria = null);
+      return;
     }
-    return null;
-  }
-
-  String? _validarLitrosEmTempoReal() {
-    if (_categoria != CategoriaDespesa.abastecimento) return null;
-    if (_litrosController.text.isEmpty) return null;
-    final litros = _parseNumero(_litrosController.text);
-    if (litros == null || litros <= 0) {
-      return 'Litros devem ser maiores que zero';
-    }
-    return null;
-  }
-
-  String? _validarOdometroEmTempoReal(ViagemCollection? viagem) {
-    if (_categoria != CategoriaDespesa.abastecimento) return null;
-    if (_kmAtualController.text.isEmpty) return null;
-    final km = _parseNumero(_kmAtualController.text);
-    if (km == null || km <= 0) {
-      return 'Informe uma quilometragem válida';
-    }
-    if (viagem != null && km < viagem.kmInicial) {
-      return 'KM (${km.toInt()}) não pode ser menor que o início (${viagem.kmInicial.toInt()} KM)';
-    }
-    return null;
-  }
-
-  bool _isFormularioValido(ViagemCollection? viagem) {
-    if (_valorTotal <= 0) return false;
-    if (_categoria == CategoriaDespesa.abastecimento) {
-      final litros = _parseNumero(_litrosController.text);
-      if (litros == null || litros <= 0) return false;
-
-      final km = _parseNumero(_kmAtualController.text);
-      if (km == null || km <= 0) return false;
-      if (viagem != null && km < viagem.kmInicial) return false;
-    }
-    return true;
-  }
-
-  String? _obterMensagemBloqueio(ViagemCollection? viagem) {
-    if (_valorTotal <= 0) {
-      return 'Informe o valor total da despesa para habilitar o salvamento.';
-    }
-    if (_categoria == CategoriaDespesa.abastecimento) {
-      final litros = _parseNumero(_litrosController.text);
-      if (litros == null || litros <= 0) {
-        return 'Informe a quantidade de litros abastecidos.';
-      }
-      final km = _parseNumero(_kmAtualController.text);
-      if (km == null || km <= 0) {
-        return 'Informe a quilometragem atual do veículo.';
-      }
-      if (viagem != null && km < viagem.kmInicial) {
-        return 'O odômetro (${km.toInt()} KM) é menor que o início da viagem (${viagem.kmInicial.toInt()} KM).';
-      }
-    }
-    return null;
+    NovaDespesaDraftManager.limpar();
+    Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
     final homeVM = context.watch<HomeViewModel>();
+    final authVM = context.watch<AuthViewModel>();
+    final veiculo = authVM.currentVehicle;
+
+    double? capacidadeTanque;
+    double? capacidadeArla;
+    String? combustivelPreferencial;
+    if (veiculo != null) {
+      if (veiculo['capacidade_tanque'] != null) {
+        capacidadeTanque = double.tryParse(veiculo['capacidade_tanque'].toString());
+      }
+      if (veiculo['capacidade_arla'] != null) {
+        capacidadeArla = double.tryParse(veiculo['capacidade_arla'].toString());
+      }
+      if (veiculo['combustivel_preferencial'] != null) {
+        combustivelPreferencial = veiculo['combustivel_preferencial'].toString().toUpperCase();
+      }
+    }
+
     final viagemAtiva = homeVM.ultimasViagens.where((v) => v.status == 'em_andamento').firstOrNull;
     final targetViagemId = widget.viagemId ?? viagemAtiva?.uuid;
 
@@ -204,108 +184,65 @@ class _NovaDespesaPageState extends State<NovaDespesaPage> {
           orElse: () => null,
         );
 
-    return Scaffold(
-      backgroundColor: colors.background,
-      appBar: AppBar(
-        backgroundColor: colors.headerBackground,
-        elevation: 0,
-        centerTitle: false,
-        automaticallyImplyLeading: false,
-        leading: IconButton(
-          icon: Icon(LucideIcons.arrowLeft, color: colors.primary),
-          onPressed: () => _aoPressionarVoltar(),
+    final bool canPopDireto = _categoria == null || widget.initialCategoria != null;
+
+    return PopScope(
+      canPop: canPopDireto,
+      onPopInvokedWithResult: (bool didPop, dynamic result) {
+        if (didPop) return;
+        _aoPressionarVoltar();
+      },
+      child: Scaffold(
+        backgroundColor: colors.background,
+        appBar: AppBar(
+          backgroundColor: colors.headerBackground,
+          elevation: 0,
+          centerTitle: false,
+          automaticallyImplyLeading: false,
+          leading: IconButton(
+            icon: Icon(LucideIcons.arrowLeft, color: colors.primary),
+            onPressed: () => _aoPressionarVoltar(),
+          ),
+          title: Text(
+            NovaDespesaFieldHelper.obterTitulo(_categoria),
+            style: GoogleFonts.lexend(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: colors.textPrimary,
+            ),
+          ),
         ),
-        title: Text(
-          _obterTitulo(),
-          style: GoogleFonts.lexend(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: colors.textPrimary,
+        body: SafeArea(
+          child: Column(
+            children: [
+              const NetworkStatusBar(),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(AppSpacing.xxl),
+                  physics: const BouncingScrollPhysics(),
+                  child: targetViagemId == null
+                      ? NovaDespesaSemViagem(onVoltar: () => Navigator.pop(context))
+                      : _categoria == null
+                          ? _buildSelecaoCategoria(colors)
+                          : _buildFormularioDespesa(
+                              context: context,
+                              viagemId: targetViagemId,
+                              viagemObj: viagemObj,
+                              colors: colors,
+                              capacidadeTanque: capacidadeTanque,
+                              capacidadeArla: capacidadeArla,
+                              combustivelPreferencial: combustivelPreferencial,
+                            ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            const NetworkStatusBar(),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(AppSpacing.xxl),
-                physics: const BouncingScrollPhysics(),
-                child: targetViagemId == null
-                    ? _buildSemViagemAtiva(context, colors)
-                    : _categoria == null
-                        ? _buildSelecaoCategoria(colors)
-                        : _buildFormularioDespesa(context, targetViagemId, viagemObj, colors),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
-  void _aoPressionarVoltar() {
-    if (_categoria != null && widget.initialCategoria == null) {
-      setState(() => _categoria = null);
-      return;
-    }
-    _NovaDespesaDraftManager.limpar();
-    Navigator.pop(context);
-  }
-
-  Widget _buildSemViagemAtiva(BuildContext context, AppColorsExtension colors) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppSpacing.huge),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.xl),
-              decoration: BoxDecoration(
-                color: colors.warning.withValues(alpha: 0.15),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(LucideIcons.alertTriangle, size: 48, color: colors.warning),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Text(
-              'Nenhuma viagem em andamento',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.lexend(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: colors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              'Para lançar uma despesa ou comprovante, você precisa primeiro iniciar uma viagem.',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.lexend(
-                fontSize: 14,
-                color: colors.textMuted,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xxl),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: colors.primary,
-                shape: RoundedRectangleBorder(borderRadius: AppRadius.lgRadius),
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl, vertical: AppSpacing.md),
-              ),
-              child: Text(
-                'Voltar ao início',
-                style: GoogleFonts.lexend(fontWeight: FontWeight.bold, color: Colors.white),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
+  // Constrói a tela de seleção inicial quando a categoria ainda não foi escolhida
   Widget _buildSelecaoCategoria(AppColorsExtension colors) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -332,19 +269,57 @@ class _NovaDespesaPageState extends State<NovaDespesaPage> {
     );
   }
 
-  Widget _buildFormularioDespesa(
-    BuildContext context,
-    String viagemId,
-    ViagemCollection? viagemObj,
-    AppColorsExtension colors,
-  ) {
+  // Constrói o formulário detalhado para inserção dos valores e comprovante
+  Widget _buildFormularioDespesa({
+    required BuildContext context,
+    required String viagemId,
+    required ViagemCollection? viagemObj,
+    required AppColorsExtension colors,
+    required double? capacidadeTanque,
+    required double? capacidadeArla,
+    required String? combustivelPreferencial,
+  }) {
     final despesaVM = context.watch<DespesaViewModel>();
     final isAbastecimento = _categoria == CategoriaDespesa.abastecimento;
-    final erroValor = _validarValorEmTempoReal();
-    final erroLitros = _validarLitrosEmTempoReal();
-    final erroKm = _validarOdometroEmTempoReal(viagemObj);
-    final formValido = _isFormularioValido(viagemObj);
-    final motivoBloqueio = _obterMensagemBloqueio(viagemObj);
+
+    final erroValor = NovaDespesaFormValidator.validarValorEmTempoReal(
+      valorTotal: _valorTotal,
+      textoValor: _valorController.text,
+    );
+    final erroLitros = NovaDespesaFormValidator.validarLitrosEmTempoReal(
+      categoria: _categoria,
+      textoLitros: _litrosController.text,
+      tipoCombustivel: _tipoCombustivel,
+      capacidadeTanque: capacidadeTanque,
+      capacidadeArla: capacidadeArla,
+    );
+    final erroKm = NovaDespesaFormValidator.validarOdometroEmTempoReal(
+      categoria: _categoria,
+      textoKm: _kmAtualController.text,
+      viagem: viagemObj,
+    );
+    final formValido = NovaDespesaFormValidator.isFormularioValido(
+      categoria: _categoria,
+      valorTotal: _valorTotal,
+      textoLitros: _litrosController.text,
+      textoKm: _kmAtualController.text,
+      tipoCombustivel: _tipoCombustivel,
+      viagem: viagemObj,
+      capacidadeTanque: capacidadeTanque,
+      capacidadeArla: capacidadeArla,
+      combustivelPreferencial: combustivelPreferencial,
+    );
+    final motivoBloqueio = NovaDespesaFormValidator.obterMensagemBloqueio(
+      categoria: _categoria,
+      valorTotal: _valorTotal,
+      textoLitros: _litrosController.text,
+      textoKm: _kmAtualController.text,
+      tipoCombustivel: _tipoCombustivel,
+      viagem: viagemObj,
+      capacidadeTanque: capacidadeTanque,
+      capacidadeArla: capacidadeArla,
+      combustivelPreferencial: combustivelPreferencial,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -359,7 +334,7 @@ class _NovaDespesaPageState extends State<NovaDespesaPage> {
         CurrencyInputField(
           label: r'Valor total (R$) *',
           controller: _valorController,
-          helperText: 'Digite o valor total pago na nota fiscal',
+          helperText: NovaDespesaFieldHelper.obterHelperValor(_categoria),
           errorText: erroValor,
           onValueChanged: (val) => setState(() => _valorTotal = val),
         ),
@@ -370,12 +345,18 @@ class _NovaDespesaPageState extends State<NovaDespesaPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: LabeledInputField(
+                child: LitersInputField(
                   label: 'Litros',
                   icon: LucideIcons.fuel,
                   controller: _litrosController,
-                  hintText: '0.00',
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  hintText: '0,00',
+                  helperText: _tipoCombustivel == 'ARLA_32'
+                      ? ((capacidadeArla != null && capacidadeArla > 0)
+                          ? 'Máx. ${capacidadeArla == capacidadeArla.toInt() ? capacidadeArla.toInt() : capacidadeArla.toStringAsFixed(1).replaceAll('.', ',')} L (Arla 32)'
+                          : 'Máx. 150 L (Arla 32)')
+                      : ((capacidadeTanque != null && capacidadeTanque > 0)
+                          ? 'Máx. ${capacidadeTanque == capacidadeTanque.toInt() ? capacidadeTanque.toInt() : capacidadeTanque.toStringAsFixed(1).replaceAll('.', ',')} L (tanque)'
+                          : null),
                   errorText: erroLitros,
                   onChanged: (_) => setState(() {}),
                 ),
@@ -394,15 +375,19 @@ class _NovaDespesaPageState extends State<NovaDespesaPage> {
             ],
           ),
           const SizedBox(height: AppSpacing.xl),
-          _buildSeletorCombustivel(colors),
+          NovaDespesaSeletorCombustivel(
+            tipoCombustivel: _tipoCombustivel,
+            combustivelPreferencial: combustivelPreferencial,
+            onChanged: (val) => setState(() => _tipoCombustivel = val),
+          ),
           const SizedBox(height: AppSpacing.xl),
         ],
 
         LabeledInputField(
-          label: isAbastecimento ? 'Posto de combustível' : 'Local ou estabelecimento',
+          label: NovaDespesaFieldHelper.obterLabelLocal(_categoria),
           icon: LucideIcons.mapPin,
           controller: _localController,
-          hintText: isAbastecimento ? 'Ex: Posto Ipiranga Rodo' : 'Ex: Restaurante do Gaúcho',
+          hintText: NovaDespesaFieldHelper.obterHintLocal(_categoria),
           onChanged: (_) => setState(() {}),
         ),
         const SizedBox(height: AppSpacing.xl),
@@ -411,7 +396,7 @@ class _NovaDespesaPageState extends State<NovaDespesaPage> {
           label: 'Observações (opcional)',
           icon: LucideIcons.fileText,
           controller: _descricaoController,
-          hintText: 'Ex: Troca de óleo de filtro, almoço...',
+          hintText: NovaDespesaFieldHelper.obterHintDescricao(_categoria),
         ),
         const SizedBox(height: AppSpacing.xl),
 
@@ -460,7 +445,15 @@ class _NovaDespesaPageState extends State<NovaDespesaPage> {
         ElevatedButton(
           onPressed: (!formValido || despesaVM.isLoading)
               ? null
-              : () => _salvar(context, viagemId, viagemObj, colors),
+              : () => _salvar(
+                    context: context,
+                    viagemId: viagemId,
+                    viagemObj: viagemObj,
+                    colors: colors,
+                    capacidadeTanque: capacidadeTanque,
+                    capacidadeArla: capacidadeArla,
+                    combustivelPreferencial: combustivelPreferencial,
+                  ),
           style: ElevatedButton.styleFrom(
             backgroundColor: formValido ? colors.primary : colors.surfaceOverlay,
             disabledBackgroundColor: colors.surfaceOverlay,
@@ -499,68 +492,14 @@ class _NovaDespesaPageState extends State<NovaDespesaPage> {
     );
   }
 
-  Widget _buildSeletorCombustivel(AppColorsExtension colors) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(LucideIcons.fuel, color: colors.primary, size: 18),
-            const SizedBox(width: AppSpacing.sm),
-            Text(
-              'Tipo de combustível',
-              style: GoogleFonts.lexend(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: colors.textSecondary,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: 2),
-          decoration: BoxDecoration(
-            color: colors.inputBackground,
-            borderRadius: AppRadius.lgRadius,
-            border: Border.all(color: colors.border),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: _tipoCombustivel,
-              isExpanded: true,
-              dropdownColor: colors.cardBackground,
-              style: GoogleFonts.lexend(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: colors.textPrimary,
-              ),
-              icon: Icon(LucideIcons.chevronDown, color: colors.textMuted),
-              items: const [
-                DropdownMenuItem(value: 'DIESEL_S10', child: Text('Diesel S10')),
-                DropdownMenuItem(value: 'DIESEL_S500', child: Text('Diesel S500')),
-                DropdownMenuItem(value: 'ARLA_32', child: Text('Arla 32')),
-                DropdownMenuItem(value: 'GASOLINA', child: Text('Gasolina')),
-                DropdownMenuItem(value: 'ETANOL', child: Text('Etanol')),
-                DropdownMenuItem(value: 'OUTRO', child: Text('Outro')),
-              ],
-              onChanged: (val) {
-                if (val != null) setState(() => _tipoCombustivel = val);
-              },
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
+  // Cabeçalho da seção de captura do comprovante fiscal
   Widget _buildCabecalhoComprovante(AppColorsExtension colors) {
     return Row(
       children: [
         Icon(LucideIcons.camera, color: colors.primary, size: 18),
         const SizedBox(width: AppSpacing.sm),
         Text(
-          'Foto do comprovante ou cupom fiscal',
+          NovaDespesaFieldHelper.obterLabelComprovante(_categoria),
           style: GoogleFonts.lexend(
             fontSize: 14,
             fontWeight: FontWeight.w500,
@@ -571,8 +510,9 @@ class _NovaDespesaPageState extends State<NovaDespesaPage> {
     );
   }
 
+  // Salva rascunho temporário antes de delegar o controle para o aplicativo de câmera
   Future<void> _salvarRascunhoAntesDaCamera(String viagemId) {
-    return _NovaDespesaDraftManager.salvar(
+    return NovaDespesaDraftManager.salvar(
       viagemId: viagemId,
       categoria: _categoria?.name,
       valorTotal: _valorTotal,
@@ -584,23 +524,32 @@ class _NovaDespesaPageState extends State<NovaDespesaPage> {
     );
   }
 
-  Future<void> _salvar(
-    BuildContext context,
-    String viagemId,
-    ViagemCollection? viagemObj,
-    AppColorsExtension colors,
-  ) async {
+  // Valida e envia a despesa para persistência local e sincronização
+  Future<void> _salvar({
+    required BuildContext context,
+    required String viagemId,
+    required ViagemCollection? viagemObj,
+    required AppColorsExtension colors,
+    required double? capacidadeTanque,
+    required double? capacidadeArla,
+    required String? combustivelPreferencial,
+  }) async {
     final despesaVM = context.read<DespesaViewModel>();
-    final double? litros = _parseNumero(_litrosController.text);
-    final double? kmAtual = _parseNumero(_kmAtualController.text);
+    final double? litros = NovaDespesaFormValidator.parseNumero(_litrosController.text);
+    final double? kmAtual = NovaDespesaFormValidator.parseNumero(_kmAtualController.text);
 
-    // Validação centralizada de domínio
+    // Validação estrita de domínio antes do salvamento
     final erroValidacao = DespesaViewModel.validarLancamento(
       valorTotal: _valorTotal,
       tipo: _categoria!.codigo,
       viagem: viagemObj,
       litros: litros,
       kmAtual: kmAtual,
+      capacidadeTanque: capacidadeTanque,
+      capacidadeArla: capacidadeArla,
+      tipoCombustivel: _categoria == CategoriaDespesa.abastecimento ? _tipoCombustivel : null,
+      combustivelPreferencial: combustivelPreferencial,
+      descricao: _descricaoController.text.trim(),
     );
 
     if (erroValidacao != null) {
@@ -621,6 +570,9 @@ class _NovaDespesaPageState extends State<NovaDespesaPage> {
       valorLitro: (litros != null && litros > 0) ? (_valorTotal / litros) : null,
       tipoCombustivel: _categoria == CategoriaDespesa.abastecimento ? _tipoCombustivel : null,
       kmAtual: kmAtual,
+      capacidadeTanque: capacidadeTanque,
+      capacidadeArla: capacidadeArla,
+      combustivelPreferencial: combustivelPreferencial,
     );
 
     if (!context.mounted) return;
@@ -631,11 +583,12 @@ class _NovaDespesaPageState extends State<NovaDespesaPage> {
     }
 
     _exibirAlerta(context, 'Despesa registrada com sucesso!', colors.success);
-    await _NovaDespesaDraftManager.limpar();
+    await NovaDespesaDraftManager.limpar();
     if (!context.mounted) return;
     Navigator.pop(context);
   }
 
+  // Exibe alertas e notificações ao usuário via SnackBar
   void _exibirAlerta(BuildContext context, String mensagem, Color cor) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -643,69 +596,5 @@ class _NovaDespesaPageState extends State<NovaDespesaPage> {
         backgroundColor: cor,
       ),
     );
-  }
-}
-
-// Gerenciador isolado para guardar e recuperar dados digitados quando o sistema operacional descarta a Activity da câmera
-abstract class _NovaDespesaDraftManager {
-  static Future<void> salvar({
-    required String viagemId,
-    required String? categoria,
-    required double valorTotal,
-    required String local,
-    required String descricao,
-    required String litros,
-    required String km,
-    required String combustivel,
-  }) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('despesa_draft_viagem_id', viagemId);
-      if (categoria != null) {
-        await prefs.setString('despesa_draft_categoria', categoria);
-      }
-      await prefs.setDouble('despesa_draft_valor', valorTotal);
-      await prefs.setString('despesa_draft_local', local);
-      await prefs.setString('despesa_draft_descricao', descricao);
-      await prefs.setString('despesa_draft_litros', litros);
-      await prefs.setString('despesa_draft_km', km);
-      await prefs.setString('despesa_draft_combustivel', combustivel);
-    } catch (e) {
-      debugPrint('[_NovaDespesaDraftManager] Erro ao salvar rascunho: $e');
-    }
-  }
-
-  static Future<void> limpar() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      const chaves = [
-        'despesa_draft_viagem_id',
-        'despesa_draft_categoria',
-        'despesa_draft_valor',
-        'despesa_draft_local',
-        'despesa_draft_descricao',
-        'despesa_draft_litros',
-        'despesa_draft_km',
-        'despesa_draft_combustivel',
-      ];
-      for (final chave in chaves) {
-        await prefs.remove(chave);
-      }
-    } catch (e) {
-      debugPrint('[_NovaDespesaDraftManager] Erro ao limpar rascunho: $e');
-    }
-  }
-
-  static Future<File?> recuperarFotoPerdida() async {
-    try {
-      final picker = ImagePicker();
-      final LostDataResponse response = await picker.retrieveLostData();
-      if (!response.isEmpty && response.file != null) {
-        return File(response.file!.path);
-      }
-    } catch (e) {
-      debugPrint('[_NovaDespesaDraftManager] Erro ao recuperar foto perdida: $e');
-    }
-    return null;
   }
 }

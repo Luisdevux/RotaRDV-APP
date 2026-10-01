@@ -190,6 +190,9 @@ class AppColorsExtension extends ThemeExtension<AppColorsExtension> {
   @override
   AppColorsExtension lerp(AppColorsExtension? other, double t) {
     if (other is! AppColorsExtension) return this;
+    // Verificações rápidas para evitar 27 cálculos desnecessários de Color.lerp e alocações de memória
+    if (t == 0.0) return this;
+    if (t == 1.0) return other;
     return AppColorsExtension(
       background: Color.lerp(background, other.background, t)!,
       backgroundAlt: Color.lerp(backgroundAlt, other.backgroundAlt, t)!,

@@ -31,10 +31,17 @@ class AuthService {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = jsonDecode(response.body);
-        return data;
+        final dynamic raw = response.data;
+        if (raw is Map<String, dynamic>) {
+          return raw;
+        } else if (raw is Map) {
+          return Map<String, dynamic>.from(raw);
+        } else {
+          return jsonDecode(response.body);
+        }
       } else {
-        final error = jsonDecode(response.body);
+        final dynamic errorData = response.data;
+        final error = errorData is Map ? errorData : jsonDecode(response.body);
         throw Exception(error['customMessage'] ?? error['message'] ?? 'Erro ao fazer login.');
       }
     } catch (e) {
@@ -69,10 +76,17 @@ class AuthService {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = jsonDecode(response.body);
-        return data;
+        final dynamic raw = response.data;
+        if (raw is Map<String, dynamic>) {
+          return raw;
+        } else if (raw is Map) {
+          return Map<String, dynamic>.from(raw);
+        } else {
+          return jsonDecode(response.body);
+        }
       } else {
-        final error = jsonDecode(response.body);
+        final dynamic errorData = response.data;
+        final error = errorData is Map ? errorData : jsonDecode(response.body);
         throw Exception(error['message'] ?? 'Erro ao autenticar na API');
       }
     } catch (e) {
@@ -90,10 +104,17 @@ class AuthService {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = jsonDecode(response.body);
-        return data;
+        final dynamic raw = response.data;
+        if (raw is Map<String, dynamic>) {
+          return raw;
+        } else if (raw is Map) {
+          return Map<String, dynamic>.from(raw);
+        } else {
+          return jsonDecode(response.body);
+        }
       } else {
-        final error = jsonDecode(response.body);
+        final dynamic errorData = response.data;
+        final error = errorData is Map ? errorData : jsonDecode(response.body);
         throw Exception(error['customMessage'] ?? error['message'] ?? 'Falha ao renovar sessão.');
       }
     } catch (e) {

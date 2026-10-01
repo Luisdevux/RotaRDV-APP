@@ -91,7 +91,7 @@ class HomeJornadaCard extends StatelessWidget {
           ),
           const SizedBox(height: 3),
           Text(
-            'KM inicial: ${viagem.kmInicial.toStringAsFixed(0)} KM',
+            'KM inicial: ${NumberFormat('#,###', 'pt_BR').format(viagem.kmInicial)} KM',
             style: GoogleFonts.lexend(
               fontSize: 12,
               color: colors.textMuted,
@@ -136,14 +136,7 @@ class HomeJornadaCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.sm),
-                decoration: BoxDecoration(
-                  color: colors.primaryLight,
-                  borderRadius: AppRadius.smRadius,
-                ),
-                child: Icon(LucideIcons.truck, size: 18, color: colors.primary),
-              ),
+              Icon(LucideIcons.truck, size: 20, color: colors.primary),
               const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(

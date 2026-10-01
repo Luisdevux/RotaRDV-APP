@@ -23,7 +23,7 @@ class HomeViewModel extends ChangeNotifier {
 
   HomeViewModel(this.authViewModel) {
     _syncListener = () async {
-      await authViewModel.reloadUserFromStorage();
+      await authViewModel.reloadUserFromStorage(notify: false);
       await carregarDadosBancoLocal();
     };
     _syncService.syncEventNotifier.addListener(_syncListener!);
@@ -50,7 +50,7 @@ class HomeViewModel extends ChangeNotifier {
     notifyListeners();
 
     // Carrega imediatamente os dados locais do Isar e usuário em cache
-    await authViewModel.reloadUserFromStorage();
+    await authViewModel.reloadUserFromStorage(notify: false);
     await carregarDadosBancoLocal();
 
     // Remove o loading da tela
@@ -61,7 +61,7 @@ class HomeViewModel extends ChangeNotifier {
     try {
       await authViewModel.fetchProfile();
       await _syncService.syncAll();
-      await authViewModel.reloadUserFromStorage();
+      await authViewModel.reloadUserFromStorage(notify: false);
       await carregarDadosBancoLocal();
     } catch (e) {
       debugPrint('[HomeViewModel] API indisponível ou offline. Dados locais preservados: $e');
@@ -86,9 +86,9 @@ class HomeViewModel extends ChangeNotifier {
 
   Future<void> refresh() async {
     try {
-      await authViewModel.fetchProfile();
+      await authViewModel.fetchProfile(force: true);
       await _syncService.syncAll();
-      await authViewModel.reloadUserFromStorage();
+      await authViewModel.reloadUserFromStorage(notify: false);
       await carregarDadosBancoLocal();
     } catch (e) {
       debugPrint('[HomeViewModel] Erro no refresh: $e');

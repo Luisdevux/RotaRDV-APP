@@ -30,7 +30,6 @@ class ViagemRotaCard extends StatelessWidget {
     final colors = context.colors;
     final isEmAndamento = viagem.status == 'em_andamento';
     final isConcluida = viagem.status == 'concluida' || viagem.status == 'concluída';
-    final isCancelada = viagem.status == 'cancelada';
 
     final Color statusColor = isEmAndamento
         ? colors.warning
@@ -100,9 +99,16 @@ class ViagemRotaCard extends StatelessWidget {
                     width: 12,
                     height: 12,
                     decoration: BoxDecoration(
-                      color: isCancelada ? colors.textMuted : colors.success,
+                      color: statusColor,
                       shape: BoxShape.circle,
                       border: Border.all(color: colors.background, width: 2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: statusColor.withValues(alpha: 0.35),
+                          blurRadius: 4,
+                          spreadRadius: 1,
+                        ),
+                      ],
                     ),
                   ),
                   Container(
@@ -194,7 +200,9 @@ class ViagemRotaCard extends StatelessWidget {
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    '${veiculo!['modelo'] ?? 'Caminhão'} • Placa ${veiculo!['placa'] ?? 'N/A'}',
+                    viagem.dataFim != null
+                        ? '${veiculo!['modelo'] ?? 'Caminhão'}'
+                        : '${veiculo!['modelo'] ?? 'Caminhão'} • Placa ${veiculo!['placa'] ?? 'N/A'}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: GoogleFonts.lexend(
@@ -204,7 +212,8 @@ class ViagemRotaCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (viagem.dataFim != null)
+                if (viagem.dataFim != null) ...[
+                  const SizedBox(width: AppSpacing.sm),
                   Text(
                     'Fim: ${_formatDateTime(viagem.dataFim!)}',
                     style: GoogleFonts.lexend(
@@ -212,6 +221,7 @@ class ViagemRotaCard extends StatelessWidget {
                       color: colors.textHint,
                     ),
                   ),
+                ],
               ],
             ),
           ],

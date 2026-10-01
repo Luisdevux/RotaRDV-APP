@@ -3,12 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
-import 'package:provider/provider.dart';
 import 'package:isar/isar.dart';
 import '../../../core/database/local_database.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_card.dart';
-import '../../../core/widgets/app_dialog.dart';
 import '../../../models/despesa_collection.dart';
 import '../../../services/sync_service.dart';
 import '../despesa_viewmodel.dart';
@@ -88,6 +86,22 @@ class _ComprovanteViewerModalState extends State<ComprovanteViewerModal> {
     }
   }
 
+  String _formatKm(num val) {
+    try {
+      return NumberFormat('#,###', 'pt_BR').format(val);
+    } catch (_) {
+      return val.toStringAsFixed(0);
+    }
+  }
+
+  String _formatLitros(double val) {
+    try {
+      return NumberFormat('#,##0.00', 'pt_BR').format(val);
+    } catch (_) {
+      return val.toStringAsFixed(2);
+    }
+  }
+
   String _formatDate(DateTime dt) {
     final localDt = dt.toLocal();
     try {
@@ -102,42 +116,6 @@ class _ComprovanteViewerModalState extends State<ComprovanteViewerModal> {
     }
   }
 
-  Future<void> _confirmarExclusao(BuildContext context) async {
-    final colors = context.colors;
-    final confirmado = await AppDialog.show(
-      context: context,
-      title: 'Excluir despesa',
-      message: 'Tem certeza que deseja excluir esta despesa? Esta ação não pode ser desfeita.',
-      icon: LucideIcons.trash2,
-      iconColor: colors.error,
-      confirmText: 'Excluir',
-      cancelText: 'Cancelar',
-      isDestructive: true,
-    );
-
-    if (confirmado == true && context.mounted) {
-      final despesaVM = context.read<DespesaViewModel>();
-      final sucesso = await despesaVM.excluirDespesa(widget.despesa);
-      if (context.mounted) {
-        if (sucesso) {
-          Navigator.pop(context); // Fecha modal
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Despesa excluída com sucesso!'),
-              backgroundColor: colors.success,
-            ),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Erro ao excluir despesa.'),
-              backgroundColor: colors.error,
-            ),
-          );
-        }
-      }
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -182,14 +160,7 @@ class _ComprovanteViewerModalState extends State<ComprovanteViewerModal> {
                 children: [
                   Row(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(AppSpacing.sm),
-                        decoration: BoxDecoration(
-                          color: colors.primaryLight,
-                          borderRadius: AppRadius.mdRadius,
-                        ),
-                        child: Icon(LucideIcons.receipt, color: colors.primary, size: 20),
-                      ),
+                      Icon(LucideIcons.receipt, color: colors.primary, size: 22),
                       const SizedBox(width: AppSpacing.md),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -286,7 +257,7 @@ class _ComprovanteViewerModalState extends State<ComprovanteViewerModal> {
                             colors: colors,
                             icon: LucideIcons.droplet,
                             label: 'Litros',
-                            value: '${widget.despesa.litros!.toStringAsFixed(2)} L',
+                            value: '${_formatLitros(widget.despesa.litros!)} L',
                           ),
                         ],
                         if (widget.despesa.valorLitro != null && widget.despesa.valorLitro! > 0) ...[
@@ -304,7 +275,7 @@ class _ComprovanteViewerModalState extends State<ComprovanteViewerModal> {
                             colors: colors,
                             icon: LucideIcons.gauge,
                             label: 'Odômetro Registrado',
-                            value: '${widget.despesa.kmAtual!.toStringAsFixed(0)} KM',
+                            value: '${_formatKm(widget.despesa.kmAtual!)} KM',
                           ),
                         ],
                         if (widget.despesa.descricao != null && widget.despesa.descricao!.isNotEmpty) ...[
@@ -409,24 +380,6 @@ class _ComprovanteViewerModalState extends State<ComprovanteViewerModal> {
                         ),
                       ),
                     ),
-                  const SizedBox(height: AppSpacing.huge),
-                  OutlinedButton.icon(
-                    onPressed: () => _confirmarExclusao(context),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: colors.error,
-                      side: BorderSide(color: colors.error),
-                      padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
-                      shape: RoundedRectangleBorder(borderRadius: AppRadius.lgRadius),
-                    ),
-                    icon: const Icon(LucideIcons.trash2, size: 18),
-                    label: Text(
-                      'Excluir despesa',
-                      style: GoogleFonts.lexend(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
                   const SizedBox(height: AppSpacing.xl),
                 ],
               ),
