@@ -448,7 +448,7 @@ class _NovaViagemPageState extends State<NovaViagemPage> {
                                   const SizedBox(height: 2),
                                   Text(
                                     temVeiculo
-                                        ? 'Placa: ${veiculo['placa'] ?? '---'}${veiculo['reboque']?['modelo'] != null && veiculo['reboque']['modelo'].toString().isNotEmpty ? ' • ${veiculo['reboque']['modelo']}' : ''}'
+                                        ? 'Placa: ${veiculo['placa'] ?? '---'}${veiculo['capacidade_tanque'] != null ? ' • Tanque: ${veiculo['capacidade_tanque']} L' : ''}${veiculo['capacidade_arla'] != null ? ' • Arla: ${veiculo['capacidade_arla']} L' : ''}${veiculo['reboque']?['modelo'] != null && veiculo['reboque']['modelo'].toString().isNotEmpty ? ' • ${veiculo['reboque']['modelo']}' : ''}'
                                         : 'É obrigatório vincular um veículo no painel para registrar viagens.',
                                     style: GoogleFonts.lexend(
                                       fontSize: 11,

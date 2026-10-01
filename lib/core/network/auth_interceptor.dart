@@ -67,7 +67,7 @@ class AuthInterceptor extends QueuedInterceptor {
         options.headers['Authorization'] = 'Bearer $novoToken';
 
         try {
-          final retentativa = await dio.fetch(options);
+          final retentativa = await _tokenDio.fetch(options);
           return handler.resolve(retentativa);
         } catch (e) {
           debugPrint('[AuthInterceptor] Falha na retentativa após renovação: $e');
@@ -99,7 +99,7 @@ class AuthInterceptor extends QueuedInterceptor {
         options.headers['Authorization'] = 'Bearer $novoToken';
 
         try {
-          final retentativa = await dio.fetch(options);
+          final retentativa = await _tokenDio.fetch(options);
           return handler.resolve(retentativa);
         } catch (e) {
           debugPrint('[AuthInterceptor] Erro ao reexecutar requisição: $e');

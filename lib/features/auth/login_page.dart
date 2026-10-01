@@ -9,6 +9,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../core/theme/app_theme.dart';
 import 'auth_viewmodel.dart';
 import '../../routes.dart';
+import '../../main.dart';
 import '../../core/widgets/network_status_bar.dart';
 import '../../core/widgets/app_dialog.dart';
 import '../../services/sync_service.dart';
@@ -31,6 +32,30 @@ class _LoginPageState extends State<LoginPage> {
   void initState() {
     super.initState();
     _checkPendingLocalData();
+  }
+
+  bool _navigating = false;
+
+  // Navega para a Home e remove todas as rotas anteriores da pilha de navegação
+  void _irParaHome() {
+    if (_navigating) return;
+    _navigating = true;
+    navigatorKey.currentState?.pushNamedAndRemoveUntil(
+      Routes.home,
+      (route) => false,
+    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Se o usuário já estiver autenticado (ex: pós-autenticação Google em segundo plano), navega com segurança para a Home
+    final authVM = Provider.of<AuthViewModel>(context, listen: false);
+    if (authVM.currentUser != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _irParaHome();
+      });
+    }
   }
 
   Future<void> _checkPendingLocalData() async {
@@ -61,9 +86,9 @@ class _LoginPageState extends State<LoginPage> {
     final authVM = context.read<AuthViewModel>();
     final success = await authVM.loginWithGoogle();
 
-    if (success && mounted) {
-      Navigator.of(context).pushReplacementNamed(Routes.home);
-    } else if (!success && mounted && authVM.errorMessage != null) {
+    if (success) {
+      _irParaHome();
+    } else if (mounted && authVM.errorMessage != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(authVM.errorMessage!),
@@ -109,9 +134,9 @@ class _LoginPageState extends State<LoginPage> {
     final authVM = context.read<AuthViewModel>();
     final success = await authVM.login(email, senha);
 
-    if (success && mounted) {
-      Navigator.of(context).pushReplacementNamed(Routes.home);
-    } else if (!success && mounted && authVM.errorMessage != null) {
+    if (success) {
+      _irParaHome();
+    } else if (mounted && authVM.errorMessage != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(authVM.errorMessage!),

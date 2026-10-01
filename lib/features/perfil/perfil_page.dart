@@ -41,7 +41,7 @@ class _PerfilPageState extends State<PerfilPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         final authVM = context.read<AuthViewModel>();
-        authVM.reloadUserFromStorage();
+        authVM.reloadUserFromStorage(notify: false);
         authVM.fetchProfile();
       }
     });
@@ -58,7 +58,8 @@ class _PerfilPageState extends State<PerfilPage> {
     final summary = await syncService.getPendingSyncSummary();
 
     if (mounted) {
-      context.read<HomeViewModel>().init();
+      await context.read<HomeViewModel>().carregarDadosBancoLocal();
+      if (!mounted) return;
       setState(() {
         _isSyncing = false;
       });

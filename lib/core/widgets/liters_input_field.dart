@@ -13,6 +13,7 @@ class LitersInputField extends StatelessWidget {
   final TextEditingController controller;
   final String hintText;
   final String? errorText;
+  final String? helperText;
   final ValueChanged<String>? onChanged;
 
   const LitersInputField({
@@ -22,6 +23,7 @@ class LitersInputField extends StatelessWidget {
     required this.controller,
     this.hintText = '0,00',
     this.errorText,
+    this.helperText,
     this.onChanged,
   });
 
@@ -65,7 +67,7 @@ class LitersInputField extends StatelessWidget {
                 child: TextField(
                   controller: controller,
                   onChanged: onChanged,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: TextInputType.number,
                   inputFormatters: [LitersTextInputFormatter()],
                   style: GoogleFonts.lexend(
                     fontSize: 22,
@@ -117,6 +119,16 @@ class LitersInputField extends StatelessWidget {
               fontSize: 12,
               fontWeight: FontWeight.w500,
               color: colors.error,
+            ),
+          ),
+        ] else if (helperText != null) ...[
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            helperText!,
+            style: GoogleFonts.lexend(
+              fontSize: 12,
+              fontWeight: FontWeight.w400,
+              color: colors.textMuted,
             ),
           ),
         ],

@@ -13,9 +13,11 @@ import '../../services/sync_service.dart';
 // Encapsula os cálculos estatísticos e de eficiência energética do veículo para um trecho específico ou para a totalidade da jornada.
 class MetricasConsumoViagem {
   final double totalLitros;
+  final double totalLitrosArla;
   final double kmPercorridoTotal;
   final double? mediaConsumoGeral;
   final int totalAbastecimentos;
+  final int totalAbastecimentosArla;
   final double? ultimoKmInformado;
   final double? mediaUltimoAbastecimento;
   final double? kmTrechoUltimo;
@@ -23,9 +25,11 @@ class MetricasConsumoViagem {
 
   const MetricasConsumoViagem({
     required this.totalLitros,
+    this.totalLitrosArla = 0.0,
     required this.kmPercorridoTotal,
     this.mediaConsumoGeral,
     required this.totalAbastecimentos,
+    this.totalAbastecimentosArla = 0,
     this.ultimoKmInformado,
     this.mediaUltimoAbastecimento,
     this.kmTrechoUltimo,
@@ -33,6 +37,7 @@ class MetricasConsumoViagem {
   });
 
   bool get temDadosAbastecimento => totalAbastecimentos > 0;
+  bool get temArla => totalLitrosArla > 0;
 }
 
 // ENUM: CATEGORIAS DE DESPESA OPERACIONAL
@@ -94,6 +99,11 @@ class DespesaViewModel extends ChangeNotifier {
     required ViagemCollection? viagem,
     double? litros,
     double? kmAtual,
+    double? capacidadeTanque,
+    double? capacidadeArla,
+    String? tipoCombustivel,
+    String? combustivelPreferencial,
+    String? descricao,
   }) {
     if (valorTotal <= 0) {
       return 'O valor total da despesa deve ser maior que zero.';
@@ -103,6 +113,47 @@ class DespesaViewModel extends ChangeNotifier {
       if (litros == null || litros <= 0) {
         return 'Informe a quantidade de litros abastecidos.';
       }
+
+      if (tipoCombustivel == 'ARLA_32') {
+        final double limiteArla = (capacidadeArla != null && capacidadeArla > 0)
+            ? capacidadeArla
+            : 150.0;
+        if (litros > limiteArla) {
+          final capStr = limiteArla == limiteArla.toInt()
+              ? limiteArla.toInt().toString()
+              : limiteArla.toStringAsFixed(1).replaceAll('.', ',');
+          return 'A quantidade de Arla 32 ($litros L) excede a capacidade do reservatório ($capStr L).';
+        }
+      } else {
+        if (capacidadeTanque != null && capacidadeTanque > 0 && litros > capacidadeTanque) {
+          final capStr = capacidadeTanque == capacidadeTanque.toInt()
+              ? capacidadeTanque.toInt().toString()
+              : capacidadeTanque.toStringAsFixed(1).replaceAll('.', ',');
+          return 'A quantidade de litros ($litros L) excede a capacidade máxima do tanque do veículo ($capStr L).';
+        }
+      }
+
+      // Validação de combustível:
+      // Veículos a diesel operam exclusivamente com o diesel cadastrado (+ Arla 32)
+      // Veículos não-diesel aceitam Gasolina, Etanol ou Outro
+      if (combustivelPreferencial != null && tipoCombustivel != null) {
+        final pref = combustivelPreferencial.toUpperCase();
+        final comb = tipoCombustivel.toUpperCase();
+        final isDiesel = pref == 'DIESEL_S10' || pref == 'DIESEL_S500';
+
+        if (isDiesel) {
+          if (comb == 'ARLA_32') {
+            // Permitido para veículos a diesel
+          } else if (comb != pref) {
+            return 'O combustível \'$comb\' não é permitido para este veículo. O abastecimento deve ser exclusivamente com $pref.';
+          }
+        } else {
+          if (comb == 'DIESEL_S10' || comb == 'DIESEL_S500' || comb == 'ARLA_32') {
+            return 'O combustível \'$comb\' não é compatível com veículos não-diesel.';
+          }
+        }
+      }
+
       if (litros > 50000) {
         return 'A quantidade de litros não pode ultrapassar 50.000 L.';
       }
@@ -181,9 +232,14 @@ class DespesaViewModel extends ChangeNotifier {
     ViagemCollection viagem, {
     double? kmFinalTemporario,
   }) {
-    final abastecimentos = _extrairAbastecimentosOrdenados();
-    final double totalLitros = _somarLitros(abastecimentos);
-    final double? maxKmRegistrado = _obterMaiorKm(abastecimentos);
+    // Separa abastecimentos de combustível fóssil/bio (Diesel, Gasolina, Etanol) e aditivo Arla 32
+    final abastecimentosCombustivel = _extrairAbastecimentosOrdenados(apenasCombustivel: true);
+    final abastecimentosArla = _extrairAbastecimentosOrdenados(apenasArla: true);
+    final todosAbastecimentos = _extrairAbastecimentosOrdenados();
+
+    final double totalLitros = _somarLitros(abastecimentosCombustivel);
+    final double totalLitrosArla = _somarLitros(abastecimentosArla);
+    final double? maxKmRegistrado = _obterMaiorKm(todosAbastecimentos);
 
     final double kmPercorridoTotal = _calcularDistanciaPercorrida(
       kmInicial: viagem.kmInicial,
@@ -192,20 +248,23 @@ class DespesaViewModel extends ChangeNotifier {
       maxKmRegistrado: maxKmRegistrado,
     );
 
+    // Média de consumo (km/l) avalia apenas o combustível do motor, sem contaminação do Arla 32
     final double? mediaGeral = (totalLitros > 0 && kmPercorridoTotal > 0)
         ? (kmPercorridoTotal / totalLitros)
         : null;
 
     final trecho = _calcularUltimoTrecho(
-      abastecimentos: abastecimentos,
+      abastecimentos: abastecimentosCombustivel,
       kmInicial: viagem.kmInicial,
     );
 
     return MetricasConsumoViagem(
       totalLitros: totalLitros,
+      totalLitrosArla: totalLitrosArla,
       kmPercorridoTotal: kmPercorridoTotal,
       mediaConsumoGeral: mediaGeral,
-      totalAbastecimentos: abastecimentos.length,
+      totalAbastecimentos: abastecimentosCombustivel.length,
+      totalAbastecimentosArla: abastecimentosArla.length,
       ultimoKmInformado: maxKmRegistrado,
       mediaUltimoAbastecimento: trecho.media,
       kmTrechoUltimo: trecho.distancia,
@@ -213,9 +272,17 @@ class DespesaViewModel extends ChangeNotifier {
     );
   }
 
-  List<DespesaCollection> _extrairAbastecimentosOrdenados() {
+  List<DespesaCollection> _extrairAbastecimentosOrdenados({
+    bool apenasCombustivel = false,
+    bool apenasArla = false,
+  }) {
     final lista = _despesas
-        .where((d) => d.tipo == 'ABASTECIMENTO' && d.statusSincronizacao != 'deletado')
+        .where((d) {
+          if (d.tipo != 'ABASTECIMENTO' || d.statusSincronizacao == 'deletado') return false;
+          if (apenasCombustivel && d.tipoCombustivel == 'ARLA_32') return false;
+          if (apenasArla && d.tipoCombustivel != 'ARLA_32') return false;
+          return true;
+        })
         .toList();
 
     lista.sort((a, b) {
@@ -303,6 +370,9 @@ class DespesaViewModel extends ChangeNotifier {
     double? valorLitro,
     String? tipoCombustivel,
     double? kmAtual,
+    double? capacidadeTanque,
+    double? capacidadeArla,
+    String? combustivelPreferencial,
   }) async {
     _isLoading = true;
     errorMessage = null;
@@ -317,6 +387,11 @@ class DespesaViewModel extends ChangeNotifier {
         viagem: viagem,
         litros: litros,
         kmAtual: kmAtual,
+        capacidadeTanque: capacidadeTanque,
+        capacidadeArla: capacidadeArla,
+        tipoCombustivel: tipoCombustivel,
+        combustivelPreferencial: combustivelPreferencial,
+        descricao: descricao,
       );
 
       if (erro != null) {

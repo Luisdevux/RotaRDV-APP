@@ -170,6 +170,18 @@ class SyncService {
         syncEventNotifier.value++;
       } catch (e) {
         debugPrint('[SyncService] Erro na tentativa $attempt/$maxRetries de sincronização: $e');
+        final errStr = e.toString();
+        final isAuthError = errStr.contains('498') ||
+            errStr.contains('401') ||
+            errStr.contains('token') ||
+            errStr.contains('Token') ||
+            DioClient.isSessionExpired;
+
+        if (isAuthError) {
+          debugPrint('[SyncService] Sessão expirada/token inválido detectado. Abortando tentativas adicionais até o motorista se reautenticar.');
+          break;
+        }
+
         if (attempt < maxRetries) {
           // Delay progressivo antes da próxima tentativa: 1.5s, 3.0s...
           final waitDuration = Duration(milliseconds: 1500 * attempt);

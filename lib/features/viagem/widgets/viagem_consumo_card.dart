@@ -201,6 +201,33 @@ class ViagemConsumoCard extends StatelessWidget {
                 ),
               ],
             ),
+            if (metricas.temArla) ...[
+              const SizedBox(height: AppSpacing.sm),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: colors.surfaceOverlay,
+                  borderRadius: AppRadius.smRadius,
+                  border: Border.all(color: colors.borderSubtle),
+                ),
+                child: Row(
+                  children: [
+                    Icon(LucideIcons.droplet, size: 14, color: colors.primary),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        'Arla 32 abastecido: ${metricas.totalLitrosArla == metricas.totalLitrosArla.toInt() ? metricas.totalLitrosArla.toInt() : metricas.totalLitrosArla.toStringAsFixed(1).replaceAll('.', ',')} L (calculado separadamente do combustível)',
+                        style: GoogleFonts.lexend(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: colors.textSecondary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ] else ...[
             Row(
               children: [
