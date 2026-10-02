@@ -146,9 +146,17 @@ class AuthViewModel extends ChangeNotifier {
 
         return true;
       }
+      if (result != null) {
+        errorMessage = result['customMessage'] ?? result['message'] ?? 'Dados de usuário não retornados pela API.';
+        await _authService.signOutGoogle();
+        return false;
+      }
       return false;
     } catch (e) {
       errorMessage = e.toString().replaceAll('Exception: ', '');
+      try {
+        await _authService.signOutGoogle();
+      } catch (_) {}
       return false;
     } finally {
       isLoadingGoogle = false;

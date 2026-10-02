@@ -50,9 +50,23 @@ class AuthService {
     }
   }
 
+  // Desloga apenas da conta Google (limpa cache local do plugin e Google Play Services)
+  Future<void> signOutGoogle() async {
+    try {
+      await _googleSignIn.signOut();
+    } catch (e) {
+      debugPrint('[AuthService] Erro ao deslogar Google: $e');
+    }
+  }
+
   Future<Map<String, dynamic>?> signInWithGoogle() async {
     try {
-      // 1. Iniciar o fluxo do Google
+      // Sempre limpa qualquer sessão anterior do GoogleSignIn antes de abrir o seletor.
+      // Isso impede que o app fique preso na mesma conta rejeitada e força
+      // o Google Play Services a sempre exibir o seletor ("Escolha uma conta").
+      await signOutGoogle();
+
+      // Iniciar o fluxo do Google
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       
       if (googleUser == null) {
@@ -60,15 +74,16 @@ class AuthService {
         return null;
       }
 
-      // 2. Obter os detalhes da autenticação (onde fica o idToken)
+      // Obtem os detalhes da autenticação (onde fica o idToken)
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
       final String? idToken = googleAuth.idToken;
 
       if (idToken == null) {
+        await signOutGoogle();
         throw Exception('Não foi possível obter o ID Token do Google.');
       }
 
-      // 3. Enviar o token para a API Node.js
+      // Envia o token para a API Node.js
       final response = await DioClient.post(
         '/google',
         body: {'idToken': idToken},
@@ -85,15 +100,21 @@ class AuthService {
           return jsonDecode(response.body);
         }
       } else {
+        // Se a API rejeitar (ex: conta não cadastrada, inativa, etc.),
+        // desloga imediatamente para não prender o GoogleSignIn nessa conta
+        await signOutGoogle();
         final dynamic errorData = response.data;
         final error = errorData is Map ? errorData : jsonDecode(response.body);
-        throw Exception(error['message'] ?? 'Erro ao autenticar na API');
+        throw Exception(error['customMessage'] ?? error['message'] ?? 'Erro ao autenticar na API');
       }
     } catch (e) {
       debugPrint('Erro no login com Google: $e');
+      // Em caso de qualquer erro de rede, timeout ou exceção, garante a limpeza da conta no GoogleSignIn
+      await signOutGoogle();
       rethrow;
     }
   }
+
 
   Future<Map<String, dynamic>?> refreshToken(String refreshToken) async {
     try {
