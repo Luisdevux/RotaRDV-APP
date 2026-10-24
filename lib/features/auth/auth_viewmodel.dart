@@ -13,6 +13,8 @@ class AuthViewModel extends ChangeNotifier {
   
   bool isLoadingGoogle = false;
   bool isLoadingLocal = false;
+  bool isLoadingRecover = false;
+  bool isLoadingReset = false;
   String? errorMessage;
   Map<String, dynamic>? currentUser;
 
@@ -299,6 +301,46 @@ class AuthViewModel extends ChangeNotifier {
     } catch (e) {
       debugPrint('Erro ao renovar token no AuthViewModel: $e');
       return null;
+    }
+  }
+
+  Future<bool> recoverPassword(String email) async {
+    isLoadingRecover = true;
+    errorMessage = null;
+    notifyListeners();
+
+    try {
+      await _authService.recoverPassword(email);
+      return true;
+    } catch (e) {
+      errorMessage = e.toString().replaceAll('Exception: ', '');
+      return false;
+    } finally {
+      isLoadingRecover = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> resetPassword({
+    required String token,
+    required String newPassword,
+  }) async {
+    isLoadingReset = true;
+    errorMessage = null;
+    notifyListeners();
+
+    try {
+      await _authService.resetPassword(
+        token: token,
+        newPassword: newPassword,
+      );
+      return true;
+    } catch (e) {
+      errorMessage = e.toString().replaceAll('Exception: ', '');
+      return false;
+    } finally {
+      isLoadingReset = false;
+      notifyListeners();
     }
   }
 }

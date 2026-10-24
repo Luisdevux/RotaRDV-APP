@@ -313,7 +313,7 @@ class _LoginPageState extends State<LoginPage> {
                         alignment: Alignment.centerRight,
                         child: TextButton(
                           onPressed: () {
-                            // Ação esqueci a senha
+                            Navigator.pushNamed(context, Routes.esqueciSenha);
                           },
                           child: const Text('Esqueci minha senha'),
                         ),
