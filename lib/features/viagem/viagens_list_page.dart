@@ -95,7 +95,7 @@ class _ViagensListPageState extends State<ViagensListPage> {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final homeVM = context.watch<HomeViewModel>();
-    final todasViagens = homeVM.ultimasViagens;
+    final todasViagens = homeVM.todasViagens;
 
     final viagensFiltradas = todasViagens.where((v) {
       return _matchesSearch(v) && _matchesStatus(v.status) && _matchesPeriodo(v.dataInicio);
