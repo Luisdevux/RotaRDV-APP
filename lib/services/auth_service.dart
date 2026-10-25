@@ -148,7 +148,10 @@ class AuthService {
     try {
       final response = await DioClient.post(
         '/recover',
-        body: {'email': email.trim().toLowerCase()},
+        body: {
+          'email': email.trim().toLowerCase(),
+          'origem': 'app',
+        },
         requiresAuth: false,
       );
 

@@ -37,6 +37,7 @@ class DeepLinkService {
   static void _handleUri(Uri uri, GlobalKey<NavigatorState> navigatorKey) {
     debugPrint('[DeepLink] Link recebido: $uri');
 
+    // Processa exclusivamente o esquema nativo do aplicativo
     if (uri.scheme == 'rotardv') {
       final context = navigatorKey.currentContext;
 
@@ -70,23 +71,14 @@ class DeepLinkService {
         }
       }
 
-      // Redefinição de senha recebida via e-mail (rotardv://auth/reset-password?token=XYZ)
+      // Redefinição de senha recebida via e-mail
+      // Exemplo: rotardv://auth/reset-password?token=XYZ
       if (uri.host == 'auth' &&
           (uri.path == '/reset-password' ||
               uri.path == 'reset-password' ||
               uri.path == '/redefinir-senha' ||
               uri.path == 'redefinir-senha')) {
         final token = uri.queryParameters['token'];
-        navigatorKey.currentState?.pushNamed(
-          Routes.redefinirSenha,
-          arguments: token,
-        );
-      }
-    } else if ((uri.scheme == 'https' || uri.scheme == 'http') &&
-        (uri.path == '/redefinir-senha' || uri.path == 'redefinir-senha')) {
-      // Redefinição de senha recebida via link web do painel (App Links HTTPS)
-      final token = uri.queryParameters['token'];
-      if (token != null && token.isNotEmpty) {
         navigatorKey.currentState?.pushNamed(
           Routes.redefinirSenha,
           arguments: token,
