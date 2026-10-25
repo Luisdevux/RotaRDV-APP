@@ -210,11 +210,12 @@ class _NovaViagemPageState extends State<NovaViagemPage> {
       if (!mounted) return;
 
       // Alerta de discrepância acentuada (ex: diferença > 10.000 KM em relação ao último odômetro)
-      if (_ultimaKmRegistrada != null && (kmDouble - _ultimaKmRegistrada!) > 10000) {
+      final double? kmReferencia = _ultimaKmRegistrada ?? (veiculo != null && veiculo['km_atual'] != null ? (veiculo['km_atual'] as num).toDouble() : null);
+      if (kmReferencia != null && (kmDouble - kmReferencia) > 10000) {
         final bool? confirmarSalto = await AppDialog.show(
           context: context,
           title: 'Quilometragem discrepante',
-          message: 'O KM informado (${NumberFormat('#,###', 'pt_BR').format(kmDouble.toInt())} KM) é mais de 10.000 KM superior ao último registro (${NumberFormat('#,###', 'pt_BR').format(_ultimaKmRegistrada!.toInt())} KM).\n\nConfirma que este valor está correto?',
+          message: 'O KM informado (${NumberFormat('#,###', 'pt_BR').format(kmDouble.toInt())} KM) é mais de 10.000 KM superior ao último registro (${NumberFormat('#,###', 'pt_BR').format(kmReferencia.toInt())} KM).\n\nConfirma que este valor está correto?',
           confirmText: 'Sim, está correto',
           cancelText: 'Revisar',
           icon: LucideIcons.alertTriangle,
@@ -299,7 +300,10 @@ class _NovaViagemPageState extends State<NovaViagemPage> {
     final ultimaVM = homeVM.ultimasViagens
         .where((v) => (v.status == 'concluida' || v.status == 'concluída') && v.kmFinal != null)
         .firstOrNull;
-    final double? ultimaKmConhecida = _ultimaKmRegistrada ?? ultimaVM?.kmFinal;
+    final veiculoKm = (veiculo != null && veiculo['km_atual'] != null && (veiculo['km_atual'] as num) > 0)
+        ? (veiculo['km_atual'] as num).toDouble()
+        : null;
+    final double? ultimaKmConhecida = _ultimaKmRegistrada ?? ultimaVM?.kmFinal ?? veiculoKm;
     final erroKm = _validarKmInicialEmTempoReal(ultimaKmConhecida);
     final kmInicialNum = _parseNumero(_kmController.text);
     final erroDestino = _erroDestino;
@@ -506,7 +510,7 @@ class _NovaViagemPageState extends State<NovaViagemPage> {
                                 Icon(LucideIcons.history, size: 12, color: colors.textMuted),
                                 const SizedBox(width: 4),
                                 Text(
-                                  'Último registro: ${NumberFormat('#,###', 'pt_BR').format(ultimaKmConhecida.toInt())} KM',
+                                  (_ultimaKmRegistrada != null || ultimaVM?.kmFinal != null ? 'Último registro: ' : 'Odômetro do veículo: ') + '${NumberFormat('#,###', 'pt_BR').format(ultimaKmConhecida.toInt())} KM',
                                   style: GoogleFonts.lexend(
                                     fontSize: 11,
                                     color: colors.textMuted,
