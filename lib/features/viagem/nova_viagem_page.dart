@@ -510,7 +510,7 @@ class _NovaViagemPageState extends State<NovaViagemPage> {
                                 Icon(LucideIcons.history, size: 12, color: colors.textMuted),
                                 const SizedBox(width: 4),
                                 Text(
-                                  (_ultimaKmRegistrada != null || ultimaVM?.kmFinal != null ? 'Último registro: ' : 'Odômetro do veículo: ') + '${NumberFormat('#,###', 'pt_BR').format(ultimaKmConhecida.toInt())} KM',
+                                  '${_ultimaKmRegistrada != null || ultimaVM?.kmFinal != null ? 'Último registro: ' : 'Odômetro do veículo: '}${NumberFormat('#,###', 'pt_BR').format(ultimaKmConhecida.toInt())} KM',
                                   style: GoogleFonts.lexend(
                                     fontSize: 11,
                                     color: colors.textMuted,
