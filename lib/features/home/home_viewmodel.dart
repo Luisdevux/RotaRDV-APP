@@ -15,6 +15,7 @@ class HomeViewModel extends ChangeNotifier {
 
   bool isLoading = true;
   List<ViagemCollection> ultimasViagens = [];
+  List<ViagemCollection> todasViagens = [];
   VoidCallback? _syncListener;
   VoidCallback? _sessionExpiredListener;
 
@@ -71,16 +72,16 @@ class HomeViewModel extends ChangeNotifier {
   Future<void> carregarDadosBancoLocal() async {
     final isar = LocalDatabase.isar;
 
-    // Busca as viagens ordenando as mais recentes primeiro e limitando a 3 para a home
+    // Busca todas as viagens ordenando as mais recentes primeiro (para histórico completo) e deriva as 3 últimas para a Home
     final viagensLocal = await isar.viagemCollections
         .where()
         .filter()
         .not().statusSincronizacaoEqualTo('deletado')
         .sortByDataInicioDesc()
-        .limit(3)
         .findAll();
 
-    ultimasViagens = viagensLocal;
+    todasViagens = viagensLocal;
+    ultimasViagens = viagensLocal.take(3).toList();
     notifyListeners();
   }
 

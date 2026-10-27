@@ -144,6 +144,73 @@ class AuthService {
     }
   }
 
+  Future<Map<String, dynamic>?> recoverPassword(String email) async {
+    try {
+      final response = await DioClient.post(
+        '/recover',
+        body: {
+          'email': email.trim().toLowerCase(),
+          'origem': 'app',
+        },
+        requiresAuth: false,
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final dynamic raw = response.data;
+        if (raw is Map<String, dynamic>) {
+          return raw;
+        } else if (raw is Map) {
+          return Map<String, dynamic>.from(raw);
+        } else {
+          return jsonDecode(response.body);
+        }
+      } else {
+        final dynamic errorData = response.data;
+        final error = errorData is Map ? errorData : jsonDecode(response.body);
+        throw Exception(error['customMessage'] ?? error['message'] ?? 'Erro ao solicitar recuperação de senha.');
+      }
+    } catch (e) {
+      debugPrint('Erro ao solicitar recuperação de senha: $e');
+      rethrow;
+    }
+  }
+
+  Future<Map<String, dynamic>?> resetPassword({
+    required String token,
+    required String newPassword,
+  }) async {
+    try {
+      final cleanToken = token.trim();
+      final response = await DioClient.patch(
+        '/password/reset',
+        queryParameters: {'token': cleanToken},
+        body: {
+          'token': cleanToken,
+          'senha': newPassword,
+        },
+        requiresAuth: false,
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final dynamic raw = response.data;
+        if (raw is Map<String, dynamic>) {
+          return raw;
+        } else if (raw is Map) {
+          return Map<String, dynamic>.from(raw);
+        } else {
+          return jsonDecode(response.body);
+        }
+      } else {
+        final dynamic errorData = response.data;
+        final error = errorData is Map ? errorData : jsonDecode(response.body);
+        throw Exception(error['customMessage'] ?? error['message'] ?? 'Erro ao redefinir a senha.');
+      }
+    } catch (e) {
+      debugPrint('Erro ao redefinir senha: $e');
+      rethrow;
+    }
+  }
+
   Future<void> signOut({bool clearDatabase = false}) async {
     try {
       await _googleSignIn.signOut();
