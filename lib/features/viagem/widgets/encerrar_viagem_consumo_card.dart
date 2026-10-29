@@ -24,6 +24,9 @@ class EncerrarViagemConsumoCard extends StatelessWidget {
     if (metricas.temDadosAbastecimento) {
       return 'Informe o KM final válido';
     }
+    if (metricas.temArla) {
+      return 'Apenas Arla 32 lançado';
+    }
     return 'Sem abastecimento lançado';
   }
 
@@ -71,25 +74,36 @@ class EncerrarViagemConsumoCard extends StatelessWidget {
               ],
             ),
           ),
-          if (metricas.temDadosAbastecimento) ...[
+          if (metricas.temDadosAbastecimento || metricas.temArla) ...[
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(
-                  '${NumberFormat('#,##0.#', 'pt_BR').format(metricas.totalLitros)} L',
-                  style: GoogleFonts.lexend(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: colors.textSecondary,
+                if (metricas.temDadosAbastecimento) ...[
+                  Text(
+                    '${NumberFormat('#,##0.#', 'pt_BR').format(metricas.totalLitros)} L',
+                    style: GoogleFonts.lexend(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: colors.textSecondary,
+                    ),
                   ),
-                ),
-                Text(
-                  '${metricas.totalAbastecimentos} abastec.',
-                  style: GoogleFonts.lexend(
-                    fontSize: 10,
-                    color: colors.textMuted,
+                  Text(
+                    '${metricas.totalAbastecimentos} abastec.',
+                    style: GoogleFonts.lexend(
+                      fontSize: 10,
+                      color: colors.textMuted,
+                    ),
                   ),
-                ),
+                ],
+                if (metricas.temArla)
+                  Text(
+                    '${metricas.temDadosAbastecimento ? "+ " : ""}${NumberFormat('#,##0.#', 'pt_BR').format(metricas.totalLitrosArla)} L Arla',
+                    style: GoogleFonts.lexend(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: colors.textMuted,
+                    ),
+                  ),
               ],
             ),
           ],

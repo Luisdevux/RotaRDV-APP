@@ -15,6 +15,7 @@ class MetricasConsumoViagem {
   final double totalLitros;
   final double totalLitrosArla;
   final double kmPercorridoTotal;
+  final double kmBaseMediaGeral;
   final double? mediaConsumoGeral;
   final int totalAbastecimentos;
   final int totalAbastecimentosArla;
@@ -27,6 +28,7 @@ class MetricasConsumoViagem {
     required this.totalLitros,
     this.totalLitrosArla = 0.0,
     required this.kmPercorridoTotal,
+    double? kmBaseMediaGeral,
     this.mediaConsumoGeral,
     required this.totalAbastecimentos,
     this.totalAbastecimentosArla = 0,
@@ -34,7 +36,7 @@ class MetricasConsumoViagem {
     this.mediaUltimoAbastecimento,
     this.kmTrechoUltimo,
     this.litrosUltimoAbastecimento,
-  });
+  }) : kmBaseMediaGeral = kmBaseMediaGeral ?? kmPercorridoTotal;
 
   bool get temDadosAbastecimento => totalAbastecimentos > 0;
   bool get temArla => totalLitrosArla > 0;
@@ -90,7 +92,7 @@ class DespesaViewModel extends ChangeNotifier {
     return mapa;
   }
 
-  // ──────────────────────── VALIDAÇÃO DE DOMÍNIO ──────────────────────── //
+  // VALIDAÇÃO DE DOMÍNIO //
 
   // Valida as regras de negócio para lançamento de despesa, impedindo inconsistências de odômetro e campos numéricos ausentes antes da persistência.
   static String? validarLancamento({
@@ -225,22 +227,37 @@ class DespesaViewModel extends ChangeNotifier {
     }
   }
 
-  // ──────────────────────── CÁLCULOS DE CONSUMO ───────────────────────── //
+  // CÁLCULOS DE CONSUMO //
 
   // Calcula as métricas consolidadas de consumo e eficiência (km/l)
   MetricasConsumoViagem calcularMetricasConsumo(
     ViagemCollection viagem, {
     double? kmFinalTemporario,
   }) {
-    // Separa abastecimentos de combustível fóssil/bio (Diesel, Gasolina, Etanol) e aditivo Arla 32
-    final abastecimentosCombustivel = _extrairAbastecimentosOrdenados(apenasCombustivel: true);
-    final abastecimentosArla = _extrairAbastecimentosOrdenados(apenasArla: true);
-    final todosAbastecimentos = _extrairAbastecimentosOrdenados();
+    return calcularMetricasParaLista(
+      viagem,
+      _despesas,
+      kmFinalTemporario: kmFinalTemporario,
+    );
+  }
+
+  // Cálculo puro e determinístico de consumo (testável sem banco embarcado)
+  static MetricasConsumoViagem calcularMetricasParaLista(
+    ViagemCollection viagem,
+    List<DespesaCollection> despesas, {
+    double? kmFinalTemporario,
+  }) {
+    // Separa abastecimentos de combustível do motor (Diesel, Gasolina, Etanol) e aditivo Arla 32
+    final abastecimentosCombustivel = _extrairAbastecimentosOrdenados(despesas, apenasCombustivel: true);
+    final abastecimentosArla = _extrairAbastecimentosOrdenados(despesas, apenasArla: true);
+    final todosAbastecimentos = _extrairAbastecimentosOrdenados(despesas);
 
     final double totalLitros = _somarLitros(abastecimentosCombustivel);
     final double totalLitrosArla = _somarLitros(abastecimentosArla);
     final double? maxKmRegistrado = _obterMaiorKm(todosAbastecimentos);
+    final double? maxKmCombustivel = _obterMaiorKm(abastecimentosCombustivel);
 
+    // Distância total observada na viagem (inclui qualquer registro de odômetro válido)
     final double kmPercorridoTotal = _calcularDistanciaPercorrida(
       kmInicial: viagem.kmInicial,
       kmFinalViagem: viagem.kmFinal,
@@ -248,9 +265,17 @@ class DespesaViewModel extends ChangeNotifier {
       maxKmRegistrado: maxKmRegistrado,
     );
 
-    // Média de consumo (km/l) avalia apenas o combustível do motor, sem contaminação do Arla 32
-    final double? mediaGeral = (totalLitros > 0 && kmPercorridoTotal > 0)
-        ? (kmPercorridoTotal / totalLitros)
+    // Distância correspondente ao combustível (quando a viagem ainda está aberta, não usa KM isolado de Arla 32)
+    final double kmParaMediaCombustivel = _calcularDistanciaPercorrida(
+      kmInicial: viagem.kmInicial,
+      kmFinalViagem: viagem.kmFinal,
+      kmFinalTemporario: kmFinalTemporario,
+      maxKmRegistrado: maxKmCombustivel,
+    );
+
+    // Média de consumo (km/l) avalia exclusivamente o combustível do motor, sem contaminação do Arla 32
+    final double? mediaGeral = (totalLitros > 0 && kmParaMediaCombustivel > 0)
+        ? (kmParaMediaCombustivel / totalLitros)
         : null;
 
     final trecho = _calcularUltimoTrecho(
@@ -262,6 +287,7 @@ class DespesaViewModel extends ChangeNotifier {
       totalLitros: totalLitros,
       totalLitrosArla: totalLitrosArla,
       kmPercorridoTotal: kmPercorridoTotal,
+      kmBaseMediaGeral: kmParaMediaCombustivel,
       mediaConsumoGeral: mediaGeral,
       totalAbastecimentos: abastecimentosCombustivel.length,
       totalAbastecimentosArla: abastecimentosArla.length,
@@ -272,11 +298,12 @@ class DespesaViewModel extends ChangeNotifier {
     );
   }
 
-  List<DespesaCollection> _extrairAbastecimentosOrdenados({
+  static List<DespesaCollection> _extrairAbastecimentosOrdenados(
+    List<DespesaCollection> despesas, {
     bool apenasCombustivel = false,
     bool apenasArla = false,
   }) {
-    final lista = _despesas
+    final lista = despesas
         .where((d) {
           if (d.tipo != 'ABASTECIMENTO' || d.statusSincronizacao == 'deletado') return false;
           if (apenasCombustivel && d.tipoCombustivel == 'ARLA_32') return false;
@@ -295,11 +322,11 @@ class DespesaViewModel extends ChangeNotifier {
     return lista;
   }
 
-  double _somarLitros(List<DespesaCollection> abastecimentos) {
+  static double _somarLitros(List<DespesaCollection> abastecimentos) {
     return abastecimentos.fold(0.0, (acc, d) => acc + (d.litros ?? 0.0));
   }
 
-  double? _obterMaiorKm(List<DespesaCollection> abastecimentos) {
+  static double? _obterMaiorKm(List<DespesaCollection> abastecimentos) {
     double? maxKm;
     for (final d in abastecimentos) {
       if (d.kmAtual != null && (maxKm == null || d.kmAtual! > maxKm)) {
@@ -309,7 +336,7 @@ class DespesaViewModel extends ChangeNotifier {
     return maxKm;
   }
 
-  double _calcularDistanciaPercorrida({
+  static double _calcularDistanciaPercorrida({
     required double kmInicial,
     double? kmFinalViagem,
     double? kmFinalTemporario,
@@ -327,7 +354,7 @@ class DespesaViewModel extends ChangeNotifier {
     return 0.0;
   }
 
-  ({double? media, double? distancia, double? litros}) _calcularUltimoTrecho({
+  static ({double? media, double? distancia, double? litros}) _calcularUltimoTrecho({
     required List<DespesaCollection> abastecimentos,
     required double kmInicial,
   }) {
@@ -354,7 +381,7 @@ class DespesaViewModel extends ChangeNotifier {
     return (media: media, distancia: distancia, litros: litros);
   }
 
-  // ──────────────────────── PERSISTÊNCIA DE DESPESA ───────────────────── //
+  // PERSISTÊNCIA DE DESPESA //
 
   // Persiste a nova despesa no banco local após validação de consistência
   Future<bool> salvarDespesa({
