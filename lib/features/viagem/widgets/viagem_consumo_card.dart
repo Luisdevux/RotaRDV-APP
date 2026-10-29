@@ -27,7 +27,7 @@ class ViagemConsumoCard extends StatelessWidget {
     if (metricas.totalLitros <= 0) {
       return 'Informe litros para calcular';
     }
-    final km = NumberFormat('#,###', 'pt_BR').format(metricas.kmPercorridoTotal.toInt());
+    final km = NumberFormat('#,###', 'pt_BR').format(metricas.kmBaseMediaGeral.toInt());
     final l = NumberFormat('#,##0.#', 'pt_BR').format(metricas.totalLitros);
     return '$km km • $l L';
   }
@@ -81,20 +81,28 @@ class ViagemConsumoCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: metricas.temDadosAbastecimento ? colors.primary.withValues(alpha: 0.12) : colors.surfaceOverlay,
+                  color: (metricas.temDadosAbastecimento || metricas.temArla)
+                      ? colors.primary.withValues(alpha: 0.12)
+                      : colors.surfaceOverlay,
                   borderRadius: BorderRadius.circular(6),
                   border: Border.all(
-                    color: metricas.temDadosAbastecimento ? colors.primary.withValues(alpha: 0.3) : colors.borderSubtle,
+                    color: (metricas.temDadosAbastecimento || metricas.temArla)
+                        ? colors.primary.withValues(alpha: 0.3)
+                        : colors.borderSubtle,
                   ),
                 ),
                 child: Text(
                   metricas.temDadosAbastecimento
                       ? '${metricas.totalAbastecimentos} ${metricas.totalAbastecimentos == 1 ? "abastecimento" : "abastecimentos"}'
-                      : 'Sem abastecimento',
+                      : (metricas.temArla
+                          ? '${metricas.totalAbastecimentosArla} abastec. Arla'
+                          : 'Sem abastecimento'),
                   style: GoogleFonts.lexend(
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
-                    color: metricas.temDadosAbastecimento ? colors.primary : colors.textMuted,
+                    color: (metricas.temDadosAbastecimento || metricas.temArla)
+                        ? colors.primary
+                        : colors.textMuted,
                   ),
                 ),
               ),
@@ -201,33 +209,6 @@ class ViagemConsumoCard extends StatelessWidget {
                 ),
               ],
             ),
-            if (metricas.temArla) ...[
-              const SizedBox(height: AppSpacing.sm),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: colors.surfaceOverlay,
-                  borderRadius: AppRadius.smRadius,
-                  border: Border.all(color: colors.borderSubtle),
-                ),
-                child: Row(
-                  children: [
-                    Icon(LucideIcons.droplet, size: 14, color: colors.primary),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        'Arla 32 abastecido: ${metricas.totalLitrosArla == metricas.totalLitrosArla.toInt() ? metricas.totalLitrosArla.toInt() : metricas.totalLitrosArla.toStringAsFixed(1).replaceAll('.', ',')} L (calculado separadamente do combustível)',
-                        style: GoogleFonts.lexend(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                          color: colors.textSecondary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
           ] else ...[
             Row(
               children: [
@@ -235,7 +216,9 @@ class ViagemConsumoCard extends StatelessWidget {
                 const SizedBox(width: AppSpacing.sm),
                 Expanded(
                   child: Text(
-                    'Ao lançar abastecimentos com litros e odômetro, a média (km/l) do veículo será calculada aqui automaticamente.',
+                    metricas.temArla
+                        ? 'Apenas Arla 32 registrado até o momento. Ao lançar combustível com litros e odômetro, a média (km/l) será exibida aqui.'
+                        : 'Ao lançar abastecimentos com litros e odômetro, a média (km/l) do veículo será calculada aqui automaticamente.',
                     style: GoogleFonts.lexend(
                       fontSize: 12,
                       color: colors.textMuted,
@@ -243,6 +226,34 @@ class ViagemConsumoCard extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+          ],
+
+          if (metricas.temArla) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: colors.surfaceOverlay,
+                borderRadius: AppRadius.smRadius,
+                border: Border.all(color: colors.borderSubtle),
+              ),
+              child: Row(
+                children: [
+                  Icon(LucideIcons.droplet, size: 14, color: colors.primary),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      'Arla 32 abastecido: ${metricas.totalLitrosArla == metricas.totalLitrosArla.toInt() ? metricas.totalLitrosArla.toInt() : metricas.totalLitrosArla.toStringAsFixed(1).replaceAll('.', ',')} L (contabilizado separadamente, fora da média km/l)',
+                      style: GoogleFonts.lexend(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: colors.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ],

@@ -104,48 +104,90 @@ class DespesasResumoGastosCard extends StatelessWidget {
               Builder(
                 builder: (_) {
                   final metricas = despesaVM.calcularMetricasConsumo(viagem!);
-                  if (!metricas.temDadosAbastecimento) return const SizedBox.shrink();
+                  if (!metricas.temDadosAbastecimento && !metricas.temArla) {
+                    return const SizedBox.shrink();
+                  }
 
                   return Column(
                     children: [
-                      const SizedBox(height: AppSpacing.md),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: colors.surfaceOverlay,
-                          borderRadius: AppRadius.smRadius,
-                          border: Border.all(color: colors.borderSubtle),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(LucideIcons.fuel, size: 14, color: colors.primary),
-                                const SizedBox(width: 6),
-                                Text(
-                                  'Média do veículo:',
-                                  style: GoogleFonts.lexend(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                    color: colors.textSecondary,
+                      if (metricas.temDadosAbastecimento) ...[
+                        const SizedBox(height: AppSpacing.md),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: colors.surfaceOverlay,
+                            borderRadius: AppRadius.smRadius,
+                            border: Border.all(color: colors.borderSubtle),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(LucideIcons.fuel, size: 14, color: colors.primary),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    'Média do veículo:',
+                                    style: GoogleFonts.lexend(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: colors.textSecondary,
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
-                            Text(
-                              metricas.mediaConsumoGeral != null
-                                  ? '${metricas.mediaConsumoGeral!.toStringAsFixed(2)} km/l (${NumberFormat('#,##0.#', 'pt_BR').format(metricas.totalLitros)} L)'
-                                  : '${NumberFormat('#,##0.#', 'pt_BR').format(metricas.totalLitros)} L abastecidos',
-                              style: GoogleFonts.lexend(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: colors.textPrimary,
+                                ],
                               ),
-                            ),
-                          ],
+                              Text(
+                                metricas.mediaConsumoGeral != null
+                                    ? '${metricas.mediaConsumoGeral!.toStringAsFixed(2)} km/l (${NumberFormat('#,##0.#', 'pt_BR').format(metricas.totalLitros)} L)'
+                                    : '${NumberFormat('#,##0.#', 'pt_BR').format(metricas.totalLitros)} L abastecidos',
+                                style: GoogleFonts.lexend(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: colors.textPrimary,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
+                      ],
+                      if (metricas.temArla) ...[
+                        SizedBox(height: metricas.temDadosAbastecimento ? AppSpacing.xs : AppSpacing.md),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 7),
+                          decoration: BoxDecoration(
+                            color: colors.surfaceOverlay,
+                            borderRadius: AppRadius.smRadius,
+                            border: Border.all(color: colors.borderSubtle),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(LucideIcons.droplet, size: 14, color: colors.primary),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    'Arla 32 (separado):',
+                                    style: GoogleFonts.lexend(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: colors.textSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Text(
+                                '${NumberFormat('#,##0.#', 'pt_BR').format(metricas.totalLitrosArla)} L',
+                                style: GoogleFonts.lexend(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: colors.textPrimary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ],
                   );
                 },

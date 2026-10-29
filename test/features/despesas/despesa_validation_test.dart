@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:app_despesas/core/widgets/liters_formatter.dart';
 import 'package:app_despesas/features/despesas/despesa_viewmodel.dart';
+import 'package:app_despesas/models/despesa_collection.dart';
 import 'package:app_despesas/models/viagem_collection.dart';
 
 void main() {
@@ -225,7 +226,7 @@ void main() {
       expect(erro, contains('exclusivamente com DIESEL_S10'));
     });
 
-    test('deve aprovar Arla 32 em veículo Diesel S10', () {
+    test('deve aprovar Arla 32 em veículo Diesel S10 e isolar Arla da média km/l', () {
       final validacao = DespesaViewModel.validarLancamento(
         valorTotal: 150.0,
         tipo: 'ABASTECIMENTO',
@@ -237,6 +238,62 @@ void main() {
         combustivelPreferencial: 'DIESEL_S10',
       );
       expect(validacao, isNull);
+
+      final viagemCalculo = ViagemCollection()
+        ..uuid = 'viagem-calc-001'
+        ..kmInicial = 653500.0
+        ..status = 'em_andamento';
+
+      final despesaDiesel = DespesaCollection()
+        ..uuid = 'uuid-diesel-1'
+        ..viagemId = viagemCalculo.uuid
+        ..tipo = 'ABASTECIMENTO'
+        ..valorTotal = 1200.0
+        ..data = DateTime(2026, 10, 1)
+        ..litros = 200.0
+        ..kmAtual = 653900.0
+        ..tipoCombustivel = 'DIESEL_S10'
+        ..statusSincronizacao = 'sincronizado';
+
+      final despesaArlaPosterior = DespesaCollection()
+        ..uuid = 'uuid-arla-1'
+        ..viagemId = viagemCalculo.uuid
+        ..tipo = 'ABASTECIMENTO'
+        ..valorTotal = 160.0
+        ..data = DateTime(2026, 10, 2)
+        ..litros = 40.0
+        ..kmAtual = 654200.0
+        ..tipoCombustivel = 'ARLA_32'
+        ..statusSincronizacao = 'sincronizado';
+
+      // Em andamento (kmInicial = 653500): média parcial deve usar 400 km / 200 L = 2.0 km/l (sem somar 40 L de Arla nem inflar KM com 654200)
+      final metricasEmRota = DespesaViewModel.calcularMetricasParaLista(
+        viagemCalculo,
+        [despesaDiesel, despesaArlaPosterior],
+      );
+      expect(metricasEmRota.totalLitros, equals(200.0));
+      expect(metricasEmRota.totalLitrosArla, equals(40.0));
+      expect(metricasEmRota.kmPercorridoTotal, equals(700.0));
+      expect(metricasEmRota.kmBaseMediaGeral, equals(400.0));
+      expect(metricasEmRota.mediaConsumoGeral, closeTo(2.0, 0.001));
+
+      // Ao informar kmFinal = 654500 (1000 km totais): 1000 km / 200 L = 5.0 km/l
+      final metricasFechamento = DespesaViewModel.calcularMetricasParaLista(
+        viagemCalculo,
+        [despesaDiesel, despesaArlaPosterior],
+        kmFinalTemporario: 654500.0,
+      );
+      expect(metricasFechamento.mediaConsumoGeral, closeTo(5.0, 0.001));
+
+      // Cenário com apenas Arla 32 lançado: média km/l permanece nula, mas Arla é contabilizado separadamente
+      final metricasApenasArla = DespesaViewModel.calcularMetricasParaLista(
+        viagemCalculo,
+        [despesaArlaPosterior],
+      );
+      expect(metricasApenasArla.temDadosAbastecimento, isFalse);
+      expect(metricasApenasArla.temArla, isTrue);
+      expect(metricasApenasArla.totalLitrosArla, equals(40.0));
+      expect(metricasApenasArla.mediaConsumoGeral, isNull);
     });
 
     test('deve rejeitar Arla 32 em veículo cujo combustível preferencial é Gasolina', () {
