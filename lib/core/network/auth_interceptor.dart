@@ -1,5 +1,6 @@
 // lib/core/network/auth_interceptor.dart
 
+import 'dart:async';
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -28,6 +29,8 @@ class AuthInterceptor extends QueuedInterceptor {
     required this.dio,
     required this.sessionExpiredNotifier,
   });
+
+  Completer<String?>? _refreshCompleter;
 
   @override
   Future<void> onRequest(
@@ -59,7 +62,10 @@ class AuthInterceptor extends QueuedInterceptor {
     // Se a resposta for 401 ou 498 e ainda não foi feita retentativa
     if (requiresAuth && !isRetry && (response.statusCode == 401 || response.statusCode == 498)) {
       debugPrint('[AuthInterceptor] Resposta ${response.statusCode} detectada. Tentando renovação de token...');
-      final novoToken = await _executarRefreshToken();
+      final requestToken = response.requestOptions.headers['Authorization']
+          ?.toString()
+          .replaceFirst('Bearer ', '');
+      final novoToken = await _executarRefreshToken(requestToken: requestToken);
 
       if (novoToken != null && novoToken.isNotEmpty) {
         final options = response.requestOptions;
@@ -91,7 +97,10 @@ class AuthInterceptor extends QueuedInterceptor {
 
     if (requiresAuth && !isRetry && (statusCode == 401 || statusCode == 498)) {
       debugPrint('[AuthInterceptor] Erro $statusCode recebido. Renovando token via refresh...');
-      final novoToken = await _executarRefreshToken();
+      final requestToken = err.requestOptions.headers['Authorization']
+          ?.toString()
+          .replaceFirst('Bearer ', '');
+      final novoToken = await _executarRefreshToken(requestToken: requestToken);
 
       if (novoToken != null && novoToken.isNotEmpty) {
         final options = err.requestOptions;
@@ -112,14 +121,35 @@ class AuthInterceptor extends QueuedInterceptor {
     handler.next(err);
   }
 
-  // Executa chamada à rota /refresh da API utilizando o refresh_token armazenado localmente
-  Future<String?> _executarRefreshToken() async {
+  // Executa chamada à rota /refresh da API com semáforo/mutex contra race conditions (Item 4.1)
+  Future<String?> _executarRefreshToken({String? requestToken}) async {
+    final prefs = await SharedPreferences.getInstance();
+    final currentToken = prefs.getString('accessToken');
+
+    // 1. Se a requisição falhou com token já anterior ao salvo (outra requisição acabou de renovar):
+    if (currentToken != null &&
+        currentToken.isNotEmpty &&
+        requestToken != null &&
+        requestToken.isNotEmpty &&
+        currentToken != requestToken) {
+      debugPrint('[AuthInterceptor] Token já renovado por requisição paralela. Reutilizando novo token.');
+      return currentToken;
+    }
+
+    // 2. Se já existe uma renovação em andamento, aguarda o resultado (evita múltiplas chamadas à rota /refresh)
+    if (_refreshCompleter != null && !_refreshCompleter!.isCompleted) {
+      debugPrint('[AuthInterceptor] Aguardando renovação concorrente já em andamento...');
+      return await _refreshCompleter!.future;
+    }
+
+    _refreshCompleter = Completer<String?>();
+
     try {
-      final prefs = await SharedPreferences.getInstance();
       final storedRefreshToken = prefs.getString('refreshToken');
 
       if (storedRefreshToken == null || storedRefreshToken.isEmpty) {
         debugPrint('[AuthInterceptor] Nenhum refresh token disponível no armazenamento local.');
+        _refreshCompleter!.complete(null);
         return null;
       }
 
@@ -142,16 +172,21 @@ class AuthInterceptor extends QueuedInterceptor {
             await prefs.setString('refreshToken', newRefreshToken);
             sessionExpiredNotifier.value = false;
             debugPrint('[AuthInterceptor] Credenciais renovadas com sucesso!');
+            _refreshCompleter!.complete(newAccessToken);
             return newAccessToken;
           }
         }
       }
 
       debugPrint('[AuthInterceptor] Resposta inválida na renovação de credenciais (${response.statusCode})');
+      _refreshCompleter!.complete(null);
       return null;
     } catch (e) {
       debugPrint('[AuthInterceptor] Exceção durante renovação de token: $e');
+      _refreshCompleter!.complete(null);
       return null;
+    } finally {
+      _refreshCompleter = null;
     }
   }
 }
