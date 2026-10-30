@@ -50,7 +50,7 @@ class AppStatusBadge extends StatelessWidget {
 
     if (s == ViagemStatus.emAndamento) {
       return (colors.primary, 'EM ANDAMENTO');
-    } else if (s == ViagemStatus.concluida || s == 'concluída') {
+    } else if (s == ViagemStatus.concluida || s == 'concluida') {
       return (colors.success, 'CONCLUÍDA');
     } else if (s == ViagemStatus.cancelada) {
       return (colors.error, 'CANCELADA');
@@ -58,6 +58,8 @@ class AppStatusBadge extends StatelessWidget {
       return (colors.success, 'SINCRONIZADO');
     } else if (s == SyncStatus.criado || s == SyncStatus.editado) {
       return (colors.warning, 'LOCAL');
+    } else if (s == SyncStatus.erroValidacao) {
+      return (colors.error, 'ERRO NO ENVIO');
     }
 
     return (colors.textMuted, status.toUpperCase());

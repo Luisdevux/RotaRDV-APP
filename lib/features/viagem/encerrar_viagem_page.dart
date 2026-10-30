@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
+import '../../core/constants/app_constants.dart';
 import '../../core/database/local_database.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/app_card.dart';
@@ -103,7 +104,7 @@ class _EncerrarViagemPageState extends State<EncerrarViagemPage> {
       await isar.writeTxn(() async {
         widget.viagem.kmFinal = _kmFinal;
         widget.viagem.dataFim = DateTime.now();
-        widget.viagem.status = 'concluida';
+        widget.viagem.status = ViagemStatus.concluida;
         widget.viagem.statusSincronizacao = widget.viagem.statusSincronizacao == 'criado' ? 'criado' : 'editado';
         await isar.viagemCollections.put(widget.viagem);
       });

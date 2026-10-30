@@ -29,7 +29,7 @@ class PendingSyncSummary {
   bool get hasPending => totalPendencias > 0;
 }
 
-// Localiza ou recupera o arquivo físico de comprovante para uma despesa, garantindo resiliência contra caminhos perdidos, arquivos órfãos e cache temporário
+// Localiza ou recupera o arquivo físico de comprovante para uma despesa com correspondência estrita por UUID (sem inferências aleatórias)
 Future<String?> resolverOuRecuperarFotoLocal(String despesaUuid, String? caminhoAtual) async {
   try {
     // 1 Se já tem caminho e o arquivo existe fisicamente no aparelho, mantém ele
@@ -56,44 +56,12 @@ Future<String?> resolverOuRecuperarFotoLocal(String despesaUuid, String? caminho
     final files = entries.whereType<File>().toList();
     for (var f in files) {
       if (f.path.contains(despesaUuid)) {
-        debugPrint('[AutoRecovery] Foto encontrada por correspondência parcial de UUID: ${f.path}');
+        debugPrint('[AutoRecovery] Foto encontrada por correspondência de UUID: ${f.path}');
         return f.path;
       }
     }
-
-    // 4 Procura no diretório temporário/cache do app (onde o ImagePicker grava originalmente)
-    final tempDir = await getTemporaryDirectory();
-    if (await tempDir.exists()) {
-      final tempEntries = await tempDir.list().toList();
-      final tempImages = tempEntries.whereType<File>().where((f) {
-        final p = f.path.toLowerCase();
-        return p.endsWith('.jpg') || p.endsWith('.jpeg') || p.endsWith('.png');
-      }).toList();
-
-      if (tempImages.isNotEmpty) {
-        // Ordena por data de modificação decrescente (o mais recente primeiro)
-        tempImages.sort((a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()));
-        final maisRecente = tempImages.first;
-        final arquivoPermanente = await maisRecente.copy(arquivoPorUuid.path);
-        debugPrint('[AutoRecovery] Arquivo recuperado do cache temporário e salvo permanentemente: ${arquivoPermanente.path}');
-        return arquivoPermanente.path;
-      }
-    }
-
-    // 5 Procura no diretório comprovantes por arquivos .jpg órfãos existentes
-    final jpgs = files.where((f) {
-      final p = f.path.toLowerCase();
-      return p.endsWith('.jpg') || p.endsWith('.jpeg') || p.endsWith('.png');
-    }).toList();
-
-    if (jpgs.isNotEmpty) {
-      jpgs.sort((a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()));
-      final recuperado = jpgs.first;
-      debugPrint('[AutoRecovery] Arquivo órfão mais recente recuperado: ${recuperado.path}');
-      return recuperado.path;
-    }
   } catch (e) {
-    debugPrint('[AutoRecovery] Erro ao tentar recuperar foto local: $e');
+    debugPrint('[AutoRecovery] Erro ao tentar recuperar foto local por UUID: $e');
   }
   return null;
 }
@@ -372,8 +340,14 @@ class SyncService {
     }
 
     // 2 Upload de Fotos/Comprovantes pendentes para o Storage (Garage)
+    // Filtra exclusivamente despesas que de fato possuem anexo local salvo (Item 2.1)
     final despesasSemFotoRemota = await isar.despesaCollections
         .filter()
+        .fotoAnexoLocalPathIsNotNull()
+        .and()
+        .not()
+        .fotoAnexoLocalPathEqualTo('')
+        .and()
         .group((q) => q.fotoAnexoUrlIsNull().or().fotoAnexoUrlEqualTo(''))
         .and()
         .not()
@@ -505,10 +479,12 @@ class SyncService {
           var despesa = await isar.despesaCollections.filter().uuidEqualTo(uuid).findFirst();
           despesa ??= DespesaCollection()..uuid = uuid;
 
-          // Localiza ou recupera foto física localmente caso ela já exista no aparelho
-          final fotoLocal = await resolverOuRecuperarFotoLocal(uuid, despesa.fotoAnexoLocalPath);
-          if (fotoLocal != null) {
-            despesa.fotoAnexoLocalPath = fotoLocal;
+          // Localiza ou valida foto física localmente caso ela já exista no aparelho
+          if (despesa.fotoAnexoLocalPath != null && despesa.fotoAnexoLocalPath!.isNotEmpty) {
+            final fotoLocal = await resolverOuRecuperarFotoLocal(uuid, despesa.fotoAnexoLocalPath);
+            if (fotoLocal != null) {
+              despesa.fotoAnexoLocalPath = fotoLocal;
+            }
           }
 
           if (despesa.id == Isar.autoIncrement || despesa.statusSincronizacao == 'sincronizado') {
@@ -552,6 +528,50 @@ class SyncService {
           }
         }
       });
+
+      // 3 Reconciliação de exclusões vindas do servidor (Item 2.3)
+      final dynamic viagensAtivasServidor = data['viagens_ativas_ids'];
+      final dynamic despesasAtivasServidor = data['despesas_ativas_ids'];
+
+      if (viagensAtivasServidor is List) {
+        final setViagensAtivas = viagensAtivasServidor.map((id) => id.toString()).toSet();
+        final viagensSincronizadas = await isar.viagemCollections
+            .filter()
+            .statusSincronizacaoEqualTo('sincronizado')
+            .findAll();
+
+        for (final v in viagensSincronizadas) {
+          if (!setViagensAtivas.contains(v.uuid)) {
+            debugPrint('[SyncService] Removendo do Isar viagem deletada no servidor: ${v.uuid}');
+            await isar.writeTxn(() async {
+              await isar.viagemCollections.delete(v.id);
+            });
+          }
+        }
+      }
+
+      if (despesasAtivasServidor is List) {
+        final setDespesasAtivas = despesasAtivasServidor.map((id) => id.toString()).toSet();
+        final despesasSincronizadas = await isar.despesaCollections
+            .filter()
+            .statusSincronizacaoEqualTo('sincronizado')
+            .findAll();
+
+        for (final d in despesasSincronizadas) {
+          if (!setDespesasAtivas.contains(d.uuid)) {
+            debugPrint('[SyncService] Removendo do Isar despesa deletada no servidor: ${d.uuid}');
+            if (d.fotoTiradaNoApp == true && d.fotoAnexoLocalPath != null && d.fotoAnexoLocalPath!.isNotEmpty) {
+              try {
+                final f = File(d.fotoAnexoLocalPath!);
+                if (await f.exists()) await f.delete();
+              } catch (_) {}
+            }
+            await isar.writeTxn(() async {
+              await isar.despesaCollections.delete(d.id);
+            });
+          }
+        }
+      }
 
       // Atualiza os dados do veículo em cache se vier no retorno
       if (data['veiculo'] != null) {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import '../../../core/constants/app_constants.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_card.dart';
 import '../../../models/viagem_collection.dart';
@@ -29,7 +30,7 @@ class ViagemRotaCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final isEmAndamento = viagem.status == 'em_andamento';
-    final isConcluida = viagem.status == 'concluida' || viagem.status == 'concluída';
+    final isConcluida = viagem.status == ViagemStatus.concluida || viagem.status == 'concluida';
 
     final Color statusColor = isEmAndamento
         ? colors.warning
