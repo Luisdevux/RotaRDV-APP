@@ -212,6 +212,23 @@ class AuthService {
   }
 
   Future<void> signOut({bool clearDatabase = false}) async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // 1. Tenta revogar a sessão remotamente na API antes de remover credenciais locais (Item 1.3)
+    try {
+      final token = prefs.getString('accessToken');
+      if (token != null && token.isNotEmpty) {
+        await DioClient.post(
+          '/logout',
+          body: {'access_token': token},
+          requiresAuth: false,
+        ).timeout(const Duration(seconds: 5));
+        debugPrint('[AuthService] Logout remoto registrado na API com sucesso.');
+      }
+    } catch (e) {
+      debugPrint('[AuthService] Falha ao notificar logout remoto ou dispositivo offline: $e');
+    }
+
     try {
       await _googleSignIn.signOut();
     } catch (e) {
@@ -228,8 +245,6 @@ class AuthService {
     } else {
       debugPrint('[AuthService] Banco Isar preservado para integridade offline.');
     }
-
-    final prefs = await SharedPreferences.getInstance();
 
     // Preserva o último email e ID logado para validação em próximos logins
     final userStr = prefs.getString('currentUser');

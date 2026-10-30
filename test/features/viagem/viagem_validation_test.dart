@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:app_despesas/core/constants/app_constants.dart';
 
 double? parseNumero(String texto) {
   final limpo = texto.replaceAll('.', '').replaceAll(',', '.').trim();
@@ -116,6 +117,26 @@ void main() {
     test('deve retornar falso se qualquer campo estiver nulo', () {
       expect(isOrigemIgualDestino(origemCidade: 'Curitiba', origemUF: 'PR'), isFalse);
       expect(isOrigemIgualDestino(destinoCidade: 'São Paulo', destinoUF: 'SP'), isFalse);
+    });
+  });
+
+  group('Viagem - Constantes e Padronização de Status', () {
+    test('deve garantir que ViagemStatus.concluida utiliza o formato canônico com acento', () {
+      expect(ViagemStatus.concluida, equals('concluída'));
+    });
+
+    test('deve reconhecer tanto "concluida" quanto "concluída" como status de conclusão', () {
+      bool isConcluida(String status) =>
+          status == ViagemStatus.concluida || status == 'concluida';
+
+      expect(isConcluida('concluída'), isTrue);
+      expect(isConcluida('concluida'), isTrue);
+      expect(isConcluida('em_andamento'), isFalse);
+      expect(isConcluida('cancelada'), isFalse);
+    });
+
+    test('deve conter constante de erro de validação em SyncStatus', () {
+      expect(SyncStatus.erroValidacao, equals('erro_validacao'));
     });
   });
 }

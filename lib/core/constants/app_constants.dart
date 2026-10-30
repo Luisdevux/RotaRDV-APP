@@ -29,4 +29,5 @@ abstract class SyncStatus {
   static const String editado = 'editado';
   static const String sincronizado = 'sincronizado';
   static const String deletado = 'deletado';
+  static const String erroValidacao = 'erro_validacao';
 }

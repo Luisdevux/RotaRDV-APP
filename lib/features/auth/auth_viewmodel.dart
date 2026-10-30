@@ -50,11 +50,16 @@ class AuthViewModel extends ChangeNotifier {
               });
               debugPrint('[AuthViewModel] Banco Isar resetado para o novo motorista (sem pendências).');
             } else {
-              debugPrint('[AuthViewModel] Há pendências locais do motorista anterior. Registros preservados no Isar.');
+              debugPrint('[AuthViewModel] Há pendências locais do motorista anterior. Isolando instâncias no Isar.');
             }
           } catch (e) {
             debugPrint('[AuthViewModel] Erro ao verificar pendências/resetar Isar: $e');
           }
+        }
+
+        // Abre/alterna instância isolada do Isar dedicada a este motorista (Item 2.2)
+        if (currentUserId.isNotEmpty) {
+          await LocalDatabase.openForUser(currentUserId);
         }
 
         await prefs.setString('currentUser', jsonEncode(currentUser));
@@ -120,11 +125,16 @@ class AuthViewModel extends ChangeNotifier {
               });
               debugPrint('[AuthViewModel] Banco Isar resetado para o novo motorista (sem pendências).');
             } else {
-              debugPrint('[AuthViewModel] Há pendências locais do motorista anterior. Registros preservados no Isar.');
+              debugPrint('[AuthViewModel] Há pendências locais do motorista anterior. Isolando instâncias no Isar.');
             }
           } catch (e) {
             debugPrint('[AuthViewModel] Erro ao verificar pendências/resetar Isar: $e');
           }
+        }
+
+        // Abre/alterna instância isolada do Isar dedicada a este motorista (Item 2.2)
+        if (currentUserId.isNotEmpty) {
+          await LocalDatabase.openForUser(currentUserId);
         }
 
         await prefs.setString('currentUser', jsonEncode(currentUser));
@@ -256,6 +266,12 @@ class AuthViewModel extends ChangeNotifier {
           if (vehicleStr != null) {
             currentUser!['veiculo_id'] = jsonDecode(vehicleStr);
           }
+
+          final uid = (currentUser!['_id'] ?? currentUser!['id'])?.toString();
+          if (uid != null && uid.isNotEmpty) {
+            await LocalDatabase.openForUser(uid);
+          }
+
           notifyListeners();
           return true;
         }

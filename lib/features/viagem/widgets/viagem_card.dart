@@ -24,7 +24,7 @@ class ViagemCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final isEmAndamento = viagem.status == ViagemStatus.emAndamento;
-    final isConcluida = viagem.status == ViagemStatus.concluida || viagem.status == 'concluída';
+    final isConcluida = viagem.status == ViagemStatus.concluida || viagem.status == 'concluida';
     final isCancelada = viagem.status == ViagemStatus.cancelada;
     final localDt = viagem.dataInicio.toLocal();
     final dateStr = DateFormat('dd/MM/yyyy • HH:mm').format(localDt);

@@ -39,6 +39,15 @@ class ComprovantePickerWidget extends StatelessWidget {
       );
 
       if (pickedFile != null) {
+        // Se já havia uma imagem temporária selecionada anteriormente, limpa do cache (Item 4.2)
+        if (selectedImage != null && selectedImage!.path != pickedFile.path) {
+          try {
+            final oldPath = selectedImage!.path;
+            if (oldPath.contains('/cache/') || oldPath.contains('/tmp/')) {
+              selectedImage!.delete().catchError((_) => selectedImage!);
+            }
+          } catch (_) {}
+        }
         onImageChanged(File(pickedFile.path), source == ImageSource.camera);
       }
     } catch (e) {
@@ -194,7 +203,17 @@ class ComprovantePickerWidget extends StatelessWidget {
                 ),
                 const SizedBox(width: 6),
                 IconButton(
-                  onPressed: () => onImageChanged(null, false),
+                  onPressed: () {
+                    if (selectedImage != null) {
+                      try {
+                        final path = selectedImage!.path;
+                        if (path.contains('/cache/') || path.contains('/tmp/')) {
+                          selectedImage!.delete().catchError((_) => selectedImage!);
+                        }
+                      } catch (_) {}
+                    }
+                    onImageChanged(null, false);
+                  },
                   style: IconButton.styleFrom(
                     backgroundColor: colors.error.withValues(alpha: 0.8),
                     foregroundColor: Colors.white,
