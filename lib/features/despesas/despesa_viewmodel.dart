@@ -64,7 +64,7 @@ enum CategoriaDespesa {
 
 // ViewModel responsável pelo ciclo de vida das despesas operacionais, validação estrita de consistência de odômetro e cálculos de eficiência de consumo
 class DespesaViewModel extends ChangeNotifier {
-  final Isar _isar = LocalDatabase.isar;
+  Isar get _isar => LocalDatabase.isar;
   final SyncService _syncService = SyncService();
 
   List<DespesaCollection> _despesas = [];
@@ -213,6 +213,11 @@ class DespesaViewModel extends ChangeNotifier {
     for (final d in _despesas) {
       final semFotoRemota = d.fotoAnexoUrl == null || d.fotoAnexoUrl!.isEmpty;
       if (!semFotoRemota) continue;
+
+      // Só tenta recuperação se a despesa originalmente possuía foto local registrada ou tirada no app (Item 2.1)
+      final tinhaFotoOriginal = (d.fotoAnexoLocalPath != null && d.fotoAnexoLocalPath!.isNotEmpty) ||
+          d.fotoTiradaNoApp == true;
+      if (!tinhaFotoOriginal) continue;
 
       final recuperado = await resolverOuRecuperarFotoLocal(d.uuid, d.fotoAnexoLocalPath);
       if (recuperado != null && recuperado != d.fotoAnexoLocalPath) {
@@ -426,8 +431,12 @@ class DespesaViewModel extends ChangeNotifier {
         return false;
       }
 
-      final localFotoPath = await _salvarArquivoComprovante(comprovanteFile);
       final novaDespesaUuid = const Uuid().v4();
+      final localFotoPath = await _salvarArquivoComprovante(
+        novaDespesaUuid,
+        comprovanteFile,
+        deleteSourceIfTemp: fotoTiradaNoApp,
+      );
 
       final novaDespesa = DespesaCollection()
         ..uuid = novaDespesaUuid
@@ -460,7 +469,11 @@ class DespesaViewModel extends ChangeNotifier {
     }
   }
 
-  Future<String?> _salvarArquivoComprovante(File? file) async {
+  Future<String?> _salvarArquivoComprovante(
+    String despesaUuid,
+    File? file, {
+    bool deleteSourceIfTemp = false,
+  }) async {
     if (file == null || !await file.exists()) return null;
 
     final appDir = await getApplicationDocumentsDirectory();
@@ -469,9 +482,22 @@ class DespesaViewModel extends ChangeNotifier {
       await comprovantesDir.create(recursive: true);
     }
 
-    final id = const Uuid().v4();
-    final destino = '${comprovantesDir.path}/comprovante_$id.jpg';
+    final destino = '${comprovantesDir.path}/comprovante_$despesaUuid.jpg';
     final arquivoSalvo = await file.copy(destino);
+
+    // Limpa o arquivo temporário original no cache para evitar inchaço de armazenamento (Item 4.2)
+    if (deleteSourceIfTemp && file.path != arquivoSalvo.path) {
+      try {
+        final tempDir = await getTemporaryDirectory();
+        if (file.path.startsWith(tempDir.path)) {
+          await file.delete();
+          debugPrint('[DespesaViewModel] Arquivo temporário da câmera excluído do cache: ${file.path}');
+        }
+      } catch (e) {
+        debugPrint('[DespesaViewModel] Aviso ao limpar arquivo temporário: $e');
+      }
+    }
+
     return arquivoSalvo.path;
   }
 
