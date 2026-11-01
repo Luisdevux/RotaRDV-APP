@@ -124,9 +124,10 @@ class _RedefinirSenhaPageState extends State<RedefinirSenhaPage> {
       body: AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
-          systemNavigationBarColor: Theme.of(context).colorScheme.surface,
+          systemNavigationBarColor: Colors.black,
+          systemNavigationBarDividerColor: Colors.black,
           statusBarIconBrightness: Brightness.light,
-          systemNavigationBarIconBrightness: Brightness.dark,
+          systemNavigationBarIconBrightness: Brightness.light,
         ),
         child: CustomScrollView(
           physics: const ClampingScrollPhysics(),

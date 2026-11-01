@@ -157,9 +157,10 @@ class _LoginPageState extends State<LoginPage> {
       body: AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
-          systemNavigationBarColor: Theme.of(context).colorScheme.surface,
+          systemNavigationBarColor: Colors.black,
+          systemNavigationBarDividerColor: Colors.black,
           statusBarIconBrightness: context.isDarkMode ? Brightness.light : Brightness.dark,
-          systemNavigationBarIconBrightness: context.isDarkMode ? Brightness.light : Brightness.dark,
+          systemNavigationBarIconBrightness: Brightness.light,
         ),
         child: CustomScrollView(
           physics: const ClampingScrollPhysics(),
