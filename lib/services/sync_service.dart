@@ -1,4 +1,4 @@
-// lib/services/sync_service.dart
+﻿// lib/services/sync_service.dart
 
 import 'dart:async';
 import 'dart:convert';
@@ -480,11 +480,9 @@ class SyncService {
           despesa ??= DespesaCollection()..uuid = uuid;
 
           // Localiza ou valida foto física localmente caso ela já exista no aparelho
-          if (despesa.fotoAnexoLocalPath != null && despesa.fotoAnexoLocalPath!.isNotEmpty) {
-            final fotoLocal = await resolverOuRecuperarFotoLocal(uuid, despesa.fotoAnexoLocalPath);
-            if (fotoLocal != null) {
-              despesa.fotoAnexoLocalPath = fotoLocal;
-            }
+          final fotoLocal = await resolverOuRecuperarFotoLocal(uuid, despesa.fotoAnexoLocalPath);
+          if (fotoLocal != null) {
+            despesa.fotoAnexoLocalPath = fotoLocal;
           }
 
           if (despesa.id == Isar.autoIncrement || despesa.statusSincronizacao == 'sincronizado') {
