@@ -46,3 +46,5 @@ app.*.map.json
 
 # Env da Aplicação com Chaves Secretas
 .env
+# Widget Preview related
+.widget_preview/
