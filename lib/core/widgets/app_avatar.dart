@@ -9,6 +9,12 @@ import '../theme/app_theme.dart';
 
 // Gerenciador de cache local persistente para foto de perfil do motorista
 class AvatarCacheService {
+  static final ValueNotifier<int> avatarUpdateNotifier = ValueNotifier<int>(0);
+
+  static void notifyAvatarChanged() {
+    avatarUpdateNotifier.value++;
+  }
+
   static Future<File?> getLocalAvatar(String? userId) async {
     if (userId == null || userId.isEmpty) return null;
     try {
@@ -19,6 +25,34 @@ class AvatarCacheService {
       }
     } catch (_) {}
     return null;
+  }
+
+  static Future<File> saveLocalAvatar(String? userId, File sourceFile) async {
+    if (userId == null || userId.isEmpty) throw Exception('userId nulo ou vazio');
+    final appDir = await getApplicationDocumentsDirectory();
+    final targetFile = File('${appDir.path}/avatar_$userId.jpg');
+    if (await targetFile.exists()) {
+      await targetFile.delete();
+    }
+    await sourceFile.copy(targetFile.path);
+    PaintingBinding.instance.imageCache.clear();
+    PaintingBinding.instance.imageCache.clearLiveImages();
+    notifyAvatarChanged();
+    return targetFile;
+  }
+
+  static Future<void> deleteLocalAvatar(String? userId) async {
+    if (userId == null || userId.isEmpty) return;
+    try {
+      final appDir = await getApplicationDocumentsDirectory();
+      final file = File('${appDir.path}/avatar_$userId.jpg');
+      if (await file.exists()) {
+        await file.delete();
+      }
+      PaintingBinding.instance.imageCache.clear();
+      PaintingBinding.instance.imageCache.clearLiveImages();
+    } catch (_) {}
+    notifyAvatarChanged();
   }
 
   static Future<void> cacheAvatar(String? userId, String? url) async {
@@ -39,7 +73,10 @@ class AvatarCacheService {
 
       if (response.statusCode == 200 && response.data != null && response.data!.isNotEmpty) {
         await file.writeAsBytes(response.data!);
+        PaintingBinding.instance.imageCache.clear();
+        PaintingBinding.instance.imageCache.clearLiveImages();
         debugPrint('[AvatarCacheService] Foto do usuário $userId armazenada com sucesso para visualização offline.');
+        notifyAvatarChanged();
       }
     } catch (e) {
       debugPrint('[AvatarCacheService] Falha silenciosa ao sincronizar avatar em cache: $e');
@@ -72,7 +109,20 @@ class _AppAvatarState extends State<AppAvatar> {
   @override
   void initState() {
     super.initState();
+    AvatarCacheService.avatarUpdateNotifier.addListener(_onAvatarUpdated);
     _checkLocalCache();
+  }
+
+  @override
+  void dispose() {
+    AvatarCacheService.avatarUpdateNotifier.removeListener(_onAvatarUpdated);
+    super.dispose();
+  }
+
+  void _onAvatarUpdated() {
+    if (mounted) {
+      _checkLocalCache();
+    }
   }
 
   @override
@@ -85,12 +135,12 @@ class _AppAvatarState extends State<AppAvatar> {
 
   Future<void> _checkLocalCache() async {
     final file = await AvatarCacheService.getLocalAvatar(widget.userId);
-    if (file != null && mounted) {
+    if (mounted) {
       setState(() => _localAvatarFile = file);
     }
 
-    // Se possui URL remota, tenta atualizar cache em segundo plano
-    if (widget.photoUrl != null && widget.photoUrl!.trim().isNotEmpty) {
+    // Se possui URL remota e não há arquivo local, tenta baixar cache em segundo plano
+    if (widget.photoUrl != null && widget.photoUrl!.trim().isNotEmpty && file == null) {
       AvatarCacheService.cacheAvatar(widget.userId, widget.photoUrl!).then((_) async {
         final updatedFile = await AvatarCacheService.getLocalAvatar(widget.userId);
         if (updatedFile != null && mounted) {
@@ -145,6 +195,7 @@ class _AppAvatarState extends State<AppAvatar> {
         child: ClipOval(
           child: Image.file(
             _localAvatarFile!,
+            key: ValueKey('${_localAvatarFile!.path}_${_localAvatarFile!.lastModifiedSync().millisecondsSinceEpoch}'),
             width: widget.size,
             height: widget.size,
             fit: BoxFit.cover,

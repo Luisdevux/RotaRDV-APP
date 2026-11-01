@@ -226,7 +226,7 @@ class DespesaCard extends StatelessWidget {
                                   style: GoogleFonts.lexend(
                                     fontSize: 10,
                                     fontWeight: FontWeight.w600,
-                                    color: colors.primary,
+                                    color: colors.textPrimary,
                                   ),
                                 ),
                               ],

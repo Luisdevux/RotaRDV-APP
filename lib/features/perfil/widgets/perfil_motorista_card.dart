@@ -1,11 +1,16 @@
 // lib/features/perfil/widgets/perfil_motorista_card.dart
 
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
+import 'package:provider/provider.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/widgets/app_card.dart';
 import '../../../core/widgets/app_avatar.dart';
+import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/app_dialog.dart';
+import '../../auth/auth_viewmodel.dart';
 
 // Componente modular que renderiza as informações de identidade do motorista, incluindo avatar com fallback, documentos habilitatórios (CNH, CPF) e vínculo com a transportadora
 class PerfilMotoristaCard extends StatefulWidget {
@@ -39,25 +44,319 @@ class PerfilMotoristaCard extends StatefulWidget {
 class _PerfilMotoristaCardState extends State<PerfilMotoristaCard> {
   bool _isExpanded = false;
 
+  Future<void> _abrirOpcoesFoto() async {
+    final colors = context.colors;
+    final localFile = await AvatarCacheService.getLocalAvatar(widget.userId);
+    final hasRemote = widget.userPhotoUrl != null && widget.userPhotoUrl!.trim().isNotEmpty;
+    final hasPhoto = localFile != null || hasRemote;
+
+    if (!mounted) return;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        decoration: BoxDecoration(
+          color: colors.cardBackground,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.xxl)),
+          border: Border(top: BorderSide(color: colors.borderSubtle, width: 1)),
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: AppSpacing.lg),
+                  decoration: BoxDecoration(
+                    color: colors.border,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              Text(
+                'Foto de perfil',
+                style: GoogleFonts.lexend(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: colors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Tire uma nova foto ou selecione da galeria para seu perfil.',
+                style: GoogleFonts.lexend(
+                  fontSize: 13,
+                  color: colors.textMuted,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildModalOption(
+                      ctx,
+                      icon: LucideIcons.camera,
+                      label: 'Tirar foto',
+                      color: colors.primary,
+                      onTap: () async {
+                        Navigator.pop(ctx);
+                        await Future.delayed(const Duration(milliseconds: 150));
+                        _selecionarFoto(ImageSource.camera);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: _buildModalOption(
+                      ctx,
+                      icon: LucideIcons.image,
+                      label: 'Galeria',
+                      color: colors.primary,
+                      onTap: () async {
+                        Navigator.pop(ctx);
+                        await Future.delayed(const Duration(milliseconds: 150));
+                        _selecionarFoto(ImageSource.gallery);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              if (hasPhoto) ...[
+                const SizedBox(height: AppSpacing.md),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      _confirmarRemoverFoto();
+                    },
+                    icon: Icon(LucideIcons.trash2, size: 16, color: colors.error),
+                    label: Text(
+                      'Remover foto',
+                      style: GoogleFonts.lexend(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: colors.error,
+                      ),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(color: colors.error.withValues(alpha: 0.3)),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppRadius.md),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModalOption(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    final colors = context.colors;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppRadius.md),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md, horizontal: AppSpacing.sm),
+        decoration: BoxDecoration(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          border: Border.all(color: color.withValues(alpha: 0.35)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 26, color: color),
+            const SizedBox(height: 8),
+            Text(
+              label,
+              style: GoogleFonts.lexend(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: colors.textPrimary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _selecionarFoto(ImageSource source) async {
+    try {
+      final picker = ImagePicker();
+      final picked = await picker.pickImage(
+        source: source,
+        imageQuality: 85,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        requestFullMetadata: false,
+      );
+
+      if (picked == null) return;
+      if (!mounted) return;
+
+      final authVM = context.read<AuthViewModel>();
+      final messenger = ScaffoldMessenger.of(context);
+      final colors = context.colors;
+
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+              ),
+              SizedBox(width: 10),
+              Text('Processando foto de perfil...'),
+            ],
+          ),
+          duration: Duration(seconds: 1),
+        ),
+      );
+
+      final onlineSuccess = await authVM.updateProfilePhoto(File(picked.path));
+
+      if (!mounted) return;
+      messenger.hideCurrentSnackBar();
+
+      if (onlineSuccess) {
+        messenger.showSnackBar(
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(LucideIcons.checkCircle2, color: Colors.white, size: 18),
+                SizedBox(width: 8),
+                Text('Foto de perfil atualizada com sucesso!'),
+              ],
+            ),
+            backgroundColor: colors.success,
+          ),
+        );
+      } else {
+        messenger.showSnackBar(
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(LucideIcons.cloudCheck, color: Colors.white, size: 18),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text('Foto atualizada no aparelho. Será enviada ao servidor quando houver conexão.'),
+                ),
+              ],
+            ),
+            backgroundColor: colors.warning,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('[PerfilMotoristaCard] Erro ao selecionar foto: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Não foi possível alterar a foto de perfil.'),
+            backgroundColor: context.colors.error,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _confirmarRemoverFoto() async {
+    final messenger = ScaffoldMessenger.of(context);
+    final colors = context.colors;
+    final authVM = context.read<AuthViewModel>();
+
+    final confirmar = await AppDialog.show(
+      context: context,
+      title: 'Remover foto',
+      message: 'Deseja realmente remover sua foto de perfil?',
+      confirmText: 'Remover',
+      cancelText: 'Cancelar',
+      isDestructive: true,
+      icon: LucideIcons.trash2,
+    );
+
+    if (confirmar == true && mounted) {
+      final success = await authVM.deleteProfilePhoto();
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            success
+                ? 'Foto de perfil removida com sucesso.'
+                : 'Foto removida no aparelho. A remoção será sincronizada quando houver conexão.',
+          ),
+          backgroundColor: success ? colors.success : colors.warning,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
 
-
     return Column(
       children: [
-        // Bloco de Identificação e Avatar
+        // Bloco de Identificação e Avatar Interativo
         AppCard(
           backgroundColor: colors.cardBackground,
           borderColor: colors.borderSubtle,
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: Row(
             children: [
-              AppAvatar(
-                userId: widget.userId,
-                photoUrl: widget.userPhotoUrl,
-                name: widget.userName,
-                size: 64,
+              GestureDetector(
+                onTap: _abrirOpcoesFoto,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    AppAvatar(
+                      userId: widget.userId,
+                      photoUrl: widget.userPhotoUrl,
+                      name: widget.userName,
+                      size: 64,
+                    ),
+                    Positioned(
+                      right: -2,
+                      bottom: -2,
+                      child: Container(
+                        padding: const EdgeInsets.all(5),
+                        decoration: BoxDecoration(
+                          color: colors.primary,
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: colors.cardBackground,
+                            width: 2.5,
+                          ),
+                        ),
+                        child: const Icon(
+                          LucideIcons.camera,
+                          size: 13,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
@@ -107,7 +406,7 @@ class _PerfilMotoristaCardState extends State<PerfilMotoristaCard> {
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
                               letterSpacing: 0.6,
-                              color: colors.primary,
+                              color: colors.textPrimary,
                             ),
                           ),
                         ],
