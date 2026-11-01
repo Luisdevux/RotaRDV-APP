@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/full_screen_image_viewer.dart';
 
 typedef OnComprovanteImageChanged = void Function(File? file, bool isCamera);
 
@@ -36,6 +37,7 @@ class ComprovantePickerWidget extends StatelessWidget {
         maxWidth: 1280,
         maxHeight: 1280,
         preferredCameraDevice: CameraDevice.rear,
+        requestFullMetadata: false,
       );
 
       if (pickedFile != null) {
@@ -115,9 +117,12 @@ class ComprovantePickerWidget extends StatelessWidget {
                 children: [
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: () {
+                      onPressed: () async {
                         Navigator.pop(ctx);
-                        _pickImage(context, ImageSource.camera, colors);
+                        await Future.delayed(const Duration(milliseconds: 150));
+                        if (context.mounted) {
+                          _pickImage(context, ImageSource.camera, colors);
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: colors.primary,
@@ -137,9 +142,12 @@ class ComprovantePickerWidget extends StatelessWidget {
                   const SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: () {
+                      onPressed: () async {
                         Navigator.pop(ctx);
-                        _pickImage(context, ImageSource.gallery, colors);
+                        await Future.delayed(const Duration(milliseconds: 150));
+                        if (context.mounted) {
+                          _pickImage(context, ImageSource.gallery, colors);
+                        }
                       },
                       style: OutlinedButton.styleFrom(
                         side: BorderSide(color: colors.primary),
@@ -172,18 +180,58 @@ class ComprovantePickerWidget extends StatelessWidget {
     if (selectedImage != null) {
       return Stack(
         children: [
-          Container(
-            height: 180,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              borderRadius: AppRadius.lgRadius,
-              border: Border.all(color: colors.textHint.withValues(alpha: 0.5), width: 1.5),
+          GestureDetector(
+            onTap: () => FullScreenImageViewer.show(
+              context,
+              file: selectedImage,
+              title: 'Comprovante Fiscal',
             ),
-            child: ClipRRect(
-              borderRadius: AppRadius.lgRadius,
-              child: Image.file(
-                selectedImage!,
-                fit: BoxFit.cover,
+            child: Container(
+              height: 180,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                borderRadius: AppRadius.lgRadius,
+                border: Border.all(color: colors.textHint.withValues(alpha: 0.5), width: 1.5),
+              ),
+              child: ClipRRect(
+                borderRadius: AppRadius.lgRadius,
+                child: Image.file(
+                  selectedImage!,
+                  fit: BoxFit.cover,
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 8,
+            left: 8,
+            child: GestureDetector(
+              onTap: () => FullScreenImageViewer.show(
+                context,
+                file: selectedImage,
+                title: 'Comprovante Fiscal',
+              ),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.65),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(LucideIcons.maximize2, size: 12, color: Colors.white),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Toque para expandir',
+                      style: GoogleFonts.lexend(
+                        fontSize: 11,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

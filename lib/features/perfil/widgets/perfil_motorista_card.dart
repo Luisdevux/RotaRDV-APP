@@ -5,9 +5,11 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/app_avatar.dart';
 
 // Componente modular que renderiza as informações de identidade do motorista, incluindo avatar com fallback, documentos habilitatórios (CNH, CPF) e vínculo com a transportadora
 class PerfilMotoristaCard extends StatefulWidget {
+  final String? userId;
   final String userName;
   final String userEmail;
   final String? userPhotoUrl;
@@ -19,6 +21,7 @@ class PerfilMotoristaCard extends StatefulWidget {
 
   const PerfilMotoristaCard({
     super.key,
+    this.userId,
     required this.userName,
     required this.userEmail,
     this.userPhotoUrl,
@@ -39,7 +42,7 @@ class _PerfilMotoristaCardState extends State<PerfilMotoristaCard> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final hasPhoto = widget.userPhotoUrl != null && widget.userPhotoUrl!.trim().isNotEmpty;
+
 
     return Column(
       children: [
@@ -50,24 +53,11 @@ class _PerfilMotoristaCardState extends State<PerfilMotoristaCard> {
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: Row(
             children: [
-              Container(
-                width: 64,
-                height: 64,
-                decoration: const BoxDecoration(
-                  shape: BoxShape.circle,
-                ),
-                child: ClipOval(
-                  child: hasPhoto
-                      ? Image.network(
-                          widget.userPhotoUrl!,
-                          width: 64,
-                          height: 64,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              _buildAvatarFallback(colors),
-                        )
-                      : _buildAvatarFallback(colors),
-                ),
+              AppAvatar(
+                userId: widget.userId,
+                photoUrl: widget.userPhotoUrl,
+                name: widget.userName,
+                size: 64,
               ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
@@ -247,19 +237,6 @@ class _PerfilMotoristaCardState extends State<PerfilMotoristaCard> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildAvatarFallback(AppColorsExtension colors) {
-    return Container(
-      width: 64,
-      height: 64,
-      color: colors.primary.withValues(alpha: 0.12),
-      child: Icon(
-        LucideIcons.user,
-        color: colors.primary,
-        size: 32,
-      ),
     );
   }
 

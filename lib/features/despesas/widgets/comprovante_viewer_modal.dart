@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -7,6 +7,7 @@ import 'package:isar/isar.dart';
 import '../../../core/database/local_database.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_card.dart';
+import '../../../core/widgets/full_screen_image_viewer.dart';
 import '../../../models/despesa_collection.dart';
 import '../../../services/sync_service.dart';
 import '../despesa_viewmodel.dart';
@@ -53,7 +54,7 @@ class _ComprovanteViewerModalState extends State<ComprovanteViewerModal> {
         _fotoLocalPath!.isNotEmpty &&
         await File(_fotoLocalPath!).exists();
 
-    if (!pathValido && (widget.despesa.fotoAnexoUrl == null || widget.despesa.fotoAnexoUrl!.isEmpty)) {
+    if (!pathValido) {
       final recuperado = await resolverOuRecuperarFotoLocal(
         widget.despesa.uuid,
         _fotoLocalPath,
@@ -312,47 +313,116 @@ class _ComprovanteViewerModalState extends State<ComprovanteViewerModal> {
                   if (hasLocalFoto)
                     ClipRRect(
                       borderRadius: AppRadius.lgRadius,
-                      child: InteractiveViewer(
-                        maxScale: 4.0,
-                        child: Image.file(
-                          File(_fotoLocalPath!),
-                          fit: BoxFit.contain,
+                      child: GestureDetector(
+                        onTap: () => FullScreenImageViewer.show(
+                          context,
+                          file: File(_fotoLocalPath!),
+                          title: 'Comprovante Fiscal - ',
+                        ),
+                        child: Stack(
+                          alignment: Alignment.bottomRight,
+                          children: [
+                            Image.file(
+                              File(_fotoLocalPath!),
+                              fit: BoxFit.contain,
+                            ),
+                            Container(
+                              margin: const EdgeInsets.all(8),
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 0.65),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(LucideIcons.maximize2, size: 12, color: Colors.white),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Toque para expandir',
+                                    style: GoogleFonts.lexend(fontSize: 11, color: Colors.white, fontWeight: FontWeight.w500),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     )
                   else if (hasRemoteFoto)
                     ClipRRect(
                       borderRadius: AppRadius.lgRadius,
-                      child: InteractiveViewer(
-                        maxScale: 4.0,
-                        child: Image.network(
-                          widget.despesa.fotoAnexoUrl!,
-                          fit: BoxFit.contain,
-                          loadingBuilder: (_, child, progress) {
-                            if (progress == null) return child;
-                            return Container(
-                              height: 200,
-                              color: colors.surfaceOverlay,
-                              child: const Center(child: CircularProgressIndicator()),
-                            );
-                          },
-                          errorBuilder: (context, error, stackTrace) => Container(
-                            height: 120,
-                            color: colors.surfaceOverlay,
-                            child: Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
+                      child: GestureDetector(
+                        onTap: () => FullScreenImageViewer.show(
+                          context,
+                          url: widget.despesa.fotoAnexoUrl!,
+                          title: 'Comprovante Fiscal - ',
+                        ),
+                        child: Stack(
+                          alignment: Alignment.bottomRight,
+                          children: [
+                            Image.network(
+                              widget.despesa.fotoAnexoUrl!,
+                              fit: BoxFit.contain,
+                              loadingBuilder: (_, child, progress) {
+                                if (progress == null) return child;
+                                return Container(
+                                  height: 200,
+                                  color: colors.surfaceOverlay,
+                                  child: const Center(child: CircularProgressIndicator()),
+                                );
+                              },
+                              errorBuilder: (context, error, stackTrace) => Container(
+                                padding: const EdgeInsets.all(AppSpacing.xl),
+                                color: colors.surfaceOverlay,
+                                child: Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(LucideIcons.cloudOff, color: colors.primary, size: 36),
+                                      const SizedBox(height: 10),
+                                      Text(
+                                        'Comprovante salvo na nuvem',
+                                        style: GoogleFonts.lexend(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                          color: colors.textPrimary,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'Disponível online. Conecte-se à internet para visualizar.',
+                                        textAlign: TextAlign.center,
+                                        style: GoogleFonts.lexend(
+                                          fontSize: 12,
+                                          color: colors.textMuted,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Container(
+                              margin: const EdgeInsets.all(8),
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 0.65),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(LucideIcons.imageOff, color: colors.textHint, size: 28),
-                                  const SizedBox(height: 6),
+                                  const Icon(LucideIcons.maximize2, size: 12, color: Colors.white),
+                                  const SizedBox(width: 4),
                                   Text(
-                                    'Erro ao carregar imagem remota',
-                                    style: GoogleFonts.lexend(fontSize: 12, color: colors.textMuted),
+                                    'Toque para expandir',
+                                    style: GoogleFonts.lexend(fontSize: 11, color: Colors.white, fontWeight: FontWeight.w500),
                                   ),
                                 ],
                               ),
                             ),
-                          ),
+                          ],
                         ),
                       ),
                     )
