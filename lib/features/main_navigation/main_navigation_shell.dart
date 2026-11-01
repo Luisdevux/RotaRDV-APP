@@ -31,11 +31,13 @@ class MainNavigationShell extends StatefulWidget {
 
 class _MainNavigationShellState extends State<MainNavigationShell> {
   late int _currentIndex;
+  final Set<int> _loadedTabs = {};
 
   @override
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
+    _loadedTabs.add(_currentIndex);
     _verificarFotoPendenteCamera();
   }
 
@@ -95,7 +97,9 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
   }
 
   void switchTab(int index) {
+    if (_currentIndex == index) return;
     setState(() {
+      _loadedTabs.add(index);
       _currentIndex = index;
     });
   }
@@ -109,18 +113,32 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
       body: IndexedStack(
         index: _currentIndex,
         children: [
-          HomePage(onNavigateToTab: switchTab),
-          ViagemTabPage(onNavigateToTab: switchTab),
-          ViagensListPage(isTab: true, onNavigateToTab: switchTab),
-          PerfilPage(isTab: true, onNavigateToTab: switchTab),
+          RepaintBoundary(
+            child: _loadedTabs.contains(0)
+                ? HomePage(onNavigateToTab: switchTab)
+                : const SizedBox.shrink(),
+          ),
+          RepaintBoundary(
+            child: _loadedTabs.contains(1)
+                ? ViagemTabPage(onNavigateToTab: switchTab)
+                : const SizedBox.shrink(),
+          ),
+          RepaintBoundary(
+            child: _loadedTabs.contains(2)
+                ? ViagensListPage(isTab: true, onNavigateToTab: switchTab)
+                : const SizedBox.shrink(),
+          ),
+          RepaintBoundary(
+            child: _loadedTabs.contains(3)
+                ? PerfilPage(isTab: true, onNavigateToTab: switchTab)
+                : const SizedBox.shrink(),
+          ),
         ],
       ),
       bottomNavigationBar: CustomBottomNavBar(
         currentIndex: _currentIndex,
         onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
+          switchTab(index);
         },
       ),
     );

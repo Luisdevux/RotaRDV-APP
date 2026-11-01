@@ -4,6 +4,52 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
+class _IbgeParsedData {
+  final List<Map<String, dynamic>> estados;
+  final List<Map<String, dynamic>> cidades;
+
+  _IbgeParsedData({required this.estados, required this.cidades});
+}
+
+_IbgeParsedData _parseIbgeData(String response) {
+  final data = json.decode(response) as Map<String, dynamic>;
+
+  final Map<int, String> stateSiglaMap = {};
+  final Map<int, String> stateNameMap = {};
+
+  final estados = (data['states'] as Map<String, dynamic>).entries.map((entry) {
+    final stateId = int.tryParse(entry.key.toString()) ?? 0;
+    final name = entry.value['name'].toString();
+    final sigla = entry.value['sigla'].toString().toUpperCase();
+    stateSiglaMap[stateId] = sigla;
+    stateNameMap[stateId] = name;
+    return {
+      'id': entry.key.toString(),
+      'name': name,
+      'sigla': sigla,
+    };
+  }).toList();
+
+  // Ordena estados por Nome (A-Z)
+  estados.sort((a, b) => (a['name'] as String).compareTo(b['name'] as String));
+
+  final cidades = (data['cities'] as List<dynamic>).map((city) {
+    final stateId = int.tryParse(city['state_id'].toString()) ?? 0;
+    return {
+      'id': city['id'],
+      'state_id': stateId,
+      'name': city['name'].toString(),
+      'sigla': stateSiglaMap[stateId] ?? '',
+      'estado_nome': stateNameMap[stateId] ?? '',
+    };
+  }).toList();
+
+  // Pré-ordena cidades por Nome (A-Z)
+  cidades.sort((a, b) => (a['name'] as String).compareTo(b['name'] as String));
+
+  return _IbgeParsedData(estados: estados, cidades: cidades);
+}
+
 class EstadoCidadeService {
   static final EstadoCidadeService _instance = EstadoCidadeService._internal();
   factory EstadoCidadeService() => _instance;
@@ -15,48 +61,16 @@ class EstadoCidadeService {
 
   bool get isLoaded => _isLoaded;
 
-  // Carrega os estados e cidades do arquivo JSON em memória (apenas uma vez)
+  // Carrega os estados e cidades do arquivo JSON em memória através de isolate em segundo plano
   Future<void> loadEstadosECidades() async {
     if (_isLoaded) return;
 
     try {
       final String response =
           await rootBundle.loadString('assets/json/ibge.json');
-      final data = json.decode(response);
-
-      final Map<int, String> stateSiglaMap = {};
-      final Map<int, String> stateNameMap = {};
-
-      _estados = (data['states'] as Map<String, dynamic>).entries.map((entry) {
-        final stateId = int.tryParse(entry.key.toString()) ?? 0;
-        final name = entry.value['name'].toString();
-        final sigla = entry.value['sigla'].toString().toUpperCase();
-        stateSiglaMap[stateId] = sigla;
-        stateNameMap[stateId] = name;
-        return {
-          'id': entry.key.toString(),
-          'name': name,
-          'sigla': sigla,
-        };
-      }).toList();
-
-      // Ordena estados por Nome (A-Z)
-      _estados.sort((a, b) => (a['name'] as String).compareTo(b['name'] as String));
-
-      _cidades = (data['cities'] as List<dynamic>).map((city) {
-        final stateId = int.tryParse(city['state_id'].toString()) ?? 0;
-        return {
-          'id': city['id'],
-          'state_id': stateId,
-          'name': city['name'].toString(),
-          'sigla': stateSiglaMap[stateId] ?? '',
-          'estado_nome': stateNameMap[stateId] ?? '',
-        };
-      }).toList();
-
-      // Pré-ordena cidades por Nome (A-Z)
-      _cidades.sort((a, b) => (a['name'] as String).compareTo(b['name'] as String));
-
+      final parsed = await compute(_parseIbgeData, response);
+      _estados = parsed.estados;
+      _cidades = parsed.cidades;
       _isLoaded = true;
     } catch (e) {
       debugPrint('Erro ao carregar estados e cidades: $e');

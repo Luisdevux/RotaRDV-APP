@@ -197,6 +197,7 @@ class ComprovantePickerWidget extends StatelessWidget {
                 borderRadius: AppRadius.lgRadius,
                 child: Image.file(
                   selectedImage!,
+                  cacheHeight: 450,
                   fit: BoxFit.cover,
                 ),
               ),

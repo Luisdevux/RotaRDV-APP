@@ -148,6 +148,7 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     final authVM = context.watch<AuthViewModel>();
     final isLoadingGoogle = authVM.isLoadingGoogle;
     final isLoadingLocal = authVM.isLoadingLocal;
@@ -157,8 +158,8 @@ class _LoginPageState extends State<LoginPage> {
         value: SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
           systemNavigationBarColor: Theme.of(context).colorScheme.surface,
-          statusBarIconBrightness: Brightness.light,
-          systemNavigationBarIconBrightness: Brightness.dark,
+          statusBarIconBrightness: context.isDarkMode ? Brightness.light : Brightness.dark,
+          systemNavigationBarIconBrightness: context.isDarkMode ? Brightness.light : Brightness.dark,
         ),
         child: CustomScrollView(
           physics: const ClampingScrollPhysics(),
@@ -187,7 +188,7 @@ class _LoginPageState extends State<LoginPage> {
                     Text(
                       'Controle de Gastos',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.textHint,
+                        color: colors.textHint,
                       ),
                     ),
                   ],
@@ -257,18 +258,18 @@ class _LoginPageState extends State<LoginPage> {
                       Text(
                         'E-mail',
                         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                          color: AppColors.textSecondary,
+                          color: colors.textSecondary,
                         ),
                       ),
                       const SizedBox(height: 8),
                       TextField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           hintText: 'motorista@exemplo.com',
                           prefixIcon: Icon(
                             Icons.email_outlined,
-                            color: AppColors.textHint,
+                            color: colors.textHint,
                           ),
                         ),
                       ),
@@ -278,7 +279,7 @@ class _LoginPageState extends State<LoginPage> {
                       Text(
                         'Senha',
                         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                          color: AppColors.textSecondary,
+                          color: colors.textSecondary,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -287,16 +288,16 @@ class _LoginPageState extends State<LoginPage> {
                         obscureText: _obscurePassword,
                         decoration: InputDecoration(
                           hintText: '••••••••',
-                          prefixIcon: const Icon(
+                          prefixIcon: Icon(
                             Icons.lock_outline,
-                            color: AppColors.textHint,
+                            color: colors.textHint,
                           ),
                           suffixIcon: IconButton(
                             icon: Icon(
                               _obscurePassword
                                   ? Icons.visibility_off
                                   : Icons.visibility,
-                              color: AppColors.textHint,
+                              color: colors.textHint,
                             ),
                             onPressed: () {
                               setState(() {
@@ -332,7 +333,7 @@ class _LoginPageState extends State<LoginPage> {
                                 height: 24,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  color: AppColors.textPrimary,
+                                  color: Colors.white,
                                 ),
                               )
                             : const Row(
@@ -349,19 +350,19 @@ class _LoginPageState extends State<LoginPage> {
                       // Divider "Ou entrar com"
                       Row(
                         children: [
-                          const Expanded(
-                            child: Divider(color: AppColors.border),
+                          Expanded(
+                            child: Divider(color: colors.border),
                           ),
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             child: Text(
                               'Ou entrar com',
                               style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(color: AppColors.textHint),
+                                  ?.copyWith(color: colors.textHint),
                             ),
                           ),
-                          const Expanded(
-                            child: Divider(color: AppColors.border),
+                          Expanded(
+                            child: Divider(color: colors.border),
                           ),
                         ],
                       ),
@@ -373,18 +374,19 @@ class _LoginPageState extends State<LoginPage> {
                             ? null
                             : _handleGoogleSignIn,
                         icon: isLoadingGoogle
-                            ? const SizedBox(
+                            ? SizedBox(
                                 width: 24,
                                 height: 24,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
+                                  color: colors.primary,
                                 ),
                               )
                             : Image.network(
                                 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/120px-Google_%22G%22_logo.svg.png',
                                 height: 24,
                                 errorBuilder: (context, error, stackTrace) =>
-                                    const Icon(Icons.g_mobiledata, size: 28),
+                                    Icon(Icons.g_mobiledata, size: 28, color: colors.textPrimary),
                               ),
                         label: Text(
                           isLoadingGoogle
@@ -392,8 +394,8 @@ class _LoginPageState extends State<LoginPage> {
                               : 'Continuar com Google',
                         ),
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: AppColors.textPrimary,
-                          side: const BorderSide(color: AppColors.border),
+                          foregroundColor: colors.textPrimary,
+                          side: BorderSide(color: colors.border),
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -414,7 +416,7 @@ class _LoginPageState extends State<LoginPage> {
                           '"Boa viagem e dirija com segurança."',
                           style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(
-                                color: AppColors.textSecondary,
+                                color: colors.textSecondary,
                                 fontStyle: FontStyle.italic,
                               ),
                         ),
@@ -426,7 +428,7 @@ class _LoginPageState extends State<LoginPage> {
                         child: Text(
                           '© 2026 RotaRDV',
                           style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: AppColors.textHint),
+                              ?.copyWith(color: colors.textHint),
                         ),
                       ),
                       const SizedBox(height: 8),

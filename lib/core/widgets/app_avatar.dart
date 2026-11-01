@@ -105,6 +105,7 @@ class AppAvatar extends StatefulWidget {
 
 class _AppAvatarState extends State<AppAvatar> {
   File? _localAvatarFile;
+  int _cacheBuster = DateTime.now().millisecondsSinceEpoch;
 
   @override
   void initState() {
@@ -136,7 +137,10 @@ class _AppAvatarState extends State<AppAvatar> {
   Future<void> _checkLocalCache() async {
     final file = await AvatarCacheService.getLocalAvatar(widget.userId);
     if (mounted) {
-      setState(() => _localAvatarFile = file);
+      setState(() {
+        _localAvatarFile = file;
+        _cacheBuster = DateTime.now().millisecondsSinceEpoch;
+      });
     }
 
     // Se possui URL remota e não há arquivo local, tenta baixar cache em segundo plano
@@ -187,7 +191,9 @@ class _AppAvatarState extends State<AppAvatar> {
     final colors = context.colors;
     final hasRemoteUrl = widget.photoUrl != null && widget.photoUrl!.trim().isNotEmpty;
 
-    if (_localAvatarFile != null && _localAvatarFile!.existsSync()) {
+    final cacheDim = (widget.size * 2.5).round();
+
+    if (_localAvatarFile != null) {
       return Container(
         width: widget.size,
         height: widget.size,
@@ -195,7 +201,9 @@ class _AppAvatarState extends State<AppAvatar> {
         child: ClipOval(
           child: Image.file(
             _localAvatarFile!,
-            key: ValueKey('${_localAvatarFile!.path}_${_localAvatarFile!.lastModifiedSync().millisecondsSinceEpoch}'),
+            key: ValueKey('${_localAvatarFile!.path}_$_cacheBuster'),
+            cacheWidth: cacheDim,
+            cacheHeight: cacheDim,
             width: widget.size,
             height: widget.size,
             fit: BoxFit.cover,
@@ -213,6 +221,8 @@ class _AppAvatarState extends State<AppAvatar> {
         child: ClipOval(
           child: Image.network(
             widget.photoUrl!,
+            cacheWidth: cacheDim,
+            cacheHeight: cacheDim,
             width: widget.size,
             height: widget.size,
             fit: BoxFit.cover,

@@ -1,6 +1,5 @@
 // lib/features/despesas/widgets/despesa_card.dart
 
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -13,6 +12,11 @@ import '../despesa_viewmodel.dart';
 // Card representativo de uma despesa cadastrada, exibindo
 // metadados de categoria, valor, data, posto e status de sincronização.
 class DespesaCard extends StatelessWidget {
+  static final _currencyFormat = NumberFormat.currency(locale: 'pt_BR', symbol: r'R$');
+  static final _dateFormat = DateFormat('dd/MM/yyyy • HH:mm', 'pt_BR');
+  static final _litrosFormat = NumberFormat('#,##0.#', 'pt_BR');
+  static final _kmFormat = NumberFormat('#,###', 'pt_BR');
+
   final DespesaCollection despesa;
   final VoidCallback? onTap;
 
@@ -24,7 +28,7 @@ class DespesaCard extends StatelessWidget {
 
   String _formatCurrency(double val) {
     try {
-      return NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$').format(val);
+      return _currencyFormat.format(val);
     } catch (_) {
       return 'R\$ ${val.toStringAsFixed(2)}';
     }
@@ -47,7 +51,7 @@ class DespesaCard extends StatelessWidget {
 
   String _formatDate(DateTime dt) {
     try {
-      return DateFormat('dd/MM/yyyy • HH:mm', 'pt_BR').format(dt.toLocal());
+      return _dateFormat.format(dt.toLocal());
     } catch (_) {
       final localDt = dt.toLocal();
       final dia = localDt.day.toString().padLeft(2, '0');
@@ -63,8 +67,7 @@ class DespesaCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final hasLocalFoto = despesa.fotoAnexoLocalPath != null &&
-        despesa.fotoAnexoLocalPath!.isNotEmpty &&
-        File(despesa.fotoAnexoLocalPath!).existsSync();
+        despesa.fotoAnexoLocalPath!.isNotEmpty;
     final hasRemoteFoto = despesa.fotoAnexoUrl != null && despesa.fotoAnexoUrl!.isNotEmpty;
     final hasFoto = hasLocalFoto || hasRemoteFoto;
     final temFotoPendente = hasLocalFoto && !hasRemoteFoto;
@@ -74,7 +77,8 @@ class DespesaCard extends StatelessWidget {
     final categoriaEnum = CategoriaDespesa.fromCodigo(despesa.tipo);
     final icon = _getIconForTipo(despesa.tipo);
 
-    return AppCard(
+    return RepaintBoundary(
+      child: AppCard(
       onTap: onTap,
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -163,7 +167,7 @@ class DespesaCard extends StatelessWidget {
                     children: [
                       if (despesa.litros != null && despesa.litros! > 0)
                         Text(
-                          '${NumberFormat('#,##0.#', 'pt_BR').format(despesa.litros!)} L ${despesa.tipoCombustivel != null ? "• ${despesa.tipoCombustivel}" : ""}',
+                          '${_litrosFormat.format(despesa.litros!)} L ${despesa.tipoCombustivel != null ? "• ${despesa.tipoCombustivel}" : ""}',
                           style: GoogleFonts.lexend(
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
@@ -180,7 +184,7 @@ class DespesaCard extends StatelessWidget {
                         ),
                       if (despesa.kmAtual != null && despesa.kmAtual! > 0)
                         Text(
-                          'KM ${NumberFormat('#,###', 'pt_BR').format(despesa.kmAtual!.toInt())}',
+                          'KM ${_kmFormat.format(despesa.kmAtual!.toInt())}',
                           style: GoogleFonts.lexend(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
@@ -273,6 +277,7 @@ class DespesaCard extends StatelessWidget {
           ),
         ],
       ),
+    ),
     );
   }
 }

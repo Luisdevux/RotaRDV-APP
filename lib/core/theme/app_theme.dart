@@ -1,11 +1,11 @@
 // lib/core/theme/app_theme.dart
 
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 import 'app_radius.dart';
 import 'app_spacing.dart';
-
 export 'app_colors.dart';
 export 'app_radius.dart';
 export 'app_spacing.dart';
@@ -30,6 +30,13 @@ class AppTheme {
 
     return ThemeData(
       useMaterial3: true,
+      fontFamily: GoogleFonts.lexend().fontFamily,
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: FadeForwardsPageTransitionsBuilder(),
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+        },
+      ),
       splashFactory: InkRipple.splashFactory,
       brightness: brightness,
       scaffoldBackgroundColor: colors.background,
@@ -40,7 +47,7 @@ class AppTheme {
         scrolledUnderElevation: 0,
         centerTitle: true,
         iconTheme: IconThemeData(color: colors.textPrimary),
-        titleTextStyle: GoogleFonts.lexend(
+        titleTextStyle: TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.w700,
           color: colors.textPrimary,
@@ -58,57 +65,57 @@ class AppTheme {
         onSurface: colors.textPrimary,
       ),
       textTheme: TextTheme(
-        displayLarge: GoogleFonts.lexend(
+        displayLarge: TextStyle(
           fontSize: 36,
           fontWeight: FontWeight.bold,
           color: colors.textPrimary,
         ),
-        displayMedium: GoogleFonts.lexend(
+        displayMedium: TextStyle(
           fontSize: 30,
           fontWeight: FontWeight.bold,
           color: colors.textPrimary,
         ),
-        headlineLarge: GoogleFonts.lexend(
+        headlineLarge: TextStyle(
           fontSize: 24,
           fontWeight: FontWeight.bold,
           color: colors.textPrimary,
         ),
-        headlineMedium: GoogleFonts.lexend(
+        headlineMedium: TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.bold,
           color: colors.textPrimary,
         ),
-        titleLarge: GoogleFonts.lexend(
+        titleLarge: TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.w600,
           color: colors.textPrimary,
         ),
-        titleMedium: GoogleFonts.lexend(
+        titleMedium: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w600,
           color: colors.textPrimary,
         ),
-        bodyLarge: GoogleFonts.lexend(
+        bodyLarge: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.normal,
           color: colors.textPrimary,
         ),
-        bodyMedium: GoogleFonts.lexend(
+        bodyMedium: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.normal,
           color: colors.textMuted,
         ),
-        bodySmall: GoogleFonts.lexend(
+        bodySmall: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.normal,
           color: colors.textHint,
         ),
-        labelLarge: GoogleFonts.lexend(
+        labelLarge: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w600,
           color: colors.primary,
         ),
-        labelSmall: GoogleFonts.lexend(
+        labelSmall: TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.bold,
           letterSpacing: 0.5,
@@ -142,12 +149,12 @@ class AppTheme {
           horizontal: AppSpacing.lg,
           vertical: AppSpacing.lg,
         ),
-        labelStyle: GoogleFonts.lexend(
+        labelStyle: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w500,
           color: colors.textMuted,
         ),
-        hintStyle: GoogleFonts.lexend(
+        hintStyle: TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.normal,
           color: colors.textHint,
@@ -157,7 +164,7 @@ class AppTheme {
         style: ElevatedButton.styleFrom(
           backgroundColor: colors.primary,
           foregroundColor: Colors.white,
-          textStyle: GoogleFonts.lexend(
+          textStyle: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
           ),
@@ -176,7 +183,7 @@ class AppTheme {
         style: OutlinedButton.styleFrom(
           foregroundColor: colors.primary,
           side: BorderSide(color: colors.primaryBorder),
-          textStyle: GoogleFonts.lexend(
+          textStyle: const TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w600,
           ),
@@ -193,7 +200,7 @@ class AppTheme {
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: colors.primary,
-          textStyle: GoogleFonts.lexend(
+          textStyle: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
           ),
@@ -215,12 +222,12 @@ class AppTheme {
           borderRadius: AppRadius.xlRadius,
           side: BorderSide(color: colors.border),
         ),
-        titleTextStyle: GoogleFonts.lexend(
+        titleTextStyle: TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.bold,
           color: colors.textPrimary,
         ),
-        contentTextStyle: GoogleFonts.lexend(
+        contentTextStyle: TextStyle(
           fontSize: 14,
           color: colors.textMuted,
         ),

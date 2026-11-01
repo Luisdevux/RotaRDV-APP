@@ -40,6 +40,10 @@ class ComprovanteViewerModal extends StatefulWidget {
 }
 
 class _ComprovanteViewerModalState extends State<ComprovanteViewerModal> {
+  static final _currencyFormat = NumberFormat.currency(locale: 'pt_BR', symbol: r'R$');
+  static final _kmFormat = NumberFormat('#,###', 'pt_BR');
+  static final _litrosFormat = NumberFormat('#,##0.00', 'pt_BR');
+  static final _dateFormat = DateFormat("dd/MM/yyyy 'às' HH:mm", 'pt_BR');
   String? _fotoLocalPath;
 
   @override
@@ -81,7 +85,7 @@ class _ComprovanteViewerModalState extends State<ComprovanteViewerModal> {
 
   String _formatCurrency(double val) {
     try {
-      return NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$').format(val);
+      return _currencyFormat.format(val);
     } catch (_) {
       return 'R\$ ${val.toStringAsFixed(2)}';
     }
@@ -89,7 +93,7 @@ class _ComprovanteViewerModalState extends State<ComprovanteViewerModal> {
 
   String _formatKm(num val) {
     try {
-      return NumberFormat('#,###', 'pt_BR').format(val);
+      return _kmFormat.format(val);
     } catch (_) {
       return val.toStringAsFixed(0);
     }
@@ -97,7 +101,7 @@ class _ComprovanteViewerModalState extends State<ComprovanteViewerModal> {
 
   String _formatLitros(double val) {
     try {
-      return NumberFormat('#,##0.00', 'pt_BR').format(val);
+      return _litrosFormat.format(val);
     } catch (_) {
       return val.toStringAsFixed(2);
     }
@@ -106,7 +110,7 @@ class _ComprovanteViewerModalState extends State<ComprovanteViewerModal> {
   String _formatDate(DateTime dt) {
     final localDt = dt.toLocal();
     try {
-      return DateFormat("dd/MM/yyyy 'às' HH:mm", 'pt_BR').format(localDt);
+      return _dateFormat.format(localDt);
     } catch (_) {
       final dia = localDt.day.toString().padLeft(2, '0');
       final mes = localDt.month.toString().padLeft(2, '0');
@@ -124,8 +128,7 @@ class _ComprovanteViewerModalState extends State<ComprovanteViewerModal> {
     final cat = CategoriaDespesa.fromCodigo(widget.despesa.tipo);
 
     final hasLocalFoto = _fotoLocalPath != null &&
-        _fotoLocalPath!.isNotEmpty &&
-        File(_fotoLocalPath!).existsSync();
+        _fotoLocalPath!.isNotEmpty;
     final hasRemoteFoto = widget.despesa.fotoAnexoUrl != null &&
         widget.despesa.fotoAnexoUrl!.isNotEmpty;
     final temFotoPendente = hasLocalFoto && !hasRemoteFoto;
