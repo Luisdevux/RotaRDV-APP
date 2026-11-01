@@ -7,8 +7,9 @@ import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../core/theme/app_theme.dart';
 
-// Campo de texto com máscara automática para digitação de moeda em reais (R$)
-class CurrencyInputField extends StatelessWidget {
+// Campo de texto com máscara automática para digitação de moeda em reais (R$),
+// foco visual e seleção de texto ao tocar
+class CurrencyInputField extends StatefulWidget {
   final String label;
   final TextEditingController controller;
   final String? helperText;
@@ -25,6 +26,22 @@ class CurrencyInputField extends StatelessWidget {
   });
 
   @override
+  State<CurrencyInputField> createState() => _CurrencyInputFieldState();
+}
+
+class _CurrencyInputFieldState extends State<CurrencyInputField> {
+  bool _isFocused = false;
+
+  void _selecionarTudo() {
+    if (widget.controller.text.isNotEmpty) {
+      widget.controller.selection = TextSelection(
+        baseOffset: 0,
+        extentOffset: widget.controller.text.length,
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final colors = context.colors;
 
@@ -36,7 +53,7 @@ class CurrencyInputField extends StatelessWidget {
             Icon(LucideIcons.circleDollarSign, color: colors.primary, size: 18),
             const SizedBox(width: AppSpacing.sm),
             Text(
-              label,
+              widget.label,
               style: GoogleFonts.lexend(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
@@ -46,66 +63,82 @@ class CurrencyInputField extends StatelessWidget {
           ],
         ),
         const SizedBox(height: AppSpacing.sm),
-        Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg,
-            vertical: AppSpacing.sm,
-          ),
-          decoration: BoxDecoration(
-            color: colors.inputBackground,
-            borderRadius: AppRadius.lgRadius,
-            border: Border.all(
-              color: errorText != null
-                  ? colors.error
-                  : colors.textHint.withValues(alpha: 0.3),
-              width: 1.5,
+        Focus(
+          onFocusChange: (hasFocus) {
+            setState(() => _isFocused = hasFocus);
+            if (hasFocus) {
+              _selecionarTudo();
+            }
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.lg,
+              vertical: AppSpacing.sm,
             ),
-          ),
-          child: Row(
-            children: [
-              Text(
-                'R\$',
-                style: GoogleFonts.lexend(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                  color: errorText != null ? colors.error : colors.textHint,
-                ),
+            decoration: BoxDecoration(
+              color: colors.inputBackground,
+              borderRadius: AppRadius.lgRadius,
+              border: Border.all(
+                color: widget.errorText != null
+                    ? colors.error
+                    : _isFocused
+                        ? colors.primary
+                        : colors.textHint.withValues(alpha: 0.3),
+                width: 1.5,
               ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: TextField(
-                  controller: controller,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                    _CurrencyTextInputFormatter(
-                      onChanged: onValueChanged,
-                    ),
-                  ],
+            ),
+            child: Row(
+              children: [
+                Text(
+                  'R\$',
                   style: GoogleFonts.lexend(
-                    fontSize: 26,
+                    fontSize: 22,
                     fontWeight: FontWeight.w700,
-                    color: colors.textPrimary,
+                    color: widget.errorText != null
+                        ? colors.error
+                        : _isFocused
+                            ? colors.primary
+                            : colors.textHint,
                   ),
-                  decoration: InputDecoration(
-                    hintText: '0,00',
-                    hintStyle: GoogleFonts.lexend(
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: TextField(
+                    controller: widget.controller,
+                    onTap: _selecionarTudo,
+                    enableInteractiveSelection: true,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      _CurrencyTextInputFormatter(
+                        onChanged: widget.onValueChanged,
+                      ),
+                    ],
+                    style: GoogleFonts.lexend(
                       fontSize: 26,
                       fontWeight: FontWeight.w700,
-                      color: colors.textHint,
+                      color: colors.textPrimary,
                     ),
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    filled: false,
-                    contentPadding: EdgeInsets.zero,
+                    decoration: InputDecoration(
+                      hintText: '0,00',
+                      hintStyle: GoogleFonts.lexend(
+                        fontSize: 26,
+                        fontWeight: FontWeight.w700,
+                        color: colors.textHint,
+                      ),
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      filled: false,
+                      contentPadding: EdgeInsets.zero,
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
-        if (errorText != null) ...[
+        if (widget.errorText != null) ...[
           const SizedBox(height: AppSpacing.xs),
           Row(
             children: [
@@ -113,7 +146,7 @@ class CurrencyInputField extends StatelessWidget {
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
-                  errorText!,
+                  widget.errorText!,
                   style: GoogleFonts.lexend(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
@@ -123,10 +156,10 @@ class CurrencyInputField extends StatelessWidget {
               ),
             ],
           ),
-        ] else if (helperText != null) ...[
+        ] else if (widget.helperText != null) ...[
           const SizedBox(height: AppSpacing.xs),
           Text(
-            helperText!,
+            widget.helperText!,
             style: GoogleFonts.lexend(
               fontSize: 12,
               color: colors.textHint,

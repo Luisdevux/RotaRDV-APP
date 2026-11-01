@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -35,6 +35,7 @@ class _EncerrarViagemPageState extends State<EncerrarViagemPage> {
   final TextEditingController _kmFinalController = TextEditingController();
   double? _kmFinal;
   bool _isSaving = false;
+  bool _isKmFocused = false;
 
   @override
   void initState() {
@@ -238,12 +239,17 @@ class _EncerrarViagemPageState extends State<EncerrarViagemPage> {
           children: [
             const NetworkStatusBar(),
             Expanded(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.all(AppSpacing.xxl),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.all(AppSpacing.xxl),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(minHeight: constraints.maxHeight - (AppSpacing.xxl * 2)),
+                      child: IntrinsicHeight(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
                     ViagemRotaCard(
                       viagem: widget.viagem,
                       veiculo: veiculo,
@@ -269,47 +275,71 @@ class _EncerrarViagemPageState extends State<EncerrarViagemPage> {
                           ],
                         ),
                         const SizedBox(height: AppSpacing.sm),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: colors.inputBackground,
-                            border: Border.all(
-                              color: isKmInvalido ? colors.error : colors.border,
+                        Focus(
+                          onFocusChange: (hasFocus) {
+                            setState(() => _isKmFocused = hasFocus);
+                            if (hasFocus && _kmFinalController.text.isNotEmpty) {
+                              _kmFinalController.selection = TextSelection(
+                                baseOffset: 0,
+                                extentOffset: _kmFinalController.text.length,
+                              );
+                            }
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: colors.inputBackground,
+                              border: Border.all(
+                                color: isKmInvalido
+                                    ? colors.error
+                                    : _isKmFocused
+                                        ? colors.primary
+                                        : colors.border,
+                                width: (_isKmFocused || isKmInvalido) ? 1.5 : 1.0,
+                              ),
+                              borderRadius: AppRadius.lgRadius,
                             ),
-                            borderRadius: AppRadius.lgRadius,
-                          ),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.lg,
-                            vertical: 14,
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: TextField(
-                                  controller: _kmFinalController,
-                                  keyboardType: TextInputType.number,
-                                  inputFormatters: [ThousandsFormatter()],
-                                  style: GoogleFonts.lexend(
-                                    fontSize: 22,
-                                    fontWeight: FontWeight.w700,
-                                    color: colors.textPrimary,
-                                    height: 1.25,
-                                  ),
-                                  decoration: InputDecoration(
-                                    hintText: '000.000',
-                                    hintStyle: GoogleFonts.lexend(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.lg,
+                              vertical: 14,
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: _kmFinalController,
+                                    onTap: () {
+                                      if (_kmFinalController.text.isNotEmpty) {
+                                        _kmFinalController.selection = TextSelection(
+                                          baseOffset: 0,
+                                          extentOffset: _kmFinalController.text.length,
+                                        );
+                                      }
+                                    },
+                                    enableInteractiveSelection: true,
+                                    keyboardType: TextInputType.number,
+                                    inputFormatters: [ThousandsFormatter()],
+                                    style: GoogleFonts.lexend(
                                       fontSize: 22,
                                       fontWeight: FontWeight.w700,
-                                      color: colors.textHint,
+                                      color: colors.textPrimary,
+                                      height: 1.25,
                                     ),
-                                    border: InputBorder.none,
-                                    enabledBorder: InputBorder.none,
-                                    focusedBorder: InputBorder.none,
-                                    contentPadding: EdgeInsets.zero,
-                                    isDense: true,
-                                    filled: false,
+                                    decoration: InputDecoration(
+                                      hintText: '000.000',
+                                      hintStyle: GoogleFonts.lexend(
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.w700,
+                                        color: colors.textHint,
+                                      ),
+                                      border: InputBorder.none,
+                                      enabledBorder: InputBorder.none,
+                                      focusedBorder: InputBorder.none,
+                                      contentPadding: EdgeInsets.zero,
+                                      isDense: true,
+                                      filled: false,
+                                    ),
                                   ),
                                 ),
-                              ),
                               const SizedBox(width: AppSpacing.sm),
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -330,6 +360,7 @@ class _EncerrarViagemPageState extends State<EncerrarViagemPage> {
                             ],
                           ),
                         ),
+                      ),
                         if (isKmInvalido) ...[
                           const SizedBox(height: 6),
                           Row(
@@ -514,6 +545,7 @@ class _EncerrarViagemPageState extends State<EncerrarViagemPage> {
                       ),
                     ),
                     const SizedBox(height: AppSpacing.huge),
+                    const Spacer(),
 
                     // Botão de Confirmação
                     Builder(
@@ -560,9 +592,13 @@ class _EncerrarViagemPageState extends State<EncerrarViagemPage> {
                 ),
               ),
             ),
-          ],
-        ),
+          );
+        },
       ),
-    );
-  }
+    ),
+  ],
+),
+),
+);
+}
 }

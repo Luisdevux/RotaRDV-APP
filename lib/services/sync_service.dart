@@ -13,6 +13,7 @@ import '../models/despesa_collection.dart';
 import '../models/viagem_collection.dart';
 import 'package:path_provider/path_provider.dart';
 import 'storage_cleaner_service.dart';
+import '../core/widgets/app_avatar.dart';
 
 class PendingSyncSummary {
   final int viagensPendentes;
@@ -402,6 +403,56 @@ class SyncService {
         }
       }
     }
+
+    // 3 Upload ou exclusão pendente de foto de perfil do motorista
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userStr = prefs.getString('currentUser');
+      if (userStr != null) {
+        final userData = jsonDecode(userStr);
+        final userId = (userData['_id'] ?? userData['id'])?.toString();
+        if (userId != null && userId.isNotEmpty) {
+          // Pendência de upload
+          final pendingAvatarPath = prefs.getString('pending_avatar_upload_$userId');
+          if (pendingAvatarPath != null && await File(pendingAvatarPath).exists()) {
+            debugPrint('[SyncService] Enviando foto de perfil pendente do usuário $userId...');
+            final uploadRes = await DioClient.uploadFile(
+              '/usuarios/$userId/foto',
+              file: File(pendingAvatarPath),
+              fieldName: 'file',
+            );
+            if (uploadRes.statusCode == 200 || uploadRes.statusCode == 201) {
+              await prefs.remove('pending_avatar_upload_$userId');
+              final resData = uploadRes.data is Map ? uploadRes.data : jsonDecode(uploadRes.body);
+              final newUrl = resData?['data']?['dados']?['foto_perfil'] ??
+                  resData?['dados']?['foto_perfil'] ??
+                  resData?['data']?['foto_perfil'];
+              if (newUrl != null) {
+                userData['foto_perfil'] = newUrl.toString();
+                await prefs.setString('currentUser', jsonEncode(userData));
+                AvatarCacheService.notifyAvatarChanged();
+              }
+              debugPrint('[SyncService] Foto de perfil enviada com sucesso no ciclo de sincronização.');
+            }
+          }
+          // Pendência de exclusão
+          final pendingAvatarDelete = prefs.getBool('pending_avatar_delete_$userId');
+          if (pendingAvatarDelete == true) {
+            debugPrint('[SyncService] Excluindo foto de perfil pendente do usuário $userId...');
+            final delRes = await DioClient.delete('/usuarios/$userId/foto');
+            if (delRes.statusCode == 200 || delRes.statusCode == 204) {
+              await prefs.remove('pending_avatar_delete_$userId');
+              userData['foto_perfil'] = null;
+              await prefs.setString('currentUser', jsonEncode(userData));
+              AvatarCacheService.notifyAvatarChanged();
+              debugPrint('[SyncService] Foto de perfil excluída com sucesso no ciclo de sincronização.');
+            }
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('[SyncService] Erro ao sincronizar foto de perfil: $e');
+    }
   }
 
   // Baixa alterações recentes da nuvem para o banco local Isar
@@ -480,11 +531,9 @@ class SyncService {
           despesa ??= DespesaCollection()..uuid = uuid;
 
           // Localiza ou valida foto física localmente caso ela já exista no aparelho
-          if (despesa.fotoAnexoLocalPath != null && despesa.fotoAnexoLocalPath!.isNotEmpty) {
-            final fotoLocal = await resolverOuRecuperarFotoLocal(uuid, despesa.fotoAnexoLocalPath);
-            if (fotoLocal != null) {
-              despesa.fotoAnexoLocalPath = fotoLocal;
-            }
+          final fotoLocal = await resolverOuRecuperarFotoLocal(uuid, despesa.fotoAnexoLocalPath);
+          if (fotoLocal != null) {
+            despesa.fotoAnexoLocalPath = fotoLocal;
           }
 
           if (despesa.id == Isar.autoIncrement || despesa.statusSincronizacao == 'sincronizado') {
@@ -589,3 +638,4 @@ class SyncService {
     }
   }
 }
+

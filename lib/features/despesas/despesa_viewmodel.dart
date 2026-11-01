@@ -1,5 +1,6 @@
-// lib/features/despesas/despesa_viewmodel.dart
+﻿// lib/features/despesas/despesa_viewmodel.dart
 
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
@@ -71,6 +72,38 @@ class DespesaViewModel extends ChangeNotifier {
   bool _isLoading = false;
   String? _currentViagemId;
   String? errorMessage;
+  StreamSubscription<void>? _despesasWatcherSub;
+  VoidCallback? _syncListener;
+
+  DespesaViewModel() {
+    _syncListener = () {
+      if (_currentViagemId != null) {
+        carregarDespesas(_currentViagemId!);
+      }
+    };
+    _syncService.syncEventNotifier.addListener(_syncListener!);
+  }
+
+  void _iniciarWatcherIsar(String viagemId) {
+    _despesasWatcherSub?.cancel();
+    try {
+      _despesasWatcherSub = _isar.despesaCollections
+          .filter()
+          .viagemIdEqualTo(viagemId)
+          .watchLazy()
+          .listen((_) async {
+        try {
+          final atualizadas = await _buscarDespesasAtivas(viagemId);
+          _despesas = atualizadas;
+          notifyListeners();
+        } catch (e) {
+          debugPrint('[DespesaViewModel] Erro no watcher Isar: ');
+        }
+      });
+    } catch (e) {
+      debugPrint('[DespesaViewModel] Nao foi possivel iniciar watcher Isar: ');
+    }
+  }
 
   List<DespesaCollection> get despesas => _despesas;
   bool get isLoading => _isLoading;
@@ -180,6 +213,7 @@ class DespesaViewModel extends ChangeNotifier {
   // Carrega as despesas registradas para a rota especificada
   Future<void> carregarDespesas(String viagemId) async {
     _currentViagemId = viagemId;
+    _iniciarWatcherIsar(viagemId);
     _isLoading = true;
     errorMessage = null;
     notifyListeners();
@@ -501,4 +535,12 @@ class DespesaViewModel extends ChangeNotifier {
     return arquivoSalvo.path;
   }
 
+  @override
+  void dispose() {
+    _despesasWatcherSub?.cancel();
+    if (_syncListener != null) {
+      _syncService.syncEventNotifier.removeListener(_syncListener!);
+    }
+    super.dispose();
+  }
 }

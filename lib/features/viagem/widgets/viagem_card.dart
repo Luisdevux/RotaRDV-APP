@@ -11,6 +11,9 @@ import '../../../models/viagem_collection.dart';
 
 // Componente modular e desacoplado que renderiza o resumo visual de uma viagem, incluindo trajeto de origem/destino, status operacional, data e odômetros.
 class ViagemCard extends StatelessWidget {
+  static final _dateFormat = DateFormat('dd/MM/yyyy • HH:mm');
+  static final _kmFormat = NumberFormat('#,###', 'pt_BR');
+
   final ViagemCollection viagem;
   final VoidCallback? onTap;
 
@@ -27,9 +30,10 @@ class ViagemCard extends StatelessWidget {
     final isConcluida = viagem.status == ViagemStatus.concluida || viagem.status == 'concluida';
     final isCancelada = viagem.status == ViagemStatus.cancelada;
     final localDt = viagem.dataInicio.toLocal();
-    final dateStr = DateFormat('dd/MM/yyyy • HH:mm').format(localDt);
+    final dateStr = _dateFormat.format(localDt);
 
-    return AppCard(
+    return RepaintBoundary(
+      child: AppCard(
       onTap: onTap,
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -90,18 +94,19 @@ class ViagemCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'KM inicial: ${NumberFormat('#,###', 'pt_BR').format(viagem.kmInicial.toInt())} KM',
+                'KM inicial: ${_kmFormat.format(viagem.kmInicial.toInt())} KM',
                 style: GoogleFonts.lexend(fontSize: 12, color: colors.textSecondary),
               ),
               if (viagem.kmFinal != null)
                 Text(
-                  'KM final: ${NumberFormat('#,###', 'pt_BR').format(viagem.kmFinal!.toInt())} KM',
+                  'KM final: ${_kmFormat.format(viagem.kmFinal!.toInt())} KM',
                   style: GoogleFonts.lexend(fontSize: 12, color: colors.textSecondary),
                 ),
             ],
           ),
         ],
       ),
+    ),
     );
   }
 }

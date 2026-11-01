@@ -1,5 +1,6 @@
 // lib/features/perfil/perfil_page.dart
 
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -53,8 +54,57 @@ class _PerfilPageState extends State<PerfilPage> {
       _isSyncing = true;
     });
 
+    final messenger = ScaffoldMessenger.of(context);
+    final colors = context.colors;
     final syncService = SyncService();
-    await syncService.syncAll();
+
+    // 1. Verifica conectividade do aparelho antes de tentar sincronizar
+    final connectivity = await Connectivity().checkConnectivity();
+    final isDeviceOffline = connectivity.contains(ConnectivityResult.none) || connectivity.isEmpty;
+
+    if (isDeviceOffline) {
+      final summary = await syncService.getPendingSyncSummary();
+      if (!mounted) return;
+      setState(() {
+        _isSyncing = false;
+      });
+
+      messenger.hideCurrentSnackBar();
+      messenger.showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(LucideIcons.wifiOff, color: Colors.white, size: 18),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  summary.hasPending
+                      ? 'Você está sem conexão com a internet. Há ${summary.totalPendencias} item(ns) salvos no aparelho que serão sincronizados assim que a conexão retornar.'
+                      : 'Você está offline. O aplicativo sincronizará automaticamente com o servidor assim que a conexão retornar.',
+                  style: GoogleFonts.lexend(fontSize: 13, color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: colors.warning,
+          duration: const Duration(seconds: 4),
+        ),
+      );
+      return;
+    }
+
+    // 2. Se há sincronização paralela ativa, aguarda finalizar; caso contrário, dispara
+    bool syncSuccess;
+    if (syncService.isSyncing) {
+      while (syncService.isSyncing && mounted) {
+        await Future.delayed(const Duration(milliseconds: 200));
+      }
+      final checkSummary = await syncService.getPendingSyncSummary();
+      syncSuccess = !checkSummary.hasPending;
+    } else {
+      syncSuccess = await syncService.syncAll(maxRetries: 2);
+    }
+
     final summary = await syncService.getPendingSyncSummary();
 
     if (mounted) {
@@ -64,23 +114,51 @@ class _PerfilPageState extends State<PerfilPage> {
         _isSyncing = false;
       });
 
-      if (!summary.hasPending) {
-        ScaffoldMessenger.of(context).showSnackBar(
+      messenger.hideCurrentSnackBar();
+
+      if (!syncSuccess) {
+        // Falha de comunicação ou queda de servidor durante a tentativa
+        messenger.showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(LucideIcons.cloudOff, color: Colors.white, size: 18),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    summary.hasPending
+                        ? 'Não foi possível contatar o servidor. Há ${summary.totalPendencias} item(ns) salvos no aparelho que serão sincronizados automaticamente assim que o sinal estabilizar.'
+                        : 'Não foi possível contatar o servidor no momento. Seus dados estão seguros e o aplicativo tentará novamente em segundo plano.',
+                    style: GoogleFonts.lexend(fontSize: 13, color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: colors.warning,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      } else if (!summary.hasPending) {
+        messenger.showSnackBar(
           SnackBar(
             content: const Row(
               children: [
                 Icon(LucideIcons.checkCircle2, color: Colors.white, size: 18),
                 SizedBox(width: 8),
                 Expanded(
-                  child: Text('Todos os dados e comprovantes estão sincronizados!'),
+                  child: Text(
+                    'Todos os dados e comprovantes estão sincronizados!',
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
               ],
             ),
-            backgroundColor: context.colors.success,
+            backgroundColor: colors.success,
+            duration: const Duration(seconds: 3),
           ),
         );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(
             content: Row(
               children: [
@@ -89,13 +167,15 @@ class _PerfilPageState extends State<PerfilPage> {
                 Expanded(
                   child: Text(
                     summary.fotosPendentes > 0
-                        ? 'Dados enviados, mas ${summary.fotosPendentes} foto(s) de comprovante aguardam o servidor de anexos.'
-                        : 'Sincronização parcial. ${summary.totalPendencias} item(ns) pendente(s).',
+                        ? 'Dados enviados com sucesso, mas ${summary.fotosPendentes} foto(s) de comprovante aguardam envio.'
+                        : 'Sincronização parcial realizada. Há ${summary.totalPendencias} item(ns) pendente(s).',
+                    style: const TextStyle(color: Colors.white),
                   ),
                 ),
               ],
             ),
-            backgroundColor: context.colors.warning,
+            backgroundColor: colors.warning,
+            duration: const Duration(seconds: 4),
           ),
         );
       }
@@ -157,6 +237,7 @@ class _PerfilPageState extends State<PerfilPage> {
     final veiculo = homeVM.veiculo;
 
     final userName = user?['nome'] ?? 'Motorista';
+    final userId = (user?['_id'] ?? user?['id'])?.toString();
     final userEmail = user?['email'] ?? 'motorista@empresa.com';
     final userCpf = user?['cpf'] as String?;
     final userCnh = user?['cnh'] as String?;
@@ -206,6 +287,7 @@ class _PerfilPageState extends State<PerfilPage> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     PerfilMotoristaCard(
+                      userId: userId,
                       userName: userName,
                       userEmail: userEmail,
                       userPhotoUrl: userPhotoUrl,
