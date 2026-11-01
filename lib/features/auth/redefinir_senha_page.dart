@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_colors.dart';
+import '../../core/widgets/network_status_bar.dart';
 import '../../routes.dart';
 import 'auth_viewmodel.dart';
 
@@ -123,13 +124,17 @@ class _RedefinirSenhaPageState extends State<RedefinirSenhaPage> {
       body: AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
-          systemNavigationBarColor: Theme.of(context).colorScheme.surface,
+          systemNavigationBarColor: Colors.black,
+          systemNavigationBarDividerColor: Colors.black,
           statusBarIconBrightness: Brightness.light,
-          systemNavigationBarIconBrightness: Brightness.dark,
+          systemNavigationBarIconBrightness: Brightness.light,
         ),
         child: CustomScrollView(
           physics: const ClampingScrollPhysics(),
           slivers: [
+            const SliverToBoxAdapter(
+              child: SafeArea(bottom: false, child: NetworkStatusBar()),
+            ),
             // Header Section
             SliverToBoxAdapter(
               child: Container(

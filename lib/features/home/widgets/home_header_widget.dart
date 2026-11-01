@@ -2,17 +2,19 @@
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/app_avatar.dart';
 
-// Componente modular para exibição da identificação do condutor, foto de perfil e os dados essenciais do veículo vinculado à operação
+// Componente modular para exibição da identificação do condutor, foto de perfil com cache offline e os dados essenciais do veículo
 class HomeHeaderWidget extends StatelessWidget {
+  final String? userId;
   final String userName;
   final String? userPhotoUrl;
   final Map<String, dynamic>? veiculo;
 
   const HomeHeaderWidget({
     super.key,
+    this.userId,
     required this.userName,
     this.userPhotoUrl,
     this.veiculo,
@@ -32,24 +34,11 @@ class HomeHeaderWidget extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl),
       child: Row(
         children: [
-          Container(
-            width: 52,
-            height: 52,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-            ),
-            child: ClipOval(
-              child: userPhotoUrl != null
-                  ? Image.network(
-                      userPhotoUrl!,
-                      width: 52,
-                      height: 52,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) =>
-                          _buildAvatarFallback(colors),
-                    )
-                  : _buildAvatarFallback(colors),
-            ),
+          AppAvatar(
+            userId: userId,
+            photoUrl: userPhotoUrl,
+            name: userName,
+            size: 52,
           ),
           const SizedBox(width: AppSpacing.md),
           Expanded(
@@ -79,17 +68,6 @@ class HomeHeaderWidget extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildAvatarFallback(AppColorsExtension colors) {
-    return Container(
-      color: colors.primary.withValues(alpha: 0.12),
-      child: Icon(
-        LucideIcons.user,
-        color: colors.primary,
-        size: 36,
       ),
     );
   }

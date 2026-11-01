@@ -1,6 +1,9 @@
 // lib/features/auth/auth_viewmodel.dart
 
+import 'dart:io';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
+import '../../core/widgets/app_avatar.dart';
 import '../../services/auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
@@ -240,6 +243,92 @@ class AuthViewModel extends ChangeNotifier {
       debugPrint('[AuthViewModel] Não foi possível atualizar perfil da API (offline ou erro): $e');
     } finally {
       _isFetchingProfile = false;
+    }
+  }
+
+  // Atualiza foto de perfil: salva em disco para suporte offline imediato e envia para a API
+  Future<bool> updateProfilePhoto(File imageFile) async {
+    final userId = (currentUser?['_id'] ?? currentUser?['id'])?.toString();
+    if (userId == null || userId.isEmpty) return false;
+
+    // 1. Salva imediatamente em disco local para disponibilidade offline
+    final localAvatar = await AvatarCacheService.saveLocalAvatar(userId, imageFile);
+    notifyListeners();
+
+    // 2. Se offline, salva flag de pendência para sincronização posterior
+    final prefs = await SharedPreferences.getInstance();
+    try {
+      final connectivity = await Connectivity().checkConnectivity();
+      final isOffline = connectivity.contains(ConnectivityResult.none) || connectivity.isEmpty;
+
+      if (isOffline) {
+        await prefs.setString('pending_avatar_upload_$userId', localAvatar.path);
+        return false;
+      }
+
+      // 3. Envia para o endpoint /usuarios/:id/foto
+      final res = await DioClient.uploadFile(
+        '/usuarios/$userId/foto',
+        file: localAvatar,
+        fieldName: 'file',
+      );
+
+      if (res.statusCode == 200 || res.statusCode == 201) {
+        await prefs.remove('pending_avatar_upload_$userId');
+        final data = res.data is Map ? res.data : jsonDecode(res.body);
+        final newUrl = data?['data']?['dados']?['foto_perfil'] ??
+            data?['dados']?['foto_perfil'] ??
+            data?['data']?['foto_perfil'];
+        if (newUrl != null) {
+          currentUser = {...?currentUser, 'foto_perfil': newUrl.toString()};
+          await prefs.setString('currentUser', jsonEncode(currentUser));
+          notifyListeners();
+        }
+        return true;
+      } else {
+        await prefs.setString('pending_avatar_upload_$userId', localAvatar.path);
+        return false;
+      }
+    } catch (e) {
+      debugPrint('[AuthViewModel] Falha ao enviar foto para API, agendada para sync: $e');
+      await prefs.setString('pending_avatar_upload_$userId', localAvatar.path);
+      return false;
+    }
+  }
+
+  // Remove foto de perfil do motorista localmente e no servidor
+  Future<bool> deleteProfilePhoto() async {
+    final userId = (currentUser?['_id'] ?? currentUser?['id'])?.toString();
+    if (userId == null || userId.isEmpty) return false;
+
+    await AvatarCacheService.deleteLocalAvatar(userId);
+    currentUser = {...?currentUser, 'foto_perfil': null};
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('currentUser', jsonEncode(currentUser));
+    await prefs.remove('pending_avatar_upload_$userId');
+    notifyListeners();
+
+    try {
+      final connectivity = await Connectivity().checkConnectivity();
+      final isOffline = connectivity.contains(ConnectivityResult.none) || connectivity.isEmpty;
+
+      if (isOffline) {
+        await prefs.setBool('pending_avatar_delete_$userId', true);
+        return false;
+      }
+
+      final res = await DioClient.delete('/usuarios/$userId/foto');
+      if (res.statusCode == 200 || res.statusCode == 204) {
+        await prefs.remove('pending_avatar_delete_$userId');
+        return true;
+      } else {
+        await prefs.setBool('pending_avatar_delete_$userId', true);
+        return false;
+      }
+    } catch (e) {
+      debugPrint('[AuthViewModel] Falha ao remover foto na API, agendada para sync: $e');
+      await prefs.setBool('pending_avatar_delete_$userId', true);
+      return false;
     }
   }
 

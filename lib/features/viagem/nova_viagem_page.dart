@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -9,6 +9,7 @@ import '../../core/database/local_database.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/widgets/app_dialog.dart';
 import '../../core/widgets/cidade_estado_picker.dart';
+import '../../core/widgets/network_status_bar.dart';
 import '../../core/widgets/odometer_input_field.dart';
 import '../../models/viagem_collection.dart';
 import '../../services/sync_service.dart';
@@ -340,7 +341,11 @@ class _NovaViagemPageState extends State<NovaViagemPage> {
         ),
       ),
       body: SafeArea(
-        child: LayoutBuilder(
+        child: Column(
+          children: [
+            const NetworkStatusBar(),
+            Expanded(
+              child: LayoutBuilder(
           builder: (context, constraints) {
             return SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
@@ -605,6 +610,9 @@ class _NovaViagemPageState extends State<NovaViagemPage> {
               ),
             );
           },
+        ),
+            ),
+          ],
         ),
       ),
     );

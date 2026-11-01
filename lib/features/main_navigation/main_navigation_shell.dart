@@ -2,6 +2,7 @@
 
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:isar/isar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -31,11 +32,13 @@ class MainNavigationShell extends StatefulWidget {
 
 class _MainNavigationShellState extends State<MainNavigationShell> {
   late int _currentIndex;
+  final Set<int> _loadedTabs = {};
 
   @override
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
+    _loadedTabs.add(_currentIndex);
     _verificarFotoPendenteCamera();
   }
 
@@ -95,7 +98,9 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
   }
 
   void switchTab(int index) {
+    if (_currentIndex == index) return;
     setState(() {
+      _loadedTabs.add(index);
       _currentIndex = index;
     });
   }
@@ -104,25 +109,46 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
   Widget build(BuildContext context) {
     final colors = context.colors;
 
-    return Scaffold(
-      backgroundColor: colors.background,
-      body: IndexedStack(
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        systemNavigationBarColor: Colors.black,
+        systemNavigationBarDividerColor: Colors.black,
+        systemNavigationBarIconBrightness: Brightness.light,
+      ),
+      child: Scaffold(
+        backgroundColor: colors.background,
+        body: IndexedStack(
         index: _currentIndex,
         children: [
-          HomePage(onNavigateToTab: switchTab),
-          ViagemTabPage(onNavigateToTab: switchTab),
-          ViagensListPage(isTab: true, onNavigateToTab: switchTab),
-          PerfilPage(isTab: true, onNavigateToTab: switchTab),
+          RepaintBoundary(
+            child: _loadedTabs.contains(0)
+                ? HomePage(onNavigateToTab: switchTab)
+                : const SizedBox.shrink(),
+          ),
+          RepaintBoundary(
+            child: _loadedTabs.contains(1)
+                ? ViagemTabPage(onNavigateToTab: switchTab)
+                : const SizedBox.shrink(),
+          ),
+          RepaintBoundary(
+            child: _loadedTabs.contains(2)
+                ? ViagensListPage(isTab: true, onNavigateToTab: switchTab)
+                : const SizedBox.shrink(),
+          ),
+          RepaintBoundary(
+            child: _loadedTabs.contains(3)
+                ? PerfilPage(isTab: true, onNavigateToTab: switchTab)
+                : const SizedBox.shrink(),
+          ),
         ],
       ),
       bottomNavigationBar: CustomBottomNavBar(
         currentIndex: _currentIndex,
         onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
+          switchTab(index);
         },
       ),
-    );
-  }
+    ),
+  );
+}
 }

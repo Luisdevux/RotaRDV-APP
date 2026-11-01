@@ -1,4 +1,4 @@
-// lib/features/home/home_page.dart
+﻿// lib/features/home/home_page.dart
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -68,6 +68,7 @@ class _HomePageState extends State<HomePage> {
     final homeVM = context.watch<HomeViewModel>();
 
     final user = authVM.currentUser;
+    final userId = (user?['_id'] ?? user?['id'])?.toString();
     final userName = user?['nome'] ?? 'Motorista';
     final userPhotoUrl = user?['foto_perfil'];
 
@@ -91,6 +92,7 @@ class _HomePageState extends State<HomePage> {
             const SizedBox(height: AppSpacing.lg),
 
             HomeHeaderWidget(
+              userId: userId,
               userName: userName,
               userPhotoUrl: userPhotoUrl,
               veiculo: homeVM.veiculo,
