@@ -5,8 +5,9 @@ import 'package:google_fonts/google_fonts.dart';
 import '../theme/app_theme.dart';
 import 'thousands_formatter.dart';
 
-// Iput personalizado para odômetro, com ícone, label, campo de texto e unidade de medida (KM).
-class OdometerInputField extends StatelessWidget {
+// Input personalizado para odômetro, com ícone, label, campo de texto, unidade (KM),
+// foco visual e seleção automática do valor ao tocar
+class OdometerInputField extends StatefulWidget {
   final String label;
   final IconData icon;
   final TextEditingController controller;
@@ -25,6 +26,22 @@ class OdometerInputField extends StatelessWidget {
   });
 
   @override
+  State<OdometerInputField> createState() => _OdometerInputFieldState();
+}
+
+class _OdometerInputFieldState extends State<OdometerInputField> {
+  bool _isFocused = false;
+
+  void _selecionarTudo() {
+    if (widget.controller.text.isNotEmpty) {
+      widget.controller.selection = TextSelection(
+        baseOffset: 0,
+        extentOffset: widget.controller.text.length,
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final colors = context.colors;
 
@@ -33,10 +50,10 @@ class OdometerInputField extends StatelessWidget {
       children: [
         Row(
           children: [
-            Icon(icon, color: colors.primary, size: 18),
+            Icon(widget.icon, color: colors.primary, size: 18),
             const SizedBox(width: AppSpacing.sm),
             Text(
-              label,
+              widget.label,
               style: GoogleFonts.lexend(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
@@ -46,72 +63,87 @@ class OdometerInputField extends StatelessWidget {
           ],
         ),
         const SizedBox(height: AppSpacing.sm),
-        Container(
-          decoration: BoxDecoration(
-            color: colors.inputBackground,
-            border: Border.all(
-              color: errorText != null ? colors.error : colors.border,
+        Focus(
+          onFocusChange: (hasFocus) {
+            setState(() => _isFocused = hasFocus);
+            if (hasFocus) {
+              _selecionarTudo();
+            }
+          },
+          child: Container(
+            decoration: BoxDecoration(
+              color: colors.inputBackground,
+              border: Border.all(
+                color: widget.errorText != null
+                    ? colors.error
+                    : _isFocused
+                        ? colors.primary
+                        : colors.border,
+                width: (_isFocused || widget.errorText != null) ? 1.5 : 1.0,
+              ),
+              borderRadius: AppRadius.lgRadius,
             ),
-            borderRadius: AppRadius.lgRadius,
-          ),
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg,
-            vertical: 14,
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: controller,
-                  onChanged: onChanged,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [ThousandsFormatter()],
-                  style: GoogleFonts.lexend(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: colors.textPrimary,
-                    height: 1.25,
-                  ),
-                  decoration: InputDecoration(
-                    hintText: hintText,
-                    hintStyle: GoogleFonts.lexend(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.lg,
+              vertical: 14,
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: widget.controller,
+                    onChanged: widget.onChanged,
+                    onTap: _selecionarTudo,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [ThousandsFormatter()],
+                    enableInteractiveSelection: true,
+                    style: GoogleFonts.lexend(
                       fontSize: 22,
                       fontWeight: FontWeight.w700,
-                      color: colors.textHint,
+                      color: colors.textPrimary,
+                      height: 1.25,
                     ),
-                    border: InputBorder.none,
-                    enabledBorder: InputBorder.none,
-                    focusedBorder: InputBorder.none,
-                    contentPadding: EdgeInsets.zero,
-                    isDense: true,
-                    filled: false,
+                    decoration: InputDecoration(
+                      hintText: widget.hintText,
+                      hintStyle: GoogleFonts.lexend(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w700,
+                        color: colors.textHint,
+                      ),
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      contentPadding: EdgeInsets.zero,
+                      isDense: true,
+                      filled: false,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: colors.cardBackground,
-                  borderRadius: AppRadius.xsRadius,
-                  border: Border.all(color: colors.borderSubtle),
-                ),
-                child: Text(
-                  'KM',
-                  style: GoogleFonts.lexend(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: colors.textSecondary,
+                const SizedBox(width: AppSpacing.sm),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: colors.cardBackground,
+                    borderRadius: AppRadius.xsRadius,
+                    border: Border.all(color: colors.borderSubtle),
+                  ),
+                  child: Text(
+                    'KM',
+                    style: GoogleFonts.lexend(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: colors.textSecondary,
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
-        if (errorText != null) ...[
+        if (widget.errorText != null) ...[
           const SizedBox(height: AppSpacing.xs),
           Text(
-            errorText!,
+            widget.errorText!,
             style: GoogleFonts.lexend(
               fontSize: 12,
               fontWeight: FontWeight.w500,
