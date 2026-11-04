@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../theme/app_theme.dart';
+import '../utils/string_utils.dart';
 import '../../services/estado_cidade_service.dart';
 
 class CidadeEstadoPicker extends StatelessWidget {
@@ -185,7 +186,7 @@ class _CidadeEstadoBottomSheetState extends State<_CidadeEstadoBottomSheet> {
   }
 
   void _filterList() {
-    final query = _searchController.text.trim().toLowerCase();
+    final query = _searchController.text.trim();
 
     if (_currentStep == _Step.selecionarEstado) {
       final todosEstados = _service.getEstados();
@@ -193,9 +194,9 @@ class _CidadeEstadoBottomSheetState extends State<_CidadeEstadoBottomSheet> {
         _filteredEstados = todosEstados;
       } else {
         _filteredEstados = todosEstados.where((e) {
-          final nome = e['name'].toString().toLowerCase();
-          final sigla = e['sigla'].toString().toLowerCase();
-          return nome.contains(query) || sigla.contains(query);
+          final nome = e['name'].toString();
+          final sigla = e['sigla'].toString();
+          return StringUtils.contemTermos(nome, query) || StringUtils.contemTermos(sigla, query);
         }).toList();
       }
     } else {

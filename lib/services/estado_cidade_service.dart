@@ -3,6 +3,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import '../core/utils/string_utils.dart';
 
 class _IbgeParsedData {
   final List<Map<String, dynamic>> estados;
@@ -107,28 +108,14 @@ class EstadoCidadeService {
 
   // Busca cidades por texto (insensível a maiúsculas/minúsculas e acentos)
   List<Map<String, dynamic>> buscarCidades(String query, {String? estadoSigla}) {
-    final queryNormalizada = _removerAcentos(query.toLowerCase().trim());
-    if (queryNormalizada.isEmpty) {
+    if (query.trim().isEmpty) {
       return estadoSigla != null ? getCidadesPorEstado(estadoSigla) : [];
     }
 
     final listaBase = estadoSigla != null ? getCidadesPorEstado(estadoSigla) : _cidades;
 
     return listaBase.where((cidade) {
-      final nomeNormalizado = _removerAcentos(cidade['name'].toString().toLowerCase());
-      return nomeNormalizado.contains(queryNormalizada);
+      return StringUtils.contemTermos(cidade['name']?.toString(), query);
     }).toList();
-  }
-
-  // Utilitário para remover acentos e facilitar a digitação do motorista
-  static String _removerAcentos(String str) {
-    const comAcento = 'ÀÁÂÃÄÅàáâãäåÒÓÔÕÖØòóôõöøÈÉÊËèéêëðÇçÌÍÎÏìíîïÙÚÛÜùúûüÑñŠšŸÿýŽž';
-    const semAcento = 'AAAAAAaaaaaaOOOOOOooooooEEEEeeeeeCcIIIIiiiiUUUUuuuuNnSsYyyZz';
-
-    String resultado = str;
-    for (int i = 0; i < comAcento.length; i++) {
-      resultado = resultado.replaceAll(comAcento[i], semAcento[i]);
-    }
-    return resultado;
   }
 }

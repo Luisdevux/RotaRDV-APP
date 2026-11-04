@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/string_utils.dart';
 import '../../core/widgets/custom_refresh_indicator.dart';
 import '../../core/widgets/network_status_bar.dart';
 import '../../models/viagem_collection.dart';
@@ -72,10 +73,9 @@ class _ViagensListPageState extends State<ViagensListPage> {
   }
 
   bool _matchesSearch(ViagemCollection viagem) {
-    if (_searchQuery.isEmpty) return true;
-    final origem = '${viagem.origemCidade} ${viagem.origemEstado}'.toLowerCase();
-    final destino = '${viagem.destinoCidade} ${viagem.destinoEstado}'.toLowerCase();
-    return origem.contains(_searchQuery) || destino.contains(_searchQuery);
+    if (_searchQuery.trim().isEmpty) return true;
+    final rotaCompleta = '${viagem.origemCidade} ${viagem.origemEstado} ${viagem.destinoCidade} ${viagem.destinoEstado}';
+    return StringUtils.contemTermos(rotaCompleta, _searchQuery);
   }
 
   String _getStatusLabel(String status) {
