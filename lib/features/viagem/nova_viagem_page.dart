@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -7,6 +7,7 @@ import 'package:uuid/uuid.dart';
 import 'package:isar/isar.dart';
 import '../../core/database/local_database.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/string_utils.dart';
 import '../../core/widgets/app_dialog.dart';
 import '../../core/widgets/cidade_estado_picker.dart';
 import '../../core/widgets/network_status_bar.dart';
@@ -89,7 +90,7 @@ class _NovaViagemPageState extends State<NovaViagemPage> {
     if (_origemCidade == null || _origemUF == null || _destinoCidade == null || _destinoUF == null) {
       return false;
     }
-    return _origemCidade!.trim().toLowerCase() == _destinoCidade!.trim().toLowerCase() &&
+    return StringUtils.normalizarParaBusca(_origemCidade) == StringUtils.normalizarParaBusca(_destinoCidade) &&
         _origemUF!.trim().toUpperCase() == _destinoUF!.trim().toUpperCase();
   }
 
