@@ -349,10 +349,11 @@ class _ViagensListPageState extends State<ViagensListPage> {
                                     ),
                                   ),
                                 ),
-                                const Spacer(),
-                                Flexible(
+                                const SizedBox(width: AppSpacing.sm),
+                                Expanded(
                                   child: Text(
                                     '${viagensFiltradas.length} ${viagensFiltradas.length == 1 ? "viagem" : "viagens"}',
+                                    textAlign: TextAlign.end,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: GoogleFonts.lexend(
