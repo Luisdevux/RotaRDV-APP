@@ -10,6 +10,7 @@ import '../../core/widgets/custom_refresh_indicator.dart';
 import '../../core/widgets/network_status_bar.dart';
 import '../../models/despesa_collection.dart';
 import '../../models/viagem_collection.dart';
+import '../../services/sync_service.dart';
 import '../home/home_viewmodel.dart';
 import 'despesa_viewmodel.dart';
 import 'nova_despesa_page.dart';
@@ -109,51 +110,71 @@ class _DespesasViagemPageState extends State<DespesasViagemPage> {
               child: targetViagemId == null
                   ? _buildSemViagemAtiva(colors)
                   : CustomRefreshIndicator(
-                      onRefresh: () async => _carregar(),
-                      child: Column(
-                        children: [
-                          // Header com Resumo de Gastos e Eficiência
-                          DespesasResumoGastosCard(
-                            despesaVM: despesaVM,
-                            viagem: viagemObj,
+                      onRefresh: () async {
+                        await SyncService().syncAll();
+                        if (mounted) {
+                          _carregar();
+                        }
+                      },
+                      child: CustomScrollView(
+                        physics: const BouncingScrollPhysics(
+                          parent: AlwaysScrollableScrollPhysics(),
+                        ),
+                        slivers: [
+                          SliverToBoxAdapter(
+                            child: Column(
+                              children: [
+                                // Header com Resumo de Gastos e Eficiência
+                                DespesasResumoGastosCard(
+                                  despesaVM: despesaVM,
+                                  viagem: viagemObj,
+                                ),
+
+                                const SizedBox(height: AppSpacing.sm),
+
+                                // Filtro por Categoria
+                                DespesasFiltroCategoriasBar(
+                                  filtroSelecionado: _filtroTipo,
+                                  onFiltroChanged: (cat) {
+                                    setState(() {
+                                      _filtroTipo = cat;
+                                    });
+                                  },
+                                ),
+
+                                const SizedBox(height: AppSpacing.sm),
+                              ],
+                            ),
                           ),
-
-                          const SizedBox(height: AppSpacing.sm),
-
-                          // Filtro por Categoria
-                          DespesasFiltroCategoriasBar(
-                            filtroSelecionado: _filtroTipo,
-                            onFiltroChanged: (cat) {
-                              setState(() {
-                                _filtroTipo = cat;
-                              });
-                            },
-                          ),
-
-                          const SizedBox(height: AppSpacing.sm),
-
-                          // Lista de Despesas
-                          Expanded(
-                            child: despesasFiltradas.isEmpty
-                                ? _buildListaVazia(colors, isViagemFinalizada)
-                                : ListView.builder(
-                                    physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
-                                    padding: const EdgeInsets.all(AppSpacing.lg),
-                                    itemCount: despesasFiltradas.length,
-                                    itemBuilder: (context, index) {
-                                      final despesa = despesasFiltradas[index];
-                                      return DespesaCard(
+                          if (despesasFiltradas.isEmpty)
+                            SliverFillRemaining(
+                              hasScrollBody: false,
+                              child: _buildListaVazia(colors, isViagemFinalizada),
+                            )
+                          else
+                            SliverPadding(
+                              padding: const EdgeInsets.fromLTRB(
+                                AppSpacing.lg,
+                                AppSpacing.lg,
+                                AppSpacing.lg,
+                                88,
+                              ),
+                              sliver: SliverList.builder(
+                                itemCount: despesasFiltradas.length,
+                                itemBuilder: (context, index) {
+                                  final despesa = despesasFiltradas[index];
+                                  return DespesaCard(
+                                    despesa: despesa,
+                                    onTap: () {
+                                      ComprovanteViewerModal.show(
+                                        context,
                                         despesa: despesa,
-                                        onTap: () {
-                                          ComprovanteViewerModal.show(
-                                            context,
-                                            despesa: despesa,
-                                          );
-                                        },
                                       );
                                     },
-                                  ),
-                          ),
+                                  );
+                                },
+                              ),
+                            ),
                         ],
                       ),
                     ),
@@ -189,45 +210,49 @@ class _DespesasViagemPageState extends State<DespesasViagemPage> {
 
   Widget _buildListaVazia(AppColorsExtension colors, bool isViagemFinalizada) {
     return Center(
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.xxl),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.xl),
-                decoration: BoxDecoration(
-                  color: colors.surfaceOverlay,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(LucideIcons.receiptText, size: 44, color: colors.textHint),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.xxl,
+          AppSpacing.xl,
+          AppSpacing.xxl,
+          88,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.xl),
+              decoration: BoxDecoration(
+                color: colors.surfaceOverlay,
+                shape: BoxShape.circle,
               ),
-              const SizedBox(height: AppSpacing.lg),
-              Text(
-                'Nenhum gasto registrado',
-                style: GoogleFonts.lexend(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: colors.textPrimary,
-                ),
+              child: Icon(LucideIcons.receiptText, size: 44, color: colors.textHint),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            Text(
+              'Nenhum gasto registrado',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.lexend(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: colors.textPrimary,
               ),
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                _filtroTipo == 'TODOS'
-                    ? (isViagemFinalizada
-                        ? 'Nenhuma despesa foi registrada nesta viagem.'
-                        : 'Toque no botão abaixo para lançar uma despesa.')
-                    : 'Nenhuma despesa encontrada para esta categoria.',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.lexend(
-                  fontSize: 13,
-                  color: colors.textMuted,
-                ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              _filtroTipo == 'TODOS'
+                  ? (isViagemFinalizada
+                      ? 'Nenhuma despesa foi registrada nesta viagem.'
+                      : 'Toque no botão abaixo para lançar uma despesa.')
+                  : 'Nenhuma despesa encontrada para esta categoria.',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.lexend(
+                fontSize: 13,
+                color: colors.textMuted,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -235,9 +260,11 @@ class _DespesasViagemPageState extends State<DespesasViagemPage> {
 
   Widget _buildSemViagemAtiva(AppColorsExtension colors) {
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.all(AppSpacing.xxl),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
@@ -251,6 +278,7 @@ class _DespesasViagemPageState extends State<DespesasViagemPage> {
             const SizedBox(height: AppSpacing.lg),
             Text(
               'Nenhuma viagem ativa',
+              textAlign: TextAlign.center,
               style: GoogleFonts.lexend(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,

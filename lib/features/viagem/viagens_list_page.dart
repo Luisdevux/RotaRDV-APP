@@ -134,248 +134,272 @@ class _ViagensListPageState extends State<ViagensListPage> {
         child: Column(
           children: [
             const NetworkStatusBar(),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.sm, AppSpacing.lg, 0),
-              child: Column(
-                children: [
-                  // Campo de Pesquisa
-                  Container(
-                    decoration: BoxDecoration(
-                      color: colors.inputBackground,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: colors.borderSubtle),
-                    ),
-                    child: TextField(
-                      controller: _searchController,
-                      style: GoogleFonts.lexend(fontSize: 14, color: colors.textPrimary),
-                      decoration: InputDecoration(
-                        hintText: 'Buscar por cidade ou estado...',
-                        hintStyle: GoogleFonts.lexend(fontSize: 13, color: colors.textHint),
-                        prefixIcon: Icon(LucideIcons.search, size: 18, color: colors.textHint),
-                        suffixIcon: _searchQuery.isNotEmpty
-                            ? IconButton(
-                                icon: Icon(LucideIcons.x, size: 16, color: colors.textHint),
-                                onPressed: () {
-                                  _searchController.clear();
-                                },
-                              )
-                            : null,
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                        isDense: true,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-
-                  // Filtros por Período e Status
-                  Row(
-                    children: [
-                      PopupMenuButton<String>(
-                        onSelected: (val) {
-                          setState(() {
-                            _filtroPeriodo = val;
-                          });
-                        },
-                        color: colors.cardBackground,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          side: BorderSide(color: colors.borderSubtle),
-                        ),
-                        itemBuilder: (context) => [
-                          PopupMenuItem(
-                            value: 'todos',
-                            child: Text(
-                              'Todas as datas (limpar)',
-                              style: GoogleFonts.lexend(
-                                color: !isPeriodoAtivo ? colors.primary : colors.textPrimary,
-                                fontWeight: !isPeriodoAtivo ? FontWeight.bold : FontWeight.normal,
-                              ),
-                            ),
-                          ),
-                          PopupMenuItem(
-                            value: 'este_mes',
-                            child: Text(
-                              'Este mês',
-                              style: GoogleFonts.lexend(
-                                color: _filtroPeriodo == 'este_mes' ? colors.primary : colors.textPrimary,
-                                fontWeight: _filtroPeriodo == 'este_mes' ? FontWeight.bold : FontWeight.normal,
-                              ),
-                            ),
-                          ),
-                          PopupMenuItem(
-                            value: 'mes_passado',
-                            child: Text(
-                              'Mês passado',
-                              style: GoogleFonts.lexend(
-                                color: _filtroPeriodo == 'mes_passado' ? colors.primary : colors.textPrimary,
-                                fontWeight: _filtroPeriodo == 'mes_passado' ? FontWeight.bold : FontWeight.normal,
-                              ),
-                            ),
-                          ),
-                        ],
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: isPeriodoAtivo
-                                ? colors.primary.withValues(alpha: 0.15)
-                                : colors.cardBackground,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: isPeriodoAtivo ? colors.primary : colors.borderSubtle,
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                isPeriodoAtivo
-                                    ? (_filtroPeriodo == 'este_mes' ? 'Este mês' : 'Mês passado')
-                                    : 'Período',
-                                style: GoogleFonts.lexend(
-                                  fontSize: 13,
-                                  fontWeight: isPeriodoAtivo ? FontWeight.bold : FontWeight.w500,
-                                  color: isPeriodoAtivo ? colors.primary : colors.textSecondary,
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              Icon(
-                                LucideIcons.chevronDown,
-                                size: 14,
-                                color: isPeriodoAtivo ? colors.primary : colors.textSecondary,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-
-                      PopupMenuButton<String>(
-                        onSelected: (val) {
-                          setState(() {
-                            _filtroStatus = val;
-                          });
-                        },
-                        color: colors.cardBackground,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          side: BorderSide(color: colors.borderSubtle),
-                        ),
-                        itemBuilder: (context) => [
-                          PopupMenuItem(
-                            value: 'TODOS',
-                            child: Text(
-                              'Todos os status (limpar)',
-                              style: GoogleFonts.lexend(
-                                color: !isStatusAtivo ? colors.primary : colors.textPrimary,
-                                fontWeight: !isStatusAtivo ? FontWeight.bold : FontWeight.normal,
-                              ),
-                            ),
-                          ),
-                          PopupMenuItem(
-                            value: 'concluida',
-                            child: Text(
-                              'Concluídas',
-                              style: GoogleFonts.lexend(
-                                color: _filtroStatus == 'concluida' ? colors.primary : colors.textPrimary,
-                                fontWeight: _filtroStatus == 'concluida' ? FontWeight.bold : FontWeight.normal,
-                              ),
-                            ),
-                          ),
-                          PopupMenuItem(
-                            value: 'em_andamento',
-                            child: Text(
-                              'Em andamento',
-                              style: GoogleFonts.lexend(
-                                color: _filtroStatus == 'em_andamento' ? colors.primary : colors.textPrimary,
-                                fontWeight: _filtroStatus == 'em_andamento' ? FontWeight.bold : FontWeight.normal,
-                              ),
-                            ),
-                          ),
-                          PopupMenuItem(
-                            value: 'cancelada',
-                            child: Text(
-                              'Canceladas',
-                              style: GoogleFonts.lexend(
-                                color: _filtroStatus == 'cancelada' ? colors.primary : colors.textPrimary,
-                                fontWeight: _filtroStatus == 'cancelada' ? FontWeight.bold : FontWeight.normal,
-                              ),
-                            ),
-                          ),
-                        ],
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: isStatusAtivo
-                                ? colors.primary.withValues(alpha: 0.15)
-                                : colors.cardBackground,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: isStatusAtivo ? colors.primary : colors.borderSubtle,
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                isStatusAtivo ? _getStatusLabel(_filtroStatus) : 'Status',
-                                style: GoogleFonts.lexend(
-                                  fontSize: 13,
-                                  fontWeight: isStatusAtivo ? FontWeight.bold : FontWeight.w500,
-                                  color: isStatusAtivo ? colors.primary : colors.textSecondary,
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              Icon(
-                                LucideIcons.chevronDown,
-                                size: 14,
-                                color: isStatusAtivo ? colors.primary : colors.textSecondary,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const Spacer(),
-                      Text(
-                        '${viagensFiltradas.length} ${viagensFiltradas.length == 1 ? "viagem" : "viagens"}',
-                        style: GoogleFonts.lexend(
-                          fontSize: 12,
-                          color: colors.textMuted,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-
             Expanded(
-              child: viagensFiltradas.isEmpty
-                  ? _buildListaVazia(colors)
-                  : CustomRefreshIndicator(
-                      onRefresh: homeVM.refresh,
-                      child: ListView.builder(
-                        physics: const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics()),
-                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
-                        itemCount: viagensFiltradas.length,
-                        itemBuilder: (context, index) {
-                          final viagem = viagensFiltradas[index];
-                          return ViagemCard(
-                            viagem: viagem,
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => DetalhesViagemPage(viagem: viagem),
+              child: CustomRefreshIndicator(
+                onRefresh: homeVM.refresh,
+                child: CustomScrollView(
+                  physics: const BouncingScrollPhysics(
+                    parent: AlwaysScrollableScrollPhysics(),
+                  ),
+                  slivers: [
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(
+                          AppSpacing.lg,
+                          AppSpacing.sm,
+                          AppSpacing.lg,
+                          AppSpacing.sm,
+                        ),
+                        child: Column(
+                          children: [
+                            // Campo de Pesquisa
+                            Container(
+                              decoration: BoxDecoration(
+                                color: colors.inputBackground,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: colors.borderSubtle),
+                              ),
+                              child: TextField(
+                                controller: _searchController,
+                                style: GoogleFonts.lexend(fontSize: 14, color: colors.textPrimary),
+                                decoration: InputDecoration(
+                                  hintText: 'Buscar por cidade ou estado...',
+                                  hintStyle: GoogleFonts.lexend(fontSize: 13, color: colors.textHint),
+                                  prefixIcon: Icon(LucideIcons.search, size: 18, color: colors.textHint),
+                                  suffixIcon: _searchQuery.isNotEmpty
+                                      ? IconButton(
+                                          icon: Icon(LucideIcons.x, size: 16, color: colors.textHint),
+                                          onPressed: () {
+                                            _searchController.clear();
+                                          },
+                                        )
+                                      : null,
+                                  border: InputBorder.none,
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                  isDense: true,
                                 ),
-                              );
-                            },
-                          );
-                        },
+                              ),
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
+
+                            // Filtros por Período e Status
+                            Row(
+                              children: [
+                                PopupMenuButton<String>(
+                                  onSelected: (val) {
+                                    setState(() {
+                                      _filtroPeriodo = val;
+                                    });
+                                  },
+                                  color: colors.cardBackground,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    side: BorderSide(color: colors.borderSubtle),
+                                  ),
+                                  itemBuilder: (context) => [
+                                    PopupMenuItem(
+                                      value: 'todos',
+                                      child: Text(
+                                        'Todas as datas (limpar)',
+                                        style: GoogleFonts.lexend(
+                                          color: !isPeriodoAtivo ? colors.primary : colors.textPrimary,
+                                          fontWeight: !isPeriodoAtivo ? FontWeight.bold : FontWeight.normal,
+                                        ),
+                                      ),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'este_mes',
+                                      child: Text(
+                                        'Este mês',
+                                        style: GoogleFonts.lexend(
+                                          color: _filtroPeriodo == 'este_mes' ? colors.primary : colors.textPrimary,
+                                          fontWeight: _filtroPeriodo == 'este_mes' ? FontWeight.bold : FontWeight.normal,
+                                        ),
+                                      ),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'mes_passado',
+                                      child: Text(
+                                        'Mês passado',
+                                        style: GoogleFonts.lexend(
+                                          color: _filtroPeriodo == 'mes_passado' ? colors.primary : colors.textPrimary,
+                                          fontWeight: _filtroPeriodo == 'mes_passado' ? FontWeight.bold : FontWeight.normal,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                    decoration: BoxDecoration(
+                                      color: isPeriodoAtivo
+                                          ? colors.primary.withValues(alpha: 0.15)
+                                          : colors.cardBackground,
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color: isPeriodoAtivo ? colors.primary : colors.borderSubtle,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          isPeriodoAtivo
+                                              ? (_filtroPeriodo == 'este_mes' ? 'Este mês' : 'Mês passado')
+                                              : 'Período',
+                                          style: GoogleFonts.lexend(
+                                            fontSize: 13,
+                                            fontWeight: isPeriodoAtivo ? FontWeight.bold : FontWeight.w500,
+                                            color: isPeriodoAtivo ? colors.primary : colors.textSecondary,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Icon(
+                                          LucideIcons.chevronDown,
+                                          size: 14,
+                                          color: isPeriodoAtivo ? colors.primary : colors.textSecondary,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: AppSpacing.sm),
+
+                                PopupMenuButton<String>(
+                                  onSelected: (val) {
+                                    setState(() {
+                                      _filtroStatus = val;
+                                    });
+                                  },
+                                  color: colors.cardBackground,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    side: BorderSide(color: colors.borderSubtle),
+                                  ),
+                                  itemBuilder: (context) => [
+                                    PopupMenuItem(
+                                      value: 'TODOS',
+                                      child: Text(
+                                        'Todos os status (limpar)',
+                                        style: GoogleFonts.lexend(
+                                          color: !isStatusAtivo ? colors.primary : colors.textPrimary,
+                                          fontWeight: !isStatusAtivo ? FontWeight.bold : FontWeight.normal,
+                                        ),
+                                      ),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'concluida',
+                                      child: Text(
+                                        'Concluídas',
+                                        style: GoogleFonts.lexend(
+                                          color: _filtroStatus == 'concluida' ? colors.primary : colors.textPrimary,
+                                          fontWeight: _filtroStatus == 'concluida' ? FontWeight.bold : FontWeight.normal,
+                                        ),
+                                      ),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'em_andamento',
+                                      child: Text(
+                                        'Em andamento',
+                                        style: GoogleFonts.lexend(
+                                          color: _filtroStatus == 'em_andamento' ? colors.primary : colors.textPrimary,
+                                          fontWeight: _filtroStatus == 'em_andamento' ? FontWeight.bold : FontWeight.normal,
+                                        ),
+                                      ),
+                                    ),
+                                    PopupMenuItem(
+                                      value: 'cancelada',
+                                      child: Text(
+                                        'Canceladas',
+                                        style: GoogleFonts.lexend(
+                                          color: _filtroStatus == 'cancelada' ? colors.primary : colors.textPrimary,
+                                          fontWeight: _filtroStatus == 'cancelada' ? FontWeight.bold : FontWeight.normal,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                    decoration: BoxDecoration(
+                                      color: isStatusAtivo
+                                          ? colors.primary.withValues(alpha: 0.15)
+                                          : colors.cardBackground,
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color: isStatusAtivo ? colors.primary : colors.borderSubtle,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          isStatusAtivo ? _getStatusLabel(_filtroStatus) : 'Status',
+                                          style: GoogleFonts.lexend(
+                                            fontSize: 13,
+                                            fontWeight: isStatusAtivo ? FontWeight.bold : FontWeight.w500,
+                                            color: isStatusAtivo ? colors.primary : colors.textSecondary,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Icon(
+                                          LucideIcons.chevronDown,
+                                          size: 14,
+                                          color: isStatusAtivo ? colors.primary : colors.textSecondary,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                const Spacer(),
+                                Flexible(
+                                  child: Text(
+                                    '${viagensFiltradas.length} ${viagensFiltradas.length == 1 ? "viagem" : "viagens"}',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: GoogleFonts.lexend(
+                                      fontSize: 12,
+                                      color: colors.textMuted,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
+                    if (viagensFiltradas.isEmpty)
+                      SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: _buildListaVazia(colors),
+                      )
+                    else
+                      SliverPadding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.lg,
+                          vertical: AppSpacing.sm,
+                        ),
+                        sliver: SliverList.builder(
+                          itemCount: viagensFiltradas.length,
+                          itemBuilder: (context, index) {
+                            final viagem = viagensFiltradas[index];
+                            return ViagemCard(
+                              viagem: viagem,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => DetalhesViagemPage(viagem: viagem),
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                  ],
+                ),
+              ),
             ),
           ],
         ),
@@ -385,43 +409,42 @@ class _ViagensListPageState extends State<ViagensListPage> {
 
   Widget _buildListaVazia(AppColorsExtension colors) {
     return Center(
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.xxl),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                decoration: BoxDecoration(
-                  color: colors.surfaceOverlay,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(LucideIcons.searchX, size: 36, color: colors.textHint),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xxl),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              decoration: BoxDecoration(
+                color: colors.surfaceOverlay,
+                shape: BoxShape.circle,
               ),
-              const SizedBox(height: AppSpacing.lg),
-              Text(
-                'Nenhuma viagem encontrada',
-                style: GoogleFonts.lexend(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: colors.textPrimary,
-                ),
+              child: Icon(LucideIcons.searchX, size: 36, color: colors.textHint),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            Text(
+              'Nenhuma viagem encontrada',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.lexend(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: colors.textPrimary,
               ),
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                _searchQuery.isNotEmpty
-                    ? 'Nenhum resultado para "$_searchQuery".'
-                    : 'Tente alterar os filtros de período ou status acima.',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.lexend(
-                  fontSize: 12,
-                  color: colors.textMuted,
-                ),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              _searchQuery.isNotEmpty
+                  ? 'Nenhum resultado para "$_searchQuery".'
+                  : 'Tente alterar os filtros de período ou status acima.',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.lexend(
+                fontSize: 12,
+                color: colors.textMuted,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

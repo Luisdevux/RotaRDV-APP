@@ -30,6 +30,20 @@ class PendingSyncSummary {
   bool get hasPending => totalPendencias > 0;
 }
 
+class SyncState {
+  final bool isSyncing;
+  final int currentAttempt;
+  final int maxRetries;
+  final bool? lastSyncSuccess;
+
+  const SyncState({
+    this.isSyncing = false,
+    this.currentAttempt = 0,
+    this.maxRetries = 3,
+    this.lastSyncSuccess,
+  });
+}
+
 // Localiza ou recupera o arquivo físico de comprovante para uma despesa com correspondência estrita por UUID (sem inferências aleatórias)
 Future<String?> resolverOuRecuperarFotoLocal(String despesaUuid, String? caminhoAtual) async {
   try {
@@ -73,8 +87,29 @@ class SyncService {
   factory SyncService() => _instance;
   SyncService._internal();
 
-  bool _isSyncing = false;
-  bool get isSyncing => _isSyncing;
+  // Notificador reativo que informa em tempo real se há uma sincronização em andamento
+  final ValueNotifier<bool> isSyncingNotifier = ValueNotifier<bool>(false);
+  // Notificador detalhado com número da tentativa atual e resultado do ciclo
+  final ValueNotifier<SyncState> syncStateNotifier = ValueNotifier<SyncState>(const SyncState());
+
+  bool get isSyncing => isSyncingNotifier.value;
+
+  void _updateSyncState({
+    required bool isSyncing,
+    int currentAttempt = 0,
+    int maxRetries = 3,
+    bool? lastSyncSuccess,
+  }) {
+    if (isSyncingNotifier.value != isSyncing) {
+      isSyncingNotifier.value = isSyncing;
+    }
+    syncStateNotifier.value = SyncState(
+      isSyncing: isSyncing,
+      currentAttempt: currentAttempt,
+      maxRetries: maxRetries,
+      lastSyncSuccess: lastSyncSuccess,
+    );
+  }
 
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
   
@@ -106,63 +141,84 @@ class SyncService {
   // Executa o ciclo completo de sincronização (Push -> Pull) com política de até [maxRetries] tentativas
   // Se não conseguir conectar após as tentativas, os dados locais são mantidos sem percas e o sync aguarda o próximo ciclo
   Future<bool> syncAll({int maxRetries = 3}) async {
-    if (_isSyncing) {
+    if (isSyncing) {
       debugPrint('[SyncService] Sincronização já está em andamento. Ignorando chamada concorrente.');
       return false;
     }
 
-    _isSyncing = true;
     int attempt = 0;
     bool success = false;
+    _updateSyncState(
+      isSyncing: true,
+      currentAttempt: 1,
+      maxRetries: maxRetries,
+    );
 
-    while (attempt < maxRetries && !success) {
-      attempt++;
-      try {
-        debugPrint('[SyncService] Iniciando ciclo de sincronização (Tentativa $attempt/$maxRetries)...');
-        
-        // PUSH: Envia tudo que foi criado/editado/deletado localmente para o backend
-        await pushSync();
-        
-        // PULL: Baixa as alterações e novidades da nuvem
-        await pullSync();
+    try {
+      while (attempt < maxRetries && !success) {
+        attempt++;
+        _updateSyncState(
+          isSyncing: true,
+          currentAttempt: attempt,
+          maxRetries: maxRetries,
+        );
+        try {
+          debugPrint('[SyncService] Iniciando ciclo de sincronização (Tentativa $attempt/$maxRetries)...');
+          
+          // PUSH: Envia tudo que foi criado/editado/deletado localmente para o backend
+          await pushSync();
+          
+          // PULL: Baixa as alterações e novidades da nuvem
+          await pullSync();
 
-        // Exclusão de fotos antigas: Limpa fotos locais de viagens concluídas há mais de 15 dias tiradas no app
-        await StorageCleanerService().purgeOldSyncedPhotos();
+          // Exclusão de fotos antigas: Limpa fotos locais de viagens concluídas há mais de 15 dias tiradas no app
+          await StorageCleanerService().purgeOldSyncedPhotos();
 
-        success = true;
-        final pendingSummary = await getPendingSyncSummary();
-        if (pendingSummary.hasPending) {
-          debugPrint('[SyncService] Ciclo de sincronização finalizado. Há ${pendingSummary.totalPendencias} item(ns) pendente(s).');
-        } else {
-          debugPrint('[SyncService] Sincronização concluída com sucesso na tentativa $attempt!');
-        }
-        syncEventNotifier.value++;
-      } catch (e) {
-        debugPrint('[SyncService] Erro na tentativa $attempt/$maxRetries de sincronização: $e');
-        final errStr = e.toString();
-        final isAuthError = errStr.contains('498') ||
-            errStr.contains('401') ||
-            errStr.contains('token') ||
-            errStr.contains('Token') ||
-            DioClient.isSessionExpired;
+          success = true;
+          final pendingSummary = await getPendingSyncSummary();
+          if (pendingSummary.hasPending) {
+            debugPrint('[SyncService] Ciclo de sincronização finalizado. Há ${pendingSummary.totalPendencias} item(ns) pendente(s).');
+          } else {
+            debugPrint('[SyncService] Sincronização concluída com sucesso na tentativa $attempt!');
+          }
+          syncEventNotifier.value++;
+        } catch (e) {
+          debugPrint('[SyncService] Erro na tentativa $attempt/$maxRetries de sincronização: $e');
+          final errStr = e.toString();
+          final isAuthError = errStr.contains('498') ||
+              errStr.contains('401') ||
+              errStr.contains('token') ||
+              errStr.contains('Token') ||
+              DioClient.isSessionExpired;
 
-        if (isAuthError) {
-          debugPrint('[SyncService] Sessão expirada/token inválido detectado. Abortando tentativas adicionais até o motorista se reautenticar.');
-          break;
-        }
+          if (isAuthError) {
+            debugPrint('[SyncService] Sessão expirada/token inválido detectado. Abortando tentativas adicionais até o motorista se reautenticar.');
+            break;
+          }
 
-        if (attempt < maxRetries) {
-          // Delay progressivo antes da próxima tentativa: 1.5s, 3.0s...
-          final waitDuration = Duration(milliseconds: 1500 * attempt);
-          debugPrint('[SyncService] Aguardando ${waitDuration.inMilliseconds}ms antes de tentar novamente...');
-          await Future.delayed(waitDuration);
-        } else {
-          debugPrint('[SyncService] Atingido o limite de $maxRetries tentativas. Dados locais mantidos seguros no Isar. Aguardando novo sinal de rede.');
+          if (attempt < maxRetries) {
+            // Delay antes da próxima tentativa para visualização clara e estabilização de rede
+            const waitDuration = Duration(milliseconds: 1200);
+            debugPrint('[SyncService] Aguardando ${waitDuration.inMilliseconds}ms antes de tentar novamente...');
+            await Future.delayed(waitDuration);
+          } else {
+            // Mantém a última tentativa visível brevemente na barra antes de encerrar o ciclo
+            if (maxRetries > 1) {
+              await Future.delayed(const Duration(milliseconds: 1000));
+            }
+            debugPrint('[SyncService] Atingido o limite de $maxRetries tentativas. Dados locais mantidos seguros no Isar. Aguardando novo sinal de rede.');
+          }
         }
       }
+    } finally {
+      _updateSyncState(
+        isSyncing: false,
+        currentAttempt: attempt,
+        maxRetries: maxRetries,
+        lastSyncSuccess: success,
+      );
     }
 
-    _isSyncing = false;
     return success;
   }
 
@@ -353,7 +409,12 @@ class SyncService {
         .and()
         .not()
         .statusSincronizacaoEqualTo('deletado')
+        .and()
+        .not()
+        .statusSincronizacaoEqualTo('erro_validacao')
         .findAll();
+
+    Object? transientUploadError;
 
     if (despesasSemFotoRemota.isNotEmpty) {
       debugPrint('[SyncService] Verificando fotos pendentes para ${despesasSemFotoRemota.length} despesa(s)...');
@@ -397,9 +458,13 @@ class SyncService {
             }
           } else {
             debugPrint('[SyncService] Falha ao enviar comprovante da despesa ${d.uuid} (${uploadRes.statusCode}): ${uploadRes.body}');
+            if ((uploadRes.statusCode ?? 0) >= 500) {
+              transientUploadError ??= Exception('Falha temporária no upload do comprovante (${uploadRes.statusCode})');
+            }
           }
         } catch (e) {
           debugPrint('[SyncService] Erro durante o upload do comprovante da despesa ${d.uuid}: $e');
+          transientUploadError ??= e;
         }
       }
     }
@@ -433,6 +498,8 @@ class SyncService {
                 AvatarCacheService.notifyAvatarChanged();
               }
               debugPrint('[SyncService] Foto de perfil enviada com sucesso no ciclo de sincronização.');
+            } else if ((uploadRes.statusCode ?? 0) >= 500) {
+              transientUploadError ??= Exception('Falha temporária no upload da foto de perfil (${uploadRes.statusCode})');
             }
           }
           // Pendência de exclusão
@@ -446,12 +513,19 @@ class SyncService {
               await prefs.setString('currentUser', jsonEncode(userData));
               AvatarCacheService.notifyAvatarChanged();
               debugPrint('[SyncService] Foto de perfil excluída com sucesso no ciclo de sincronização.');
+            } else if ((delRes.statusCode ?? 0) >= 500) {
+              transientUploadError ??= Exception('Falha temporária ao excluir foto de perfil (${delRes.statusCode})');
             }
           }
         }
       }
     } catch (e) {
       debugPrint('[SyncService] Erro ao sincronizar foto de perfil: $e');
+      transientUploadError ??= e;
+    }
+
+    if (transientUploadError != null) {
+      throw transientUploadError;
     }
   }
 

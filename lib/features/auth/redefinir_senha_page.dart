@@ -116,6 +116,7 @@ class _RedefinirSenhaPageState extends State<RedefinirSenhaPage> {
   Widget build(BuildContext context) {
     final authVM = context.watch<AuthViewModel>();
     final isLoading = authVM.isLoadingReset;
+    final isCompactHeight = MediaQuery.of(context).size.height < 500;
     final hasToken = (widget.initialToken != null && widget.initialToken!.isNotEmpty) ||
         _tokenController.text.isNotEmpty;
 
@@ -139,13 +140,16 @@ class _RedefinirSenhaPageState extends State<RedefinirSenhaPage> {
             SliverToBoxAdapter(
               child: Container(
                 width: double.infinity,
-                padding: const EdgeInsets.only(top: 48, bottom: 32),
+                padding: EdgeInsets.only(
+                  top: isCompactHeight ? 16 : 48,
+                  bottom: isCompactHeight ? 16 : 32,
+                ),
                 color: Theme.of(context).appBarTheme.backgroundColor,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Image.asset('assets/images/rotardv-icone.png', height: 64),
-                    const SizedBox(height: 12),
+                    Image.asset('assets/images/rotardv-icone.png', height: isCompactHeight ? 48 : 64),
+                    SizedBox(height: isCompactHeight ? 8 : 12),
                     Text(
                       'RotaRDV',
                       style: Theme.of(context).textTheme.displayLarge,

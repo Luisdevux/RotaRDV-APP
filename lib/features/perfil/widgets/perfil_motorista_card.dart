@@ -54,8 +54,12 @@ class _PerfilMotoristaCardState extends State<PerfilMotoristaCard> {
 
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(ctx).size.height * 0.9,
+        ),
         padding: const EdgeInsets.all(AppSpacing.xl),
         decoration: BoxDecoration(
           color: colors.cardBackground,
@@ -63,10 +67,12 @@ class _PerfilMotoristaCardState extends State<PerfilMotoristaCard> {
           border: Border(top: BorderSide(color: colors.borderSubtle, width: 1)),
         ),
         child: SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
               Center(
                 child: Container(
                   width: 40,
@@ -151,10 +157,11 @@ class _PerfilMotoristaCardState extends State<PerfilMotoristaCard> {
                         borderRadius: BorderRadius.circular(AppRadius.md),
                       ),
                     ),
+                    ),
                   ),
-                ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),

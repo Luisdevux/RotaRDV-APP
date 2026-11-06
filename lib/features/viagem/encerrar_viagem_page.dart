@@ -1,4 +1,5 @@
-﻿import 'package:flutter/material.dart';
+import 'dart:math' as math;
+import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -245,7 +246,9 @@ class _EncerrarViagemPageState extends State<EncerrarViagemPage> {
                     physics: const BouncingScrollPhysics(),
                     padding: const EdgeInsets.all(AppSpacing.xxl),
                     child: ConstrainedBox(
-                      constraints: BoxConstraints(minHeight: constraints.maxHeight - (AppSpacing.xxl * 2)),
+                      constraints: BoxConstraints(
+                        minHeight: math.max(0.0, constraints.maxHeight - (AppSpacing.xxl * 2)),
+                      ),
                       child: IntrinsicHeight(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -400,35 +403,42 @@ class _EncerrarViagemPageState extends State<EncerrarViagemPage> {
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Row(
-                                      children: [
-                                        Text(
-                                          'Percorrido',
-                                          style: GoogleFonts.lexend(
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w600,
-                                            color: colors.textHint,
-                                          ),
-                                        ),
-                                        if (isParcial && kmPercorridoExibido != null) ...[
-                                          const SizedBox(width: 4),
-                                          Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                                            decoration: BoxDecoration(
-                                              color: colors.primary.withValues(alpha: 0.12),
-                                              borderRadius: AppRadius.xsRadius,
-                                            ),
+                                    Flexible(
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Flexible(
                                             child: Text(
-                                              'Parcial',
+                                              'Percorrido',
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
                                               style: GoogleFonts.lexend(
-                                                fontSize: 9,
-                                                fontWeight: FontWeight.w700,
-                                                color: colors.primary,
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w600,
+                                                color: colors.textHint,
                                               ),
                                             ),
                                           ),
+                                          if (isParcial && kmPercorridoExibido != null) ...[
+                                            const SizedBox(width: 4),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                              decoration: BoxDecoration(
+                                                color: colors.primary.withValues(alpha: 0.12),
+                                                borderRadius: AppRadius.xsRadius,
+                                              ),
+                                              child: Text(
+                                                'Parcial',
+                                                style: GoogleFonts.lexend(
+                                                  fontSize: 9,
+                                                  fontWeight: FontWeight.w700,
+                                                  color: colors.primary,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
                                         ],
-                                      ],
+                                      ),
                                     ),
                                     Icon(LucideIcons.gauge, size: 14, color: colors.primary),
                                   ],

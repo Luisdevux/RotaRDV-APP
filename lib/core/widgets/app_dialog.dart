@@ -76,11 +76,12 @@ class AppDialog extends StatelessWidget {
       ),
       insetPadding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.xxl,
-        vertical: AppSpacing.huge,
+        vertical: AppSpacing.lg,
       ),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 400),
-        child: Padding(
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
           padding: const EdgeInsets.all(AppSpacing.xxl),
           child: Column(
             mainAxisSize: MainAxisSize.min,
