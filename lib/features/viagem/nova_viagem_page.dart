@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -352,7 +353,9 @@ class _NovaViagemPageState extends State<NovaViagemPage> {
               physics: const BouncingScrollPhysics(),
               padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
               child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: constraints.maxHeight - 32.0),
+                constraints: BoxConstraints(
+                  minHeight: math.max(0.0, constraints.maxHeight - 32.0),
+                ),
                 child: IntrinsicHeight(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -511,19 +514,27 @@ class _NovaViagemPageState extends State<NovaViagemPage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Row(
-                              children: [
-                                Icon(LucideIcons.history, size: 12, color: colors.textMuted),
-                                const SizedBox(width: 4),
-                                Text(
-                                  '${_ultimaKmRegistrada != null || ultimaVM?.kmFinal != null ? 'Último registro: ' : 'Odômetro do veículo: '}${NumberFormat('#,###', 'pt_BR').format(ultimaKmConhecida.toInt())} KM',
-                                  style: GoogleFonts.lexend(
-                                    fontSize: 11,
-                                    color: colors.textMuted,
+                            Flexible(
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(LucideIcons.history, size: 12, color: colors.textMuted),
+                                  const SizedBox(width: 4),
+                                  Flexible(
+                                    child: Text(
+                                      '${_ultimaKmRegistrada != null || ultimaVM?.kmFinal != null ? 'Último registro: ' : 'Odômetro do veículo: '}${NumberFormat('#,###', 'pt_BR').format(ultimaKmConhecida.toInt())} KM',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: GoogleFonts.lexend(
+                                        fontSize: 11,
+                                        color: colors.textMuted,
+                                      ),
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
+                            const SizedBox(width: AppSpacing.xs),
                             InkWell(
                               onTap: () {
                                 _kmController.text = NumberFormat('#,###', 'pt_BR').format(ultimaKmConhecida.toInt());

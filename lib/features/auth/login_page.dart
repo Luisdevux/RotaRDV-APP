@@ -152,6 +152,7 @@ class _LoginPageState extends State<LoginPage> {
     final authVM = context.watch<AuthViewModel>();
     final isLoadingGoogle = authVM.isLoadingGoogle;
     final isLoadingLocal = authVM.isLoadingLocal;
+    final isCompactHeight = MediaQuery.of(context).size.height < 500;
     return Scaffold(
       backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
       body: AnnotatedRegion<SystemUiOverlayStyle>(
@@ -174,18 +175,21 @@ class _LoginPageState extends State<LoginPage> {
             SliverToBoxAdapter(
               child: Container(
                 width: double.infinity,
-                padding: const EdgeInsets.only(top: 24, bottom: 32),
+                padding: EdgeInsets.only(
+                  top: isCompactHeight ? 12 : 24,
+                  bottom: isCompactHeight ? 16 : 32,
+                ),
                 color: Theme.of(context).appBarTheme.backgroundColor,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Image.asset('assets/images/rotardv-icone.png', height: 64),
-                    const SizedBox(height: 12),
+                    Image.asset('assets/images/rotardv-icone.png', height: isCompactHeight ? 48 : 64),
+                    SizedBox(height: isCompactHeight ? 8 : 12),
                     Text(
                       'RotaRDV',
                       style: Theme.of(context).textTheme.displayLarge,
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     Text(
                       'Controle de Gastos',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
