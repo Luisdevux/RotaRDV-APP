@@ -1,4 +1,4 @@
-﻿// lib/features/home/home_page.dart
+// lib/features/home/home_page.dart
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -83,134 +83,245 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           children: [
             const NetworkStatusBar(),
-
-            if (homeVM.isSessionExpired) ...[
-              const SizedBox(height: AppSpacing.sm),
-              HomeSessionExpiredBanner(userEmail: authVM.currentUser?['email']),
-            ],
-
-            const SizedBox(height: AppSpacing.lg),
-
-            HomeHeaderWidget(
-              userId: userId,
-              userName: userName,
-              userPhotoUrl: userPhotoUrl,
-              veiculo: homeVM.veiculo,
-            ),
-
-            const SizedBox(height: AppSpacing.lg),
-
-            HomeJornadaCard(
-              viagemAtiva: viagemAtiva,
-              onAcessarViagem: () {
-                if (viagemAtiva != null) {
-                  _navegarParaViagemAtiva(viagemAtiva);
-                }
-              },
-            ),
-
-            const SizedBox(height: AppSpacing.lg),
-
-            // Gaveta de Histórico Recente
             Expanded(
-              child: Container(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.xl,
-                  AppSpacing.xl,
-                  AppSpacing.xl,
-                  0,
-                ),
-                decoration: BoxDecoration(
-                  color: colors.cardBackgroundAlt,
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-                  border: Border(
-                    top: BorderSide(
-                      color: colors.borderSubtle,
-                      width: 1.0,
-                    ),
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    // Cabeçalho da Seção de Histórico
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(LucideIcons.history, color: colors.primary, size: 18),
-                            const SizedBox(width: AppSpacing.sm),
-                            Text(
-                              'Histórico recente',
-                              style: GoogleFonts.lexend(
-                                color: colors.textPrimary,
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final isCompactHeight = constraints.maxHeight < 520;
+
+                  if (isCompactHeight) {
+                    return CustomRefreshIndicator(
+                      onRefresh: homeVM.refresh,
+                      child: CustomScrollView(
+                        physics: const BouncingScrollPhysics(
+                          parent: AlwaysScrollableScrollPhysics(),
+                        ),
+                        slivers: [
+                          SliverToBoxAdapter(
+                            child: Column(
+                              children: [
+                                if (homeVM.isSessionExpired) ...[
+                                  const SizedBox(height: AppSpacing.sm),
+                                  HomeSessionExpiredBanner(
+                                    userEmail: authVM.currentUser?['email'],
+                                  ),
+                                ],
+                                const SizedBox(height: AppSpacing.md),
+                                HomeHeaderWidget(
+                                  userId: userId,
+                                  userName: userName,
+                                  userPhotoUrl: userPhotoUrl,
+                                  veiculo: homeVM.veiculo,
+                                ),
+                                const SizedBox(height: AppSpacing.md),
+                                HomeJornadaCard(
+                                  viagemAtiva: viagemAtiva,
+                                  onAcessarViagem: () {
+                                    if (viagemAtiva != null) {
+                                      _navegarParaViagemAtiva(viagemAtiva);
+                                    }
+                                  },
+                                ),
+                                const SizedBox(height: AppSpacing.md),
+                              ],
+                            ),
+                          ),
+                          SliverFillRemaining(
+                            hasScrollBody: false,
+                            child: Container(
+                              padding: const EdgeInsets.fromLTRB(
+                                AppSpacing.xl,
+                                AppSpacing.lg,
+                                AppSpacing.xl,
+                                AppSpacing.md,
                               ),
-                            ),
-                          ],
-                        ),
-                        TextButton(
-                          style: TextButton.styleFrom(
-                            padding: EdgeInsets.zero,
-                            minimumSize: Size.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          ),
-                          onPressed: () {
-                            if (widget.onNavigateToTab != null) {
-                              widget.onNavigateToTab!(2);
-                            } else {
-                              Navigator.pushNamed(context, Routes.viagens);
-                            }
-                          },
-                          child: Text(
-                            'Ver histórico',
-                            style: GoogleFonts.lexend(
-                              color: colors.primary,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: AppSpacing.md),
-
-                    // Lista de Viagens Recentes
-                    Expanded(
-                      child: homeVM.isLoading
-                          ? const AppLoadingIndicator()
-                          : homeVM.ultimasViagens.isEmpty
-                              ? const AppEmptyState(
-                                  icon: LucideIcons.truck,
-                                  title: 'Nenhuma viagem encontrada',
-                                  subtitle: 'Toque no botão acima para iniciar sua rota.',
-                                )
-                              : CustomRefreshIndicator(
-                                  onRefresh: homeVM.refresh,
-                                  child: ListView.builder(
-                                    physics: const BouncingScrollPhysics(
-                                      parent: AlwaysScrollableScrollPhysics(),
-                                    ),
-                                    itemCount: homeVM.ultimasViagens.length,
-                                    itemBuilder: (context, index) {
-                                      final viagem = homeVM.ultimasViagens[index];
-                                      return ViagemCard(
-                                        viagem: viagem,
-                                        onTap: () => _abrirDetalhesViagem(viagem),
-                                      );
-                                    },
+                              decoration: BoxDecoration(
+                                color: colors.cardBackgroundAlt,
+                                borderRadius: const BorderRadius.vertical(
+                                  top: Radius.circular(24),
+                                ),
+                                border: Border(
+                                  top: BorderSide(
+                                    color: colors.borderSubtle,
+                                    width: 1.0,
                                   ),
                                 ),
-                    ),
-                  ],
-                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  _buildHistoricoHeader(colors),
+                                  const SizedBox(height: AppSpacing.md),
+                                  if (homeVM.isLoading)
+                                    const Padding(
+                                      padding: EdgeInsets.symmetric(vertical: AppSpacing.xl),
+                                      child: AppLoadingIndicator(),
+                                    )
+                                  else if (homeVM.ultimasViagens.isEmpty)
+                                    const AppEmptyState(
+                                      icon: LucideIcons.truck,
+                                      title: 'Nenhuma viagem encontrada',
+                                      subtitle: 'Toque no botão acima para iniciar sua rota.',
+                                    )
+                                  else
+                                    ...homeVM.ultimasViagens.map(
+                                      (viagem) => ViagemCard(
+                                        viagem: viagem,
+                                        onTap: () => _abrirDetalhesViagem(viagem),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  return Column(
+                    children: [
+                      if (homeVM.isSessionExpired) ...[
+                        const SizedBox(height: AppSpacing.sm),
+                        HomeSessionExpiredBanner(userEmail: authVM.currentUser?['email']),
+                      ],
+
+                      const SizedBox(height: AppSpacing.lg),
+
+                      HomeHeaderWidget(
+                        userId: userId,
+                        userName: userName,
+                        userPhotoUrl: userPhotoUrl,
+                        veiculo: homeVM.veiculo,
+                      ),
+
+                      const SizedBox(height: AppSpacing.lg),
+
+                      HomeJornadaCard(
+                        viagemAtiva: viagemAtiva,
+                        onAcessarViagem: () {
+                          if (viagemAtiva != null) {
+                            _navegarParaViagemAtiva(viagemAtiva);
+                          }
+                        },
+                      ),
+
+                      const SizedBox(height: AppSpacing.lg),
+
+                      // Gaveta de Histórico Recente
+                      Expanded(
+                        child: Container(
+                          padding: const EdgeInsets.fromLTRB(
+                            AppSpacing.xl,
+                            AppSpacing.xl,
+                            AppSpacing.xl,
+                            0,
+                          ),
+                          decoration: BoxDecoration(
+                            color: colors.cardBackgroundAlt,
+                            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                            border: Border(
+                              top: BorderSide(
+                                color: colors.borderSubtle,
+                                width: 1.0,
+                              ),
+                            ),
+                          ),
+                          child: Column(
+                            children: [
+                              _buildHistoricoHeader(colors),
+
+                              const SizedBox(height: AppSpacing.md),
+
+                              // Lista de Viagens Recentes
+                              Expanded(
+                                child: homeVM.isLoading
+                                    ? const AppLoadingIndicator()
+                                    : homeVM.ultimasViagens.isEmpty
+                                        ? const AppEmptyState(
+                                            icon: LucideIcons.truck,
+                                            title: 'Nenhuma viagem encontrada',
+                                            subtitle: 'Toque no botão acima para iniciar sua rota.',
+                                          )
+                                        : CustomRefreshIndicator(
+                                            onRefresh: homeVM.refresh,
+                                            child: ListView.builder(
+                                              physics: const BouncingScrollPhysics(
+                                                parent: AlwaysScrollableScrollPhysics(),
+                                              ),
+                                              itemCount: homeVM.ultimasViagens.length,
+                                              itemBuilder: (context, index) {
+                                                final viagem = homeVM.ultimasViagens[index];
+                                                return ViagemCard(
+                                                  viagem: viagem,
+                                                  onTap: () => _abrirDetalhesViagem(viagem),
+                                                );
+                                              },
+                                            ),
+                                          ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildHistoricoHeader(AppColorsExtension colors) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Flexible(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(LucideIcons.history, color: colors.primary, size: 18),
+              const SizedBox(width: AppSpacing.sm),
+              Flexible(
+                child: Text(
+                  'Histórico recente',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.lexend(
+                    color: colors.textPrimary,
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        TextButton(
+          style: TextButton.styleFrom(
+            padding: EdgeInsets.zero,
+            minimumSize: Size.zero,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          onPressed: () {
+            if (widget.onNavigateToTab != null) {
+              widget.onNavigateToTab!(2);
+            } else {
+              Navigator.pushNamed(context, Routes.viagens);
+            }
+          },
+          child: Text(
+            'Ver histórico',
+            style: GoogleFonts.lexend(
+              color: colors.primary,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

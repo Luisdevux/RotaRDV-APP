@@ -68,8 +68,12 @@ class ComprovantePickerWidget extends StatelessWidget {
   void _showSourceModal(BuildContext context, AppColorsExtension colors) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(ctx).size.height * 0.9,
+        ),
         padding: const EdgeInsets.all(AppSpacing.xl),
         decoration: BoxDecoration(
           color: colors.cardBackground,
@@ -79,10 +83,12 @@ class ComprovantePickerWidget extends StatelessWidget {
           ),
         ),
         child: SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
               Center(
                 child: Container(
                   width: 40,
@@ -163,10 +169,11 @@ class ComprovantePickerWidget extends StatelessWidget {
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

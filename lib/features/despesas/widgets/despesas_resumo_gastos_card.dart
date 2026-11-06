@@ -65,14 +65,19 @@ class DespesasResumoGastosCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Total de despesas da viagem',
-                  style: GoogleFonts.lexend(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: colors.textMuted,
+                Flexible(
+                  child: Text(
+                    'Total de despesas da viagem',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.lexend(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: colors.textMuted,
+                    ),
                   ),
                 ),
+                const SizedBox(width: AppSpacing.sm),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
@@ -123,6 +128,7 @@ class DespesasResumoGastosCard extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Row(
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Icon(LucideIcons.fuel, size: 14, color: colors.primary),
                                   const SizedBox(width: 6),
@@ -136,14 +142,20 @@ class DespesasResumoGastosCard extends StatelessWidget {
                                   ),
                                 ],
                               ),
-                              Text(
-                                metricas.mediaConsumoGeral != null
-                                    ? '${metricas.mediaConsumoGeral!.toStringAsFixed(2)} km/l (${NumberFormat('#,##0.#', 'pt_BR').format(metricas.totalLitros)} L)'
-                                    : '${NumberFormat('#,##0.#', 'pt_BR').format(metricas.totalLitros)} L abastecidos',
-                                style: GoogleFonts.lexend(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: colors.textPrimary,
+                              const SizedBox(width: AppSpacing.sm),
+                              Flexible(
+                                child: Text(
+                                  metricas.mediaConsumoGeral != null
+                                      ? '${metricas.mediaConsumoGeral!.toStringAsFixed(2)} km/l (${NumberFormat('#,##0.#', 'pt_BR').format(metricas.totalLitros)} L)'
+                                      : '${NumberFormat('#,##0.#', 'pt_BR').format(metricas.totalLitros)} L abastecidos',
+                                  textAlign: TextAlign.end,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.lexend(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: colors.textPrimary,
+                                  ),
                                 ),
                               ),
                             ],
@@ -163,6 +175,7 @@ class DespesasResumoGastosCard extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Row(
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Icon(LucideIcons.droplet, size: 14, color: colors.primary),
                                   const SizedBox(width: 6),
@@ -176,12 +189,18 @@ class DespesasResumoGastosCard extends StatelessWidget {
                                   ),
                                 ],
                               ),
-                              Text(
-                                '${NumberFormat('#,##0.#', 'pt_BR').format(metricas.totalLitrosArla)} L',
-                                style: GoogleFonts.lexend(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  color: colors.textPrimary,
+                              const SizedBox(width: AppSpacing.sm),
+                              Flexible(
+                                child: Text(
+                                  '${NumberFormat('#,##0.#', 'pt_BR').format(metricas.totalLitrosArla)} L',
+                                  textAlign: TextAlign.end,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.lexend(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: colors.textPrimary,
+                                  ),
                                 ),
                               ),
                             ],

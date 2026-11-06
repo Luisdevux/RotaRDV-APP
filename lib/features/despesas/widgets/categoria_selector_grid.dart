@@ -37,26 +37,31 @@ class CategoriaSelectorGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: 2,
-          crossAxisSpacing: AppSpacing.md,
-          mainAxisSpacing: AppSpacing.md,
-          childAspectRatio: 1.25,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth >= 500;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildCategoriaButton(CategoriaDespesa.abastecimento, colors),
-            _buildCategoriaButton(CategoriaDespesa.alimentacao, colors),
-            _buildCategoriaButton(CategoriaDespesa.manutencao, colors),
-            _buildCategoriaButton(CategoriaDespesa.pedagio, colors),
+            GridView.count(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: isWide ? 4 : 2,
+              crossAxisSpacing: AppSpacing.md,
+              mainAxisSpacing: AppSpacing.md,
+              childAspectRatio: isWide ? 1.15 : 1.25,
+              children: [
+                _buildCategoriaButton(CategoriaDespesa.abastecimento, colors),
+                _buildCategoriaButton(CategoriaDespesa.alimentacao, colors),
+                _buildCategoriaButton(CategoriaDespesa.manutencao, colors),
+                _buildCategoriaButton(CategoriaDespesa.pedagio, colors),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
+            _buildOutrosButton(colors),
           ],
-        ),
-        const SizedBox(height: AppSpacing.md),
-        _buildOutrosButton(colors),
-      ],
+        );
+      },
     );
   }
 
@@ -69,33 +74,39 @@ class CategoriaSelectorGrid extends StatelessWidget {
       isHighlighted: isSelected,
       backgroundColor: isSelected ? colors.primaryLight : colors.cardBackground,
       borderColor: isSelected ? colors.primary : colors.border,
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(
-              color: isSelected ? colors.primary : Colors.transparent,
-              borderRadius: AppRadius.mdRadius,
-            ),
-            child: Icon(
-              icon,
-              color: isSelected ? Colors.white : colors.primary,
-              size: 26,
-            ),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Center(
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: isSelected ? colors.primary : Colors.transparent,
+                  borderRadius: AppRadius.mdRadius,
+                ),
+                child: Icon(
+                  icon,
+                  color: isSelected ? Colors.white : colors.primary,
+                  size: 26,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                categoria.label,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.lexend(
+                  fontSize: 14,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  color: isSelected ? colors.primary : colors.textPrimary,
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            categoria.label,
-            textAlign: TextAlign.center,
-            style: GoogleFonts.lexend(
-              fontSize: 14,
-              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-              color: isSelected ? colors.primary : colors.textPrimary,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

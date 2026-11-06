@@ -58,12 +58,25 @@ class _PerfilPageState extends State<PerfilPage> {
     final colors = context.colors;
     final syncService = SyncService();
 
-    // 1. Verifica conectividade do aparelho antes de tentar sincronizar
+    // 1. Verifica conectividade do aparelho e dispara o ciclo de tentativas (exibidas na NetworkStatusBar)
     final connectivity = await Connectivity().checkConnectivity();
     final isDeviceOffline = connectivity.contains(ConnectivityResult.none) || connectivity.isEmpty;
 
-    if (isDeviceOffline) {
-      final summary = await syncService.getPendingSyncSummary();
+    // 2. Se há sincronização paralela ativa, aguarda finalizar; caso contrário, dispara
+    bool syncSuccess;
+    if (syncService.isSyncing) {
+      while (syncService.isSyncing && mounted) {
+        await Future.delayed(const Duration(milliseconds: 200));
+      }
+      final checkSummary = await syncService.getPendingSyncSummary();
+      syncSuccess = !checkSummary.hasPending && !isDeviceOffline;
+    } else {
+      syncSuccess = await syncService.syncAll(maxRetries: 3);
+    }
+
+    final summary = await syncService.getPendingSyncSummary();
+
+    if (isDeviceOffline && !syncSuccess) {
       if (!mounted) return;
       setState(() {
         _isSyncing = false;
@@ -92,20 +105,6 @@ class _PerfilPageState extends State<PerfilPage> {
       );
       return;
     }
-
-    // 2. Se há sincronização paralela ativa, aguarda finalizar; caso contrário, dispara
-    bool syncSuccess;
-    if (syncService.isSyncing) {
-      while (syncService.isSyncing && mounted) {
-        await Future.delayed(const Duration(milliseconds: 200));
-      }
-      final checkSummary = await syncService.getPendingSyncSummary();
-      syncSuccess = !checkSummary.hasPending;
-    } else {
-      syncSuccess = await syncService.syncAll(maxRetries: 2);
-    }
-
-    final summary = await syncService.getPendingSyncSummary();
 
     if (mounted) {
       await context.read<HomeViewModel>().carregarDadosBancoLocal();
@@ -305,9 +304,14 @@ class _PerfilPageState extends State<PerfilPage> {
                     const PerfilPreferenciasCard(),
                     const SizedBox(height: AppSpacing.md),
 
-                    PerfilSincronizacaoCard(
-                      isSyncing: _isSyncing,
-                      onSincronizar: _forcarSincronizacao,
+                    ValueListenableBuilder<bool>(
+                      valueListenable: SyncService().isSyncingNotifier,
+                      builder: (context, isBackgroundSyncing, _) {
+                        return PerfilSincronizacaoCard(
+                          isSyncing: _isSyncing || isBackgroundSyncing,
+                          onSincronizar: _forcarSincronizacao,
+                        );
+                      },
                     ),
                     const SizedBox(height: AppSpacing.xl),
 

@@ -31,6 +31,9 @@ class PerfilPendenciasModal {
         return StatefulBuilder(
           builder: (context, setModalState) {
             return Container(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.92,
+              ),
               decoration: BoxDecoration(
                 color: colors.cardBackground,
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(AppRadius.lg)),
@@ -47,6 +50,7 @@ class PerfilPendenciasModal {
                 bottom: MediaQuery.of(context).viewInsets.bottom + AppSpacing.xl,
               ),
               child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -120,12 +124,14 @@ class PerfilPendenciasModal {
                                 children: [
                                   Icon(LucideIcons.truck, size: 15, color: colors.warning),
                                   const SizedBox(width: 8),
-                                  Text(
-                                    '${currentSummary.viagensPendentes} viagem(ns) pendente(s)',
-                                    style: GoogleFonts.lexend(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w500,
-                                      color: colors.textPrimary,
+                                  Expanded(
+                                    child: Text(
+                                      '${currentSummary.viagensPendentes} viagem(ns) pendente(s)',
+                                      style: GoogleFonts.lexend(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                        color: colors.textPrimary,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -138,12 +144,14 @@ class PerfilPendenciasModal {
                                 children: [
                                   Icon(LucideIcons.receipt, size: 15, color: colors.warning),
                                   const SizedBox(width: 8),
-                                  Text(
-                                    '${currentSummary.despesasPendentes} despesa(s) pendente(s)',
-                                    style: GoogleFonts.lexend(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w500,
-                                      color: colors.textPrimary,
+                                  Expanded(
+                                    child: Text(
+                                      '${currentSummary.despesasPendentes} despesa(s) pendente(s)',
+                                      style: GoogleFonts.lexend(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                        color: colors.textPrimary,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -156,12 +164,14 @@ class PerfilPendenciasModal {
                                 children: [
                                   Icon(LucideIcons.image, size: 15, color: colors.warning),
                                   const SizedBox(width: 8),
-                                  Text(
-                                    '${currentSummary.fotosPendentes} foto(s) de comprovante não enviada(s)',
-                                    style: GoogleFonts.lexend(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w500,
-                                      color: colors.textPrimary,
+                                  Expanded(
+                                    child: Text(
+                                      '${currentSummary.fotosPendentes} foto(s) de comprovante não enviada(s)',
+                                      style: GoogleFonts.lexend(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                        color: colors.textPrimary,
+                                      ),
                                     ),
                                   ),
                                 ],

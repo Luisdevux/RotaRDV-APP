@@ -220,9 +220,13 @@ class _CidadeEstadoBottomSheetState extends State<_CidadeEstadoBottomSheet> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final mediaQuery = MediaQuery.of(context);
+    final isCompactHeight = mediaQuery.size.height < 500;
+    final hasKeyboard = mediaQuery.viewInsets.bottom > 0;
 
     return Container(
-      height: MediaQuery.of(context).size.height * 0.85,
+      height: mediaQuery.size.height * (isCompactHeight ? 0.94 : 0.85),
+      padding: EdgeInsets.only(bottom: mediaQuery.viewInsets.bottom),
       decoration: BoxDecoration(
         color: colors.cardBackground,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
@@ -235,7 +239,10 @@ class _CidadeEstadoBottomSheetState extends State<_CidadeEstadoBottomSheet> {
           // Drag Handle
           Center(
             child: Container(
-              margin: const EdgeInsets.only(top: 12, bottom: 8),
+              margin: EdgeInsets.only(
+                top: isCompactHeight ? 8 : 12,
+                bottom: isCompactHeight ? 4 : 8,
+              ),
               width: 40,
               height: 4,
               decoration: BoxDecoration(
@@ -247,11 +254,15 @@ class _CidadeEstadoBottomSheetState extends State<_CidadeEstadoBottomSheet> {
 
           // Header
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
+            padding: EdgeInsets.symmetric(
+              horizontal: AppSpacing.lg,
+              vertical: isCompactHeight ? 2 : AppSpacing.sm,
+            ),
             child: Row(
               children: [
                 if (_currentStep == _Step.selecionarCidade)
                   IconButton(
+                    visualDensity: isCompactHeight ? VisualDensity.compact : VisualDensity.standard,
                     icon: Icon(LucideIcons.arrowLeft, color: colors.primary, size: 22),
                     onPressed: () {
                       setState(() {
@@ -271,25 +282,31 @@ class _CidadeEstadoBottomSheetState extends State<_CidadeEstadoBottomSheet> {
                         _currentStep == _Step.selecionarEstado
                             ? '1. Escolha o Estado (UF)'
                             : '2. Escolha a Cidade (${_selectedEstado?['sigla']})',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: GoogleFonts.lexend(
-                          fontSize: 16,
+                          fontSize: isCompactHeight ? 15 : 16,
                           fontWeight: FontWeight.w700,
                           color: colors.textPrimary,
                         ),
                       ),
-                      Text(
-                        _currentStep == _Step.selecionarEstado
-                            ? 'Para onde é o seu destino ou ponto de partida?'
-                            : 'Cidades de ${_selectedEstado?['name']}',
-                        style: GoogleFonts.lexend(
-                          fontSize: 12,
-                          color: colors.textMuted,
+                      if (!(isCompactHeight && hasKeyboard))
+                        Text(
+                          _currentStep == _Step.selecionarEstado
+                              ? 'Para onde é o seu destino ou ponto de partida?'
+                              : 'Cidades de ${_selectedEstado?['name']}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.lexend(
+                            fontSize: 12,
+                            color: colors.textMuted,
+                          ),
                         ),
-                      ),
                     ],
                   ),
                 ),
                 IconButton(
+                  visualDensity: isCompactHeight ? VisualDensity.compact : VisualDensity.standard,
                   icon: Icon(LucideIcons.x, color: colors.textHint, size: 20),
                   onPressed: () => Navigator.pop(context),
                 ),
@@ -299,7 +316,10 @@ class _CidadeEstadoBottomSheetState extends State<_CidadeEstadoBottomSheet> {
 
           // Search Field
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
+            padding: EdgeInsets.symmetric(
+              horizontal: AppSpacing.lg,
+              vertical: isCompactHeight ? 4 : AppSpacing.sm,
+            ),
             child: Container(
               decoration: BoxDecoration(
                 color: colors.inputBackground,
@@ -329,7 +349,7 @@ class _CidadeEstadoBottomSheetState extends State<_CidadeEstadoBottomSheet> {
                   border: InputBorder.none,
                   enabledBorder: InputBorder.none,
                   focusedBorder: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                  contentPadding: EdgeInsets.symmetric(vertical: isCompactHeight ? 10 : 12),
                   filled: false,
                 ),
                 onChanged: (val) {

@@ -1,4 +1,4 @@
-﻿import 'dart:io';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -162,31 +162,40 @@ class _ComprovanteViewerModalState extends State<ComprovanteViewerModal> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      Icon(LucideIcons.receipt, color: colors.primary, size: 22),
-                      const SizedBox(width: AppSpacing.md),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            cat.label,
-                            style: GoogleFonts.lexend(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: colors.textPrimary,
-                            ),
+                  Flexible(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(LucideIcons.receipt, color: colors.primary, size: 22),
+                        const SizedBox(width: AppSpacing.md),
+                        Flexible(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                cat.label,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.lexend(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: colors.textPrimary,
+                                ),
+                              ),
+                              Text(
+                                _formatDate(widget.despesa.data),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.lexend(
+                                  fontSize: 12,
+                                  color: colors.textMuted,
+                                ),
+                              ),
+                            ],
                           ),
-                          Text(
-                            _formatDate(widget.despesa.data),
-                            style: GoogleFonts.lexend(
-                              fontSize: 12,
-                              color: colors.textMuted,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                        ),
+                      ],
+                    ),
                   ),
                   IconButton(
                     onPressed: () => Navigator.pop(context),
@@ -475,6 +484,7 @@ class _ComprovanteViewerModalState extends State<ComprovanteViewerModal> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icon, size: 15, color: iconColor ?? colors.textMuted),
             const SizedBox(width: 8),
@@ -488,6 +498,7 @@ class _ComprovanteViewerModalState extends State<ComprovanteViewerModal> {
             ),
           ],
         ),
+        const SizedBox(width: AppSpacing.md),
         Flexible(
           child: Text(
             value,
