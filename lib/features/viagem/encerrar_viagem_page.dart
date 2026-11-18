@@ -7,10 +7,11 @@ import 'package:provider/provider.dart';
 import '../../core/constants/app_constants.dart';
 import '../../core/database/local_database.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/odometer_validator.dart';
 import '../../core/widgets/app_card.dart';
 import '../../core/widgets/app_dialog.dart';
 import '../../core/widgets/network_status_bar.dart';
-import '../../core/widgets/thousands_formatter.dart';
+import '../../core/widgets/odometer_input_field.dart';
 import '../../models/viagem_collection.dart';
 import '../../services/sync_service.dart';
 import '../despesas/despesa_viewmodel.dart';
@@ -36,19 +37,19 @@ class _EncerrarViagemPageState extends State<EncerrarViagemPage> {
   final TextEditingController _kmFinalController = TextEditingController();
   double? _kmFinal;
   bool _isSaving = false;
-  bool _isKmFocused = false;
 
   @override
   void initState() {
     super.initState();
-    if (widget.viagem.kmFinal != null && widget.viagem.kmFinal! > widget.viagem.kmInicial) {
+    if (widget.viagem.kmFinal != null &&
+        widget.viagem.kmFinal! > widget.viagem.kmInicial &&
+        widget.viagem.kmFinal! <= OdometerValidator.maxOdometroKm) {
       _kmFinal = widget.viagem.kmFinal;
-      _kmFinalController.text = NumberFormat('#,###', 'pt_BR').format(_kmFinal!.toInt());
+      _kmFinalController.text = OdometerValidator.formatKm(_kmFinal!.toInt());
     }
 
     _kmFinalController.addListener(() {
-      final text = _kmFinalController.text.replaceAll('.', '').replaceAll(',', '').trim();
-      final val = double.tryParse(text);
+      final val = OdometerValidator.parseNumero(_kmFinalController.text);
       if (val != _kmFinal) {
         setState(() {
           _kmFinal = val;
@@ -77,19 +78,43 @@ class _EncerrarViagemPageState extends State<EncerrarViagemPage> {
     }
   }
 
-  String _formatKm(num val) {
-    try {
-      return NumberFormat('#,###', 'pt_BR').format(val);
-    } catch (_) {
-      return val.toStringAsFixed(0);
-    }
-  }
+  Future<void> _confirmarEncerramento(
+    BuildContext context,
+    AppColorsExtension colors,
+    MetricasConsumoViagem metricas,
+  ) async {
+    final validacaoKm = OdometerValidator.validarKmFinal(
+      textoKm: _kmFinalController.text,
+      kmInicial: widget.viagem.kmInicial,
+      ultimoKmAbastecimento: metricas.ultimoKmInformado,
+    );
+    if (_isSaving || _kmFinal == null || validacaoKm.mensagemErro != null) return;
 
-  Future<void> _confirmarEncerramento(BuildContext context, AppColorsExtension colors) async {
+    // Alerta de discrepância acentuada (diferença > 10.000 KM em relação ao último odômetro)
+    final double kmReferencia = metricas.ultimoKmInformado ?? widget.viagem.kmInicial;
+    if (OdometerValidator.isSaltoDiscrepante(
+      kmInformado: _kmFinal!,
+      kmReferencia: kmReferencia,
+    )) {
+      final String labelReferencia = metricas.ultimoKmInformado != null
+          ? 'último abastecimento'
+          : 'KM inicial';
+      final bool? confirmarSalto = await AppDialog.show(
+        context: context,
+        title: 'Quilometragem discrepante',
+        message:
+            'O KM final informado (${OdometerValidator.formatKm(_kmFinal!)} KM) é mais de 10.000 KM superior ao $labelReferencia (${OdometerValidator.formatKm(kmReferencia)} KM).\n\nConfirma que este valor está correto?',
+        confirmText: 'Sim, está correto',
+        cancelText: 'Revisar',
+        icon: LucideIcons.alertTriangle,
+      );
+      if (confirmarSalto != true || !context.mounted) return;
+    }
+
     final bool? confirm = await AppDialog.show(
       context: context,
       title: 'Encerrar viagem',
-      message: 'Confirma o encerramento desta rota com KM final de ${_formatKm(_kmFinal!)} KM?',
+      message: 'Confirma o encerramento desta rota com KM final de ${OdometerValidator.formatKm(_kmFinal!)} KM?',
       confirmText: 'Encerrar viagem',
       cancelText: 'Cancelar',
       icon: LucideIcons.checkCircle2,
@@ -161,16 +186,21 @@ class _EncerrarViagemPageState extends State<EncerrarViagemPage> {
     final veiculo = homeVM.veiculo;
     final despesaVM = context.watch<DespesaViewModel>();
 
-    final metricas = despesaVM.calcularMetricasConsumo(
-      widget.viagem,
-      kmFinalTemporario: _kmFinal,
+    final metricasBase = despesaVM.calcularMetricasConsumo(widget.viagem);
+    final validacaoKm = OdometerValidator.validarKmFinal(
+      textoKm: _kmFinalController.text,
+      kmInicial: kmInicial,
+      ultimoKmAbastecimento: metricasBase.ultimoKmInformado,
     );
+    final bool isKmInvalido = validacaoKm.mensagemErro != null;
 
-    final bool isKmMenorQueInicial = _kmFinal != null && _kmFinal! <= kmInicial;
-    final bool isKmMenorQueUltimoAbastec = metricas.ultimoKmInformado != null &&
-        _kmFinal != null &&
-        _kmFinal! < metricas.ultimoKmInformado!;
-    final bool isKmInvalido = isKmMenorQueInicial || isKmMenorQueUltimoAbastec;
+    // Só repassa o KM temporário para cálculo de média quando estiver dentro dos limites válidos
+    final metricas = (!isKmInvalido && _kmFinal != null)
+        ? despesaVM.calcularMetricasConsumo(
+            widget.viagem,
+            kmFinalTemporario: _kmFinal,
+          )
+        : metricasBase;
 
     final double? kmPercorridoExibido;
     final bool isParcial;
@@ -183,7 +213,9 @@ class _EncerrarViagemPageState extends State<EncerrarViagemPage> {
         kmPercorridoExibido = null;
         isParcial = false;
       }
-    } else if (widget.viagem.kmFinal != null && widget.viagem.kmFinal! > kmInicial) {
+    } else if (widget.viagem.kmFinal != null &&
+        widget.viagem.kmFinal! > kmInicial &&
+        widget.viagem.kmFinal! <= OdometerValidator.maxOdometroKm) {
       kmPercorridoExibido = widget.viagem.kmFinal! - kmInicial;
       isParcial = false;
     } else if (metricas.kmPercorridoTotal > 0) {
@@ -197,21 +229,20 @@ class _EncerrarViagemPageState extends State<EncerrarViagemPage> {
     final String kmPercorridoSubtitulo;
     final Color kmPercorridoSubtituloColor;
 
-    if (_kmFinal != null && isKmInvalido) {
-      kmPercorridoSubtitulo = isKmMenorQueInicial
-          ? 'Menor que o inicial'
-          : 'Menor que último abastec.';
+    if (validacaoKm.subtituloCurto != null) {
+      kmPercorridoSubtitulo = validacaoKm.subtituloCurto!;
       kmPercorridoSubtituloColor = colors.error;
     } else if (isParcial && kmPercorridoExibido != null) {
       kmPercorridoSubtitulo = metricas.ultimoKmInformado != null
-          ? 'Último reg.: ${_formatKm(metricas.ultimoKmInformado!)} KM'
+          ? 'Último reg.: ${OdometerValidator.formatKm(metricas.ultimoKmInformado!)} KM'
           : 'Parcial dos abastecimentos';
       kmPercorridoSubtituloColor = colors.textMuted;
     } else if (_kmFinal != null && kmPercorridoExibido != null) {
-      kmPercorridoSubtitulo = 'Inicial: ${_formatKm(kmInicial)} • Final: ${_formatKm(_kmFinal!)}';
+      kmPercorridoSubtitulo =
+          'Inicial: ${OdometerValidator.formatKm(kmInicial)} • Final: ${OdometerValidator.formatKm(_kmFinal!)}';
       kmPercorridoSubtituloColor = colors.textMuted;
     } else {
-      kmPercorridoSubtitulo = 'Inicial: ${_formatKm(kmInicial)} KM';
+      kmPercorridoSubtitulo = 'Inicial: ${OdometerValidator.formatKm(kmInicial)} KM';
       kmPercorridoSubtituloColor = colors.textMuted;
     }
 
@@ -260,270 +291,167 @@ class _EncerrarViagemPageState extends State<EncerrarViagemPage> {
                     const SizedBox(height: AppSpacing.xl),
 
                     // Campo de Odômetro (KM Final)
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(LucideIcons.gauge, color: colors.primary, size: 18),
-                            const SizedBox(width: AppSpacing.sm),
-                            Text(
-                              'KM final (odômetro na chegada)*',
-                              style: GoogleFonts.lexend(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color: colors.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: AppSpacing.sm),
-                        Focus(
-                          onFocusChange: (hasFocus) {
-                            setState(() => _isKmFocused = hasFocus);
-                            if (hasFocus && _kmFinalController.text.isNotEmpty) {
-                              _kmFinalController.selection = TextSelection(
-                                baseOffset: 0,
-                                extentOffset: _kmFinalController.text.length,
-                              );
-                            }
-                          },
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: colors.inputBackground,
-                              border: Border.all(
-                                color: isKmInvalido
-                                    ? colors.error
-                                    : _isKmFocused
-                                        ? colors.primary
-                                        : colors.border,
-                                width: (_isKmFocused || isKmInvalido) ? 1.5 : 1.0,
-                              ),
-                              borderRadius: AppRadius.lgRadius,
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.lg,
-                              vertical: 14,
-                            ),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: TextField(
-                                    controller: _kmFinalController,
-                                    onTap: () {
-                                      if (_kmFinalController.text.isNotEmpty) {
-                                        _kmFinalController.selection = TextSelection(
-                                          baseOffset: 0,
-                                          extentOffset: _kmFinalController.text.length,
-                                        );
-                                      }
-                                    },
-                                    enableInteractiveSelection: true,
-                                    keyboardType: TextInputType.number,
-                                    inputFormatters: [ThousandsFormatter()],
-                                    style: GoogleFonts.lexend(
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.w700,
-                                      color: colors.textPrimary,
-                                      height: 1.25,
-                                    ),
-                                    decoration: InputDecoration(
-                                      hintText: '000.000',
-                                      hintStyle: GoogleFonts.lexend(
-                                        fontSize: 22,
-                                        fontWeight: FontWeight.w700,
-                                        color: colors.textHint,
-                                      ),
-                                      border: InputBorder.none,
-                                      enabledBorder: InputBorder.none,
-                                      focusedBorder: InputBorder.none,
-                                      contentPadding: EdgeInsets.zero,
-                                      isDense: true,
-                                      filled: false,
-                                    ),
-                                  ),
-                                ),
-                              const SizedBox(width: AppSpacing.sm),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: colors.cardBackground,
-                                  borderRadius: AppRadius.xsRadius,
-                                  border: Border.all(color: colors.borderSubtle),
-                                ),
-                                child: Text(
-                                  'KM',
-                                  style: GoogleFonts.lexend(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w700,
-                                    color: colors.textSecondary,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                        if (isKmInvalido) ...[
-                          const SizedBox(height: 6),
-                          Row(
-                            children: [
-                              Icon(LucideIcons.alertCircle, size: 14, color: colors.error),
-                              const SizedBox(width: 5),
-                              Expanded(
-                                child: Text(
-                                  isKmMenorQueInicial
-                                      ? 'O KM final deve ser maior que o KM inicial (${_formatKm(kmInicial)} KM)'
-                                      : 'O KM final não pode ser menor que o último abastecimento (${_formatKm(metricas.ultimoKmInformado!)} KM)',
-                                  style: GoogleFonts.lexend(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                    color: colors.error,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ],
+                    OdometerInputField(
+                      label: 'KM final (odômetro na chegada)*',
+                      icon: LucideIcons.gauge,
+                      controller: _kmFinalController,
+                      hintText: '000.000',
+                      errorText: validacaoKm.mensagemErro,
                     ),
                     const SizedBox(height: AppSpacing.lg),
 
                     // Métricas: Total Percorrido e Despesas
-                    Row(
-                      children: [
-                        Expanded(
-                          child: AppCard(
-                            backgroundColor: colors.cardBackground,
-                            borderColor: colors.borderSubtle,
-                            padding: const EdgeInsets.all(AppSpacing.md),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Flexible(
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Flexible(
-                                            child: Text(
-                                              'Percorrido',
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: GoogleFonts.lexend(
-                                                fontSize: 11,
-                                                fontWeight: FontWeight.w600,
-                                                color: colors.textHint,
-                                              ),
-                                            ),
-                                          ),
-                                          if (isParcial && kmPercorridoExibido != null) ...[
-                                            const SizedBox(width: 4),
-                                            Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                                              decoration: BoxDecoration(
-                                                color: colors.primary.withValues(alpha: 0.12),
-                                                borderRadius: AppRadius.xsRadius,
-                                              ),
+                    IntrinsicHeight(
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Expanded(
+                            child: AppCard(
+                              backgroundColor: colors.cardBackground,
+                              borderColor: isKmInvalido
+                                  ? colors.error.withValues(alpha: 0.5)
+                                  : colors.borderSubtle,
+                              padding: const EdgeInsets.all(AppSpacing.md),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Flexible(
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Flexible(
                                               child: Text(
-                                                'Parcial',
+                                                'Percorrido',
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
                                                 style: GoogleFonts.lexend(
-                                                  fontSize: 9,
-                                                  fontWeight: FontWeight.w700,
-                                                  color: colors.primary,
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: colors.textHint,
                                                 ),
                                               ),
                                             ),
+                                            if (isParcial && kmPercorridoExibido != null) ...[
+                                              const SizedBox(width: 4),
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                                decoration: BoxDecoration(
+                                                  color: colors.primary.withValues(alpha: 0.12),
+                                                  borderRadius: AppRadius.xsRadius,
+                                                ),
+                                                child: Text(
+                                                  'Parcial',
+                                                  style: GoogleFonts.lexend(
+                                                    fontSize: 9,
+                                                    fontWeight: FontWeight.w700,
+                                                    color: colors.primary,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
                                           ],
-                                        ],
+                                        ),
                                       ),
-                                    ),
-                                    Icon(LucideIcons.gauge, size: 14, color: colors.primary),
-                                  ],
-                                ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  kmPercorridoExibido != null ? '${_formatKm(kmPercorridoExibido)} KM' : '-- KM',
-                                  style: GoogleFonts.lexend(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: colors.textPrimary,
+                                      Icon(LucideIcons.gauge, size: 14, color: colors.primary),
+                                    ],
                                   ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  kmPercorridoSubtitulo,
-                                  style: GoogleFonts.lexend(
-                                    fontSize: 11,
-                                    color: kmPercorridoSubtituloColor,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(
-                          child: AppCard(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => DespesasViagemPage(
-                                    viagem: widget.viagem,
-                                    viagemId: widget.viagem.uuid,
-                                  ),
-                                ),
-                              );
-                            },
-                            backgroundColor: colors.cardBackground,
-                            borderColor: colors.borderSubtle,
-                            padding: const EdgeInsets.all(AppSpacing.md),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      'Despesas',
+                                  const SizedBox(height: 6),
+                                  FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    alignment: Alignment.centerLeft,
+                                    child: Text(
+                                      kmPercorridoExibido != null
+                                          ? '${OdometerValidator.formatKm(kmPercorridoExibido)} KM'
+                                          : '-- KM',
+                                      maxLines: 1,
                                       style: GoogleFonts.lexend(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w600,
-                                        color: colors.textHint,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: colors.textPrimary,
                                       ),
                                     ),
-                                    Icon(LucideIcons.chevronRight, size: 14, color: colors.textSecondary),
-                                  ],
-                                ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  _formatCurrency(despesaVM.totalGasto),
-                                  style: GoogleFonts.lexend(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: colors.textPrimary,
                                   ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  '${despesaVM.despesas.length} ${despesaVM.despesas.length == 1 ? 'lançamento' : 'lançamentos'}',
-                                  style: GoogleFonts.lexend(
-                                    fontSize: 11,
-                                    color: colors.textMuted,
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    kmPercorridoSubtitulo,
+                                    style: GoogleFonts.lexend(
+                                      fontSize: 11,
+                                      color: kmPercorridoSubtituloColor,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: AppSpacing.md),
+                          Expanded(
+                            child: AppCard(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => DespesasViagemPage(
+                                      viagem: widget.viagem,
+                                      viagemId: widget.viagem.uuid,
+                                    ),
+                                  ),
+                                );
+                              },
+                              backgroundColor: colors.cardBackground,
+                              borderColor: colors.borderSubtle,
+                              padding: const EdgeInsets.all(AppSpacing.md),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        'Despesas',
+                                        style: GoogleFonts.lexend(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                          color: colors.textHint,
+                                        ),
+                                      ),
+                                      Icon(LucideIcons.chevronRight, size: 14, color: colors.textSecondary),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 6),
+                                  FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    alignment: Alignment.centerLeft,
+                                    child: Text(
+                                      _formatCurrency(despesaVM.totalGasto),
+                                      maxLines: 1,
+                                      style: GoogleFonts.lexend(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: colors.textPrimary,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    '${despesaVM.despesas.length} ${despesaVM.despesas.length == 1 ? 'lançamento' : 'lançamentos'}',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: GoogleFonts.lexend(
+                                      fontSize: 11,
+                                      color: colors.textMuted,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.md),
 
@@ -562,7 +490,7 @@ class _EncerrarViagemPageState extends State<EncerrarViagemPage> {
                       builder: (context) {
                         final bool botaoHabilitado = !_isSaving && _kmFinal != null && !isKmInvalido;
                         return ElevatedButton(
-                          onPressed: botaoHabilitado ? () => _confirmarEncerramento(context, colors) : null,
+                          onPressed: botaoHabilitado ? () => _confirmarEncerramento(context, colors, metricas) : null,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: botaoHabilitado ? colors.success : colors.surfaceOverlay,
                             disabledBackgroundColor: colors.surfaceOverlay,
@@ -584,13 +512,17 @@ class _EncerrarViagemPageState extends State<EncerrarViagemPage> {
                                       size: 20,
                                     ),
                                     const SizedBox(width: AppSpacing.sm),
-                                    Text(
-                                      'Encerrar viagem',
-                                      style: GoogleFonts.lexend(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        letterSpacing: 0.8,
-                                        color: botaoHabilitado ? Colors.white : colors.textHint,
+                                    Flexible(
+                                      child: Text(
+                                        'Encerrar viagem',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: GoogleFonts.lexend(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 0.8,
+                                          color: botaoHabilitado ? Colors.white : colors.textHint,
+                                        ),
                                       ),
                                     ),
                                   ],

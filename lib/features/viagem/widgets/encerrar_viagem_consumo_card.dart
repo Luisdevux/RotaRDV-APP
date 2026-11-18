@@ -65,6 +65,8 @@ class EncerrarViagemConsumoCard extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   _obterValorConsumo(metricas),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.lexend(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
