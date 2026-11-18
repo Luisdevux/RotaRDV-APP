@@ -1,5 +1,6 @@
 // lib/features/despesas/nova_despesa_form_validator.dart
 
+import '../../core/utils/odometer_validator.dart';
 import '../../models/viagem_collection.dart';
 import 'despesa_viewmodel.dart';
 import 'widgets/nova_despesa_seletor_combustivel.dart';
@@ -7,10 +8,7 @@ import 'widgets/nova_despesa_seletor_combustivel.dart';
 // Validações em tempo real e regras de liberação do formulário de nova despesa
 abstract class NovaDespesaFormValidator {
   // Converte texto com formatação brasileira (vírgula e ponto) em número de ponto flutuante
-  static double? parseNumero(String texto) {
-    final limpo = texto.replaceAll('.', '').replaceAll(',', '.').trim();
-    return double.tryParse(limpo);
-  }
+  static double? parseNumero(String texto) => OdometerValidator.parseNumero(texto);
 
   // Valida o valor monetário total digitado
   static String? validarValorEmTempoReal({
@@ -75,7 +73,7 @@ abstract class NovaDespesaFormValidator {
     if (km == null || km <= 0) {
       return 'Informe uma quilometragem válida';
     }
-    if (km > 10000000) {
+    if (km > OdometerValidator.maxOdometroKm) {
       return 'Quilometragem inválida (limite excedido)';
     }
     if (viagem != null && km < viagem.kmInicial) {
@@ -127,7 +125,7 @@ abstract class NovaDespesaFormValidator {
       }
 
       final km = parseNumero(textoKm);
-      if (km == null || km <= 0 || km > 10000000) return false;
+      if (km == null || km <= 0 || km > OdometerValidator.maxOdometroKm) return false;
       if (viagem != null && km < viagem.kmInicial) return false;
     }
 
@@ -199,7 +197,7 @@ abstract class NovaDespesaFormValidator {
       if (km == null || km <= 0) {
         return 'Informe a quilometragem atual do veículo.';
       }
-      if (km > 10000000) {
+      if (km > OdometerValidator.maxOdometroKm) {
         return 'A quilometragem informada ultrapassa o limite permitido.';
       }
       if (viagem != null && km < viagem.kmInicial) {

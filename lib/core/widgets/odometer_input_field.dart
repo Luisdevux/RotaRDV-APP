@@ -2,7 +2,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../theme/app_theme.dart';
+import '../utils/odometer_validator.dart';
 import 'thousands_formatter.dart';
 
 // Input personalizado para odômetro, com ícone, label, campo de texto, unidade (KM),
@@ -14,6 +16,7 @@ class OdometerInputField extends StatefulWidget {
   final String hintText;
   final String? errorText;
   final ValueChanged<String>? onChanged;
+  final int maxDigits;
 
   const OdometerInputField({
     super.key,
@@ -23,6 +26,7 @@ class OdometerInputField extends StatefulWidget {
     required this.hintText,
     this.errorText,
     this.onChanged,
+    this.maxDigits = OdometerValidator.maxOdometroDigits,
   });
 
   @override
@@ -52,12 +56,14 @@ class _OdometerInputFieldState extends State<OdometerInputField> {
           children: [
             Icon(widget.icon, color: colors.primary, size: 18),
             const SizedBox(width: AppSpacing.sm),
-            Text(
-              widget.label,
-              style: GoogleFonts.lexend(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: colors.textSecondary,
+            Flexible(
+              child: Text(
+                widget.label,
+                style: GoogleFonts.lexend(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: colors.textSecondary,
+                ),
               ),
             ),
           ],
@@ -94,8 +100,9 @@ class _OdometerInputFieldState extends State<OdometerInputField> {
                     controller: widget.controller,
                     onChanged: widget.onChanged,
                     onTap: _selecionarTudo,
+                    maxLines: 1,
                     keyboardType: TextInputType.number,
-                    inputFormatters: [ThousandsFormatter()],
+                    inputFormatters: [ThousandsFormatter(maxDigits: widget.maxDigits)],
                     enableInteractiveSelection: true,
                     style: GoogleFonts.lexend(
                       fontSize: 22,
@@ -141,14 +148,22 @@ class _OdometerInputFieldState extends State<OdometerInputField> {
           ),
         ),
         if (widget.errorText != null) ...[
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            widget.errorText!,
-            style: GoogleFonts.lexend(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: colors.error,
-            ),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Icon(LucideIcons.alertCircle, size: 14, color: colors.error),
+              const SizedBox(width: 5),
+              Expanded(
+                child: Text(
+                  widget.errorText!,
+                  style: GoogleFonts.lexend(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: colors.error,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ],

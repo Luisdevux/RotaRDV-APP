@@ -72,19 +72,26 @@ class ViagemOdometroResumoCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 6),
-                Text(
-                  percorrido != null
-                      ? '${_formatKm(percorrido)} KM'
-                      : (isEmAndamento ? 'Em andamento' : '${_formatKm(kmIni)} KM'),
-                  style: GoogleFonts.lexend(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: colors.textPrimary,
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    percorrido != null
+                        ? '${_formatKm(percorrido)} KM'
+                        : (isEmAndamento ? 'Em andamento' : '${_formatKm(kmIni)} KM'),
+                    maxLines: 1,
+                    style: GoogleFonts.lexend(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: colors.textPrimary,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   'Inicial: ${_formatKm(kmIni)} KM',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.lexend(
                     fontSize: 11,
                     color: colors.textMuted,

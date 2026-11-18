@@ -7,6 +7,7 @@ import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 import '../../core/database/local_database.dart';
+import '../../core/utils/odometer_validator.dart';
 import '../../models/despesa_collection.dart';
 import '../../models/viagem_collection.dart';
 import '../../services/sync_service.dart';
@@ -109,7 +110,7 @@ class DespesaViewModel extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get currentViagemId => _currentViagemId;
 
-  double get totalGasto => _despesas.fold(0.0, (acc, d) => acc + d.valorTotal);
+  double get totalGasto => despesas.fold(0.0, (acc, d) => acc + d.valorTotal);
 
   Map<String, double> get gastosPorCategoria {
     final Map<String, double> mapa = {
@@ -119,7 +120,7 @@ class DespesaViewModel extends ChangeNotifier {
       'PEDAGIO': 0.0,
       'OUTROS': 0.0,
     };
-    for (final d in _despesas) {
+    for (final d in despesas) {
       mapa[d.tipo] = (mapa[d.tipo] ?? 0.0) + d.valorTotal;
     }
     return mapa;
@@ -195,7 +196,7 @@ class DespesaViewModel extends ChangeNotifier {
       if (kmAtual == null || kmAtual <= 0) {
         return 'Informe o odômetro (KM) atual do veículo para o abastecimento.';
       }
-      if (kmAtual > 10000000) {
+      if (kmAtual > OdometerValidator.maxOdometroKm) {
         return 'O odômetro informado excede o limite máximo permitido.';
       }
       if (viagem != null && kmAtual < viagem.kmInicial) {
@@ -275,7 +276,7 @@ class DespesaViewModel extends ChangeNotifier {
   }) {
     return calcularMetricasParaLista(
       viagem,
-      _despesas,
+      despesas,
       kmFinalTemporario: kmFinalTemporario,
     );
   }

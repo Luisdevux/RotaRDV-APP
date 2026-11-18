@@ -1,13 +1,13 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import 'package:isar/isar.dart';
 import '../../core/database/local_database.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/odometer_validator.dart';
 import '../../core/utils/string_utils.dart';
 import '../../core/widgets/app_dialog.dart';
 import '../../core/widgets/cidade_estado_picker.dart';
@@ -82,11 +82,6 @@ class _NovaViagemPageState extends State<NovaViagemPage> {
     super.dispose();
   }
 
-  double? _parseNumero(String texto) {
-    final limpo = texto.replaceAll('.', '').replaceAll(',', '.').trim();
-    return double.tryParse(limpo);
-  }
-
   bool get _isOrigemIgualDestino {
     if (_origemCidade == null || _origemUF == null || _destinoCidade == null || _destinoUF == null) {
       return false;
@@ -103,19 +98,10 @@ class _NovaViagemPageState extends State<NovaViagemPage> {
   }
 
   String? _validarKmInicialEmTempoReal(double? ultimaKmConhecida) {
-    final kmText = _kmController.text.trim();
-    if (kmText.isEmpty) return null;
-    final km = _parseNumero(kmText);
-    if (km == null || km <= 0) {
-      return 'Informe uma quilometragem inicial maior que zero';
-    }
-    if (km > 10000000) {
-      return 'Quilometragem inválida (limite excedido)';
-    }
-    if (ultimaKmConhecida != null && km < ultimaKmConhecida) {
-      return 'KM (${NumberFormat('#,###', 'pt_BR').format(km.toInt())}) não pode ser menor que o da última viagem (${NumberFormat('#,###', 'pt_BR').format(ultimaKmConhecida.toInt())} KM)';
-    }
-    return null;
+    return OdometerValidator.validarKmInicial(
+      textoKm: _kmController.text,
+      ultimaKmConhecida: ultimaKmConhecida,
+    );
   }
 
   Future<void> _iniciarViagem(AppColorsExtension colors, dynamic veiculo) async {
@@ -177,11 +163,15 @@ class _NovaViagemPageState extends State<NovaViagemPage> {
       return;
     }
 
-    final kmDouble = _parseNumero(kmText);
-    if (kmDouble == null || kmDouble <= 0) {
+    final kmDouble = OdometerValidator.parseNumero(kmText);
+    if (kmDouble == null || kmDouble <= 0 || kmDouble > OdometerValidator.maxOdometroKm) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('A quilometragem inicial deve ser maior que zero!'),
+          content: Text(
+            kmDouble != null && kmDouble > OdometerValidator.maxOdometroKm
+                ? 'Quilometragem inválida (limite excedido)!'
+                : 'A quilometragem inicial deve ser maior que zero!',
+          ),
           backgroundColor: colors.warning,
         ),
       );
@@ -214,11 +204,12 @@ class _NovaViagemPageState extends State<NovaViagemPage> {
 
       // Alerta de discrepância acentuada (ex: diferença > 10.000 KM em relação ao último odômetro)
       final double? kmReferencia = _ultimaKmRegistrada ?? (veiculo != null && veiculo['km_atual'] != null ? (veiculo['km_atual'] as num).toDouble() : null);
-      if (kmReferencia != null && (kmDouble - kmReferencia) > 10000) {
+      if (kmReferencia != null &&
+          OdometerValidator.isSaltoDiscrepante(kmInformado: kmDouble, kmReferencia: kmReferencia)) {
         final bool? confirmarSalto = await AppDialog.show(
           context: context,
           title: 'Quilometragem discrepante',
-          message: 'O KM informado (${NumberFormat('#,###', 'pt_BR').format(kmDouble.toInt())} KM) é mais de 10.000 KM superior ao último registro (${NumberFormat('#,###', 'pt_BR').format(kmReferencia.toInt())} KM).\n\nConfirma que este valor está correto?',
+          message: 'O KM informado (${OdometerValidator.formatKm(kmDouble.toInt())} KM) é mais de 10.000 KM superior ao último registro (${OdometerValidator.formatKm(kmReferencia.toInt())} KM).\n\nConfirma que este valor está correto?',
           confirmText: 'Sim, está correto',
           cancelText: 'Revisar',
           icon: LucideIcons.alertTriangle,
@@ -232,7 +223,7 @@ class _NovaViagemPageState extends State<NovaViagemPage> {
       final bool? confirm = await AppDialog.show(
         context: context,
         title: 'Iniciar viagem',
-        message: 'Confirma o início da rota de $origem ($origemUF) para $destino ($destinoUF) com odômetro inicial de ${NumberFormat('#,###', 'pt_BR').format(kmDouble.toInt())} KM?',
+        message: 'Confirma o início da rota de $origem ($origemUF) para $destino ($destinoUF) com odômetro inicial de ${OdometerValidator.formatKm(kmDouble.toInt())} KM?',
         confirmText: 'Começar viagem',
         cancelText: 'Revisar dados'
       );
@@ -308,7 +299,7 @@ class _NovaViagemPageState extends State<NovaViagemPage> {
         : null;
     final double? ultimaKmConhecida = _ultimaKmRegistrada ?? ultimaVM?.kmFinal ?? veiculoKm;
     final erroKm = _validarKmInicialEmTempoReal(ultimaKmConhecida);
-    final kmInicialNum = _parseNumero(_kmController.text);
+    final kmInicialNum = OdometerValidator.parseNumero(_kmController.text);
     final erroDestino = _erroDestino;
 
     final bool formValido = temVeiculo &&
@@ -522,7 +513,7 @@ class _NovaViagemPageState extends State<NovaViagemPage> {
                                   const SizedBox(width: 4),
                                   Flexible(
                                     child: Text(
-                                      '${_ultimaKmRegistrada != null || ultimaVM?.kmFinal != null ? 'Último registro: ' : 'Odômetro do veículo: '}${NumberFormat('#,###', 'pt_BR').format(ultimaKmConhecida.toInt())} KM',
+                                      '${_ultimaKmRegistrada != null || ultimaVM?.kmFinal != null ? 'Último registro: ' : 'Odômetro do veículo: '}${OdometerValidator.formatKm(ultimaKmConhecida.toInt())} KM',
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: GoogleFonts.lexend(
@@ -537,7 +528,7 @@ class _NovaViagemPageState extends State<NovaViagemPage> {
                             const SizedBox(width: AppSpacing.xs),
                             InkWell(
                               onTap: () {
-                                _kmController.text = NumberFormat('#,###', 'pt_BR').format(ultimaKmConhecida.toInt());
+                                _kmController.text = OdometerValidator.formatKm(ultimaKmConhecida.toInt());
                                 setState(() {});
                               },
                               borderRadius: AppRadius.xsRadius,
